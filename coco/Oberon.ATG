@@ -1,3 +1,5 @@
+using Ast;
+
 COMPILER Taste
 
 Proc curProc;  // current program unit (procedure or main program)
@@ -29,20 +31,20 @@ Taste                    (. String name; .)
   Ident<out name>        (. curProc = new Proc(name, null, this); .)
   "{"
   { VarDecl | ProcDecl }
-  "}"                    (. for (Obj obj: curProc.locals) {
-                            	if (obj instanceof Proc) ((Proc)obj).dump();
+  "}"                    (. foreach (Obj obj in curProc.locals) {
+                            	if (obj is Proc) ((Proc)obj).Dump();
                             } .).
 /*------------------------------------------------------------------------*/
-VarDecl                  (. String name; Type type; .)
+VarDecl                  (. String name; OType type; .)
 = Typ<out type>
   Ident<out name>        (. curProc.add(new Var(name, type)); .)
   { ',' Ident<out name>  (. curProc.add(new Var(name, type)); .)
   } ';'.
 /*------------------------------------------------------------------------*/
-Typ<out Type type>
-=                        (. type = Type.INT; .)
+Typ<out OType type>
+=                        (. type = OType.INT; .)
  ( "int"
- | "bool"                (. type = Type.BOOL; .)
+ | "bool"                (. type = OType.BOOL; .)
  ).
 /*------------------------------------------------------------------------*/
 ProcDecl                 (. String name; .)
@@ -116,7 +118,7 @@ Term<out Expr e>         (. Operator op; Expr e2; .)
 Factor<out Expr e>       (. String name; .)
 =                        (. e = null; .)
   ( Ident<out name>      (. e = new Ident(curProc.find(name)); .)
-  | number               (. e = new IntCon(Integer.parseInt(t.val)); .)
+  | number               (. e = new IntCon(Int32.Parse(t.val)); .)
   | '-' Factor<out e>    (. e = new UnaryExpr(Operator.SUB, e); .)
   | "true"               (. e = new BoolCon(true); .)
   | "false"              (. e = new BoolCon(false); .)

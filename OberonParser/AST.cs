@@ -1,6 +1,6 @@
 namespace Ast
 {
-    enum Type
+    enum OType
     {
         UNDEF,
         INT,
@@ -30,10 +30,10 @@ namespace Ast
         public String name;
 
         //  name of this object
-        public Type type;
+        public OType type;
 
         //  type of this object (UNDEF for procedures)
-        public Obj(String s, Type t)
+        public Obj(String s, OType t)
         {
             this.name = s;
             this.type = t;
@@ -51,7 +51,7 @@ namespace Ast
         public int adr;
 
         //  address in memory
-        public Var(String name, Type type) :
+        public Var(String name, OType type) :
                 base(name, type)
         {
 
@@ -77,12 +77,12 @@ namespace Ast
 
         //  for error messages
         public Proc(String name, Proc program, Parser parser) :
-                base(name, Type.UNDEF)
+                base(name, OType.UNDEF)
         {
 
             this.locals = new List<Obj>();
-            this.program = this.program;
-            this.parser = this.parser;
+            this.program = program;
+            this.parser = parser;
         }
 
         public void add(Obj obj)
@@ -102,7 +102,7 @@ namespace Ast
                 this.nextAdr++;
             }
 
-            ((Var)(obj)).adr = this.nextAdr;
+            if (obj is Var) ((Var)obj).adr = nextAdr++;
         }
 
         public Obj find(String name)
@@ -130,7 +130,7 @@ namespace Ast
             }
 
             this.parser.SemErr((name + " undeclared"));
-            return new Obj("_undef", Type.INT);
+            return new Obj("_undef", OType.INT);
             //  dummy
         }
 

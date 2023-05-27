@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "OberonParser": {
+      "commandName": "Project",
+      "commandLineArgs": "$(ProjectDir)..\\coco\\Test.mod"
+    }
+  }
+}

@@ -16,7 +16,7 @@ else
         Console.WriteLine("   Initializing parser with conditional compilation symbols");
         String[] ccs = new String[args.Length - 1];
         System.Array.Copy(args, 1, ccs, 0, ccs.Length);
-        parser.AddConditionalCompilationSymbols(ccs);
+        //parser.AddConditionalCompilationSymbols(ccs);
     }
     Console.WriteLine("   Parsing source file {0}", args[0]);
     parser.Parse();
