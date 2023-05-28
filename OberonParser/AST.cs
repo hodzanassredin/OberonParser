@@ -298,7 +298,7 @@ namespace Ast
             this.stat = s;
         }
 
-        void dump()
+        public override void Dump()
         {
             base.Dump();
             Console.Write("if ");

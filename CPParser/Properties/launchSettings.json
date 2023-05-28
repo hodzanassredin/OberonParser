@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "CPParser": {
+      "commandName": "Project",
+      "commandLineArgs": "$(ProjectDir)..\\coco\\CPTest.mod"
+    }
+  }
+}

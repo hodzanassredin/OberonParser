@@ -7,8 +7,19 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OberonParser", "OberonParse
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{4905890A-E9F9-487F-A49D-CED6859724E2}"
 	ProjectSection(SolutionItems) = preProject
-		coco\Oberon.ATG = coco\Oberon.ATG
-		coco\Test.mod = coco\Test.mod
+		coco\AO.ATG = coco\AO.ATG
+		coco\Ast.ATG = coco\Ast.ATG
+		coco\AOTest.mod = coco\AOTest.mod
+		coco\CP.ATG = coco\CP.ATG
+		coco\CPTest.mod = coco\CPTest.mod
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CPParser", "CPParser\CPParser.csproj", "{B0FFED75-2372-44E1-84A8-0C31B4233564}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs", "Docs", "{249EFF22-04FB-414C-A746-BE170ED867CC}"
+	ProjectSection(SolutionItems) = preProject
+		coco\Ast.ATG = coco\Ast.ATG
+		coco\Oberon2.ATG = coco\Oberon2.ATG
 	EndProjectSection
 EndProject
 Global
@@ -21,6 +32,10 @@ Global
 		{312412AD-80CF-4F86-9B33-13A0614D8EFF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{312412AD-80CF-4F86-9B33-13A0614D8EFF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{312412AD-80CF-4F86-9B33-13A0614D8EFF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B0FFED75-2372-44E1-84A8-0C31B4233564}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B0FFED75-2372-44E1-84A8-0C31B4233564}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B0FFED75-2372-44E1-84A8-0C31B4233564}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B0FFED75-2372-44E1-84A8-0C31B4233564}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
