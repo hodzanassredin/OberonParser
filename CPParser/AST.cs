@@ -1,40 +1,59 @@
-namespace Ast {
+namespace CPParser.Ast
+{
 
-	class Ident
+	public interface IAstElement
+	{
+		void Accept(IAstVisitor v);
+	}
+	public class Ident : IAstElement
 	{
 		public string Name { get; set; }
-	}
 
-	class Qualident
+        public void Accept(IAstVisitor v) => v.Visit(this);
+    }
+
+	public class Qualident : IAstElement
 	{
 		public List<Ident> Idents { get; set; }
+		public void Accept(IAstVisitor v) => v.Visit(this);
 	}
-	class Guard
+	public class Guard : IAstElement
 	{
 		public Qualident VarQualident { get; set; }
 		public Qualident TypeQualident { get; set; }
+		public void Accept(IAstVisitor v) => v.Visit(this);
 	}
-	class Module {
+	public class Module : IAstElement
+	{
 		public Ident Ident { get; set; }
-        public ImportList ImportList { get; set; }
+		public ImportList ImportList { get; set; } 
 		public DeclSeq DeclSeq { get; set; }
 		public StatementSeq Begin { get; set; }
 		public StatementSeq Close { get; set; }
+		public void Accept(IAstVisitor v) => v.Visit(this);
 	}
 
-	class ImportList {
+	public class Import : IAstElement
+	{
         public Ident Name { get; set; }
 		public Ident OriginalName { get; set; }
+		public void Accept(IAstVisitor v) => v.Visit(this);
+	}
+	public class ImportList : IAstElement
+	{
+        public List<Import> Imports { get; set; } = new List<Import>();
+		public void Accept(IAstVisitor v) => v.Visit(this);
 	}
 
-	enum IdentExport { 
-		Private,
-		ExportReadonly,
-		Export
-	}
-	class IdentDef
+	public class IdentDef : IAstElement
 	{
-        public Ident Ident { get; set; }
+		public enum IdentExport
+		{
+			Private,
+			ExportReadonly,
+			Export
+		}
+		public Ident Ident { get; set; }
 		public void SetExport(String c) {
             switch (c)
             {
@@ -50,126 +69,180 @@ namespace Ast {
             }
         }
 		public IdentExport Export { get; set; }
+		public void Accept(IAstVisitor v) => v.Visit(this);
 	}
-	class ConstTypeVarDecl { }
-	class ProcForwardDecl { }
-	class DeclSeq {
-		public List<ConstTypeVarDecl> ConstTypeVarDecls { get; set; }
-		public List<ProcForwardDecl> ProcForwardDecls { get; set; }
+	public interface IConstTypeVarDecl : IAstElement { }
+	public interface IProcForwardDecl : IAstElement { }
+	public class DeclSeq : IAstElement
+	{
+		public List<IConstTypeVarDecl> ConstTypeVarDecls { get; set; }
+		public List<IProcForwardDecl> ProcForwardDecls { get; set; }
+		public void Accept(IAstVisitor v) => v.Visit(this);
 	}
-	class ConstDecl {
+	public class ConstDecl : IAstElement, IConstTypeVarDecl
+	{
 		public IdentDef IdentDef { get; set; }
 		public ConstExpr ConstExpr { get; set; }
+		public void Accept(IAstVisitor v) => v.Visit(this);
 	}
-	class TypeDecl {
+	public class TypeDecl : IAstElement, IConstTypeVarDecl
+	{
 		public IdentDef IdentDef { get; set; }
-		public Type_ Type_ { get; set; }
+		public IType Type_ { get; set; }
+        public void Accept(IAstVisitor v) => v.Visit(this);
 	}
-	class VarDecl {
+	public class VarDecl : IAstElement, IConstTypeVarDecl
+	{
 		public IdentList IdentList { get; set; }
-		public Type_ Type_ { get; set; }
+		public IType Type_ { get; set; }
+        public void Accept(IAstVisitor v) => v.Visit(this);
 	}
-	class ProcDecl
+	public class ProcDecl : IAstElement, IProcForwardDecl
 	{
 		public Receiver Receiver { get; set; }
 		public IdentDef IdentDef { get; set; }
 		public FormalPars FormalPars { get; set; }
 		public MethAttributes MethAttributes { get; set; }
         public StatementSeq StatementSeq { get; set; }
+		public void Accept(IAstVisitor v) => v.Visit(this);
 	}
 
-	enum MethodAttr {
-		ABSTRACT , EMPTY , EXTENSIBLE
-	}
-	class MethAttributes {
+
+	public class MethAttributes : IAstElement
+	{
+		public enum MethodAttr
+		{
+			ABSTRACT, EMPTY, EXTENSIBLE
+		}
 		public bool IsNew { get; set; }
-		public MethodAttr? MethodAttr { get; set; }
+		public MethodAttr? Attr { get; set; }
+		public void Accept(IAstVisitor v) => v.Visit(this);
 	}
-	class ForwardDecl {
+	public class ForwardDecl : IAstElement, IProcForwardDecl
+	{
 		public Receiver Receiver { get; set; }
 		public IdentDef IdentDef { get; set; }
 		public FormalPars FormalPars { get; set; }
 		public MethAttributes MethAttributes { get; set; }
+		public void Accept(IAstVisitor v) => v.Visit(this);
 	}
-	class FormalPars {
-        public List<FPSection> FPSections { get; set; }
-        public Type_ Type_ { get; set; }
-	}
-
-	enum FpSectionPrefix {
-		VAR , IN , OUT
-	}
-
-	class FPSection {
-        public FpSectionPrefix? FpSectionPrefix { get; set; }
-        public List<Ident> Idents { get; set; }
-		public Type_ Type_ { get; set; }
-	}
-	enum ReceiverPrefix
+	public class FormalPars : IAstElement
 	{
-		VAR, IN
+        public List<FPSection> FPSections { get; set; }
+        public IType Type_ { get; set; }
+        public void Accept(IAstVisitor v) => v.Visit(this);
 	}
-	class Receiver {
-		public ReceiverPrefix? ReceiverPrefix { get; set; }
+
+	
+
+	public class FPSection : IAstElement
+	{
+		public enum Prefix
+		{
+			VAR, IN, OUT
+		}
+		public Prefix? FpSectionPrefix { get; set; }
+        public List<Ident> Idents { get; set; }
+		public IType Type_ { get; set; }
+		public void Accept(IAstVisitor v) => v.Visit(this);
+	}
+	
+	public class Receiver : IAstElement
+	{
+		public enum Prefix
+		{
+			VAR, IN
+		}
+		public Prefix? ReceiverPrefix { get; set; }
 		public Ident SelfIdent { get; set; }
 		public Ident TypeIdent { get; set; }
+		public void Accept(IAstVisitor v) => v.Visit(this);
 	}
-	abstract class Type_
-	{
-	}
-	class SynonimType : Type_
-	{
-        public Qualident Qualident { get; set; }
-    }
-	class ArrayType : Type_
-	{
-		public List<ConstExpr> ConstExprs { get; set; }
-		public Type_ Type_ { get; set; }
-	}
+    public interface IType : IAstElement
+    {
+		public class SynonimType : IType
+		{
+			public Qualident Qualident { get; set; }
+			public void Accept(IAstVisitor v) => v.Visit(this);
+		}
+		public class ArrayType : IType
+		{
+			public List<ConstExpr> ConstExprs { get; set; }
+			public IType Type_ { get; set; }
+			public void Accept(IAstVisitor v) => v.Visit(this);
+		}
 
-	class ExprList { public List<Expr> Exprs { get; set; } }
-	class IdentList
+		public class RecordType : IType
+		{
+			public enum Meta
+			{
+				ABSTRACT, EXTENSIBLE, LIMITED
+			}
+			public Meta RecordMeta { get; set; }
+			public Qualident Qualident { get; set; }
+			public List<FieldList> FieldList { get; set; }
+			public void Accept(IAstVisitor v) => v.Visit(this);
+
+		}
+		public class PointerType : IType
+		{
+			public IType Type_ { get; set; }
+			public void Accept(IAstVisitor v) => v.Visit(this);
+		}
+		public class ProcedureType : IType
+		{
+			public FormalPars FormalPars { get; set; }
+			public void Accept(IAstVisitor v) => v.Visit(this);
+		}
+	}
+    
+
+	public class ExprList : IAstElement { 
+		public List<Expr> Exprs { get; set; }
+		public void Accept(IAstVisitor v) => v.Visit(this);
+	}
+	public class IdentList : IAstElement
 	{
 		public List<IdentDef> IdentDefs { get; set; }
+		public void Accept(IAstVisitor v) => v.Visit(this);
 	}
-	class FieldList
-    {
+	public class FieldList : IAstElement
+	{
 		public IdentList IdentList { get; set; }
-		public Type_ Type_ { get; set; }
+		public IType Type_ { get; set; }
+		public void Accept(IAstVisitor v) => v.Visit(this);
 	}
-	enum RecordMeta
-	{
-		ABSTRACT, EXTENSIBLE, LIMITED
+	
+	
+	public class ConstExpr : IAstElement { 
+		public Expr Expr { get; set; }
+		public void Accept(IAstVisitor v) => v.Visit(this);
 	}
-	class RecordType {
-		public RecordMeta RecordMeta { get; set; }
-		public Qualident Qualident { get; set; }
-		public List<FieldList> FieldList { get; set; }
-	}
-	class PointerType : Type_
-	{
-		public Type_ Type_ { get; set; }
-	}
-	class ProcedureType : Type_ {
-		public FormalPars FormalPars { get; set; }
-	}
-	class ConstExpr { public Expr Expr { get; set; } }
-	class CaseLabels
+	public class CaseLabels : IAstElement
 	{
 		public List<ConstExpr> ConstExprs { get; set; }
+		public void Accept(IAstVisitor v) => v.Visit(this);
 	}
-	class StatementSeq {
-		public List<Statement> Statements { get; set; }
+	public class StatementSeq : IAstElement
+	{
+		public List<IStatement> Statements { get; set; }
+        public void Accept(IAstVisitor v) => v.Visit(this);
     }
-	class Set { public List<Element> Elements { get; set; } }
-	class Element { public List<Expr> Exprs { get; set; } }
-	enum AddOps
-	{
-		Add, Sub, Or
+	public class Set : IAstElement { 
+		public List<Element> Elements { get; set; }
+        public void Accept(IAstVisitor v) => v.Visit(this);		
 	}
-	class AddOp
+	public class Element : IAstElement { 
+		public List<Expr> Exprs { get; set; }
+        public void Accept(IAstVisitor v) => v.Visit(this); 
+	}
+	
+	public class AddOp : IAstElement
 	{
-
+		public enum AddOps
+		{
+			Add, Sub, Or
+		}
 		public void SetOp(String c)
 		{
 			switch (c)
@@ -188,15 +261,16 @@ namespace Ast {
 			}
 		}
 		public AddOps Op { get; set; }
-	
-	}
-	enum MulOps
-	{
-		Mul, Division, DIV, MOD, AND
-	}
-	class MulOp
-	{
+		public void Accept(IAstVisitor v) => v.Visit(this);
 
+	}
+
+	public class MulOp : IAstElement
+	{
+		public enum MulOps
+		{
+			Mul, Division, DIV, MOD, AND
+		}
 		public void SetOp(String c)
 		{
 			switch (c)
@@ -221,14 +295,15 @@ namespace Ast {
 			}
 		}
 		public MulOps Op { get; set; }
-
+		public void Accept(IAstVisitor v) => v.Visit(this);
 	}
-	enum Relations
+	
+	public class Relation : IAstElement
 	{
-		Eq, Neq, Lss, Leq, Gtr, Geq, In, Is
-	}
-	class Relation
-	{
+		public enum Relations
+		{
+			Eq, Neq, Lss, Leq, Gtr, Geq, In, Is
+		}
 		public void Set(String c)
 		{
 			switch (c)
@@ -262,14 +337,15 @@ namespace Ast {
 			}
 		}
 		public Relations Op { get; set; }
-
+		public void Accept(IAstVisitor v) => v.Visit(this);
 	}
-	enum SimpleExprPrefix
+	
+	public class SimpleExpr : IAstElement
 	{
-		Add, Sub
-	}
-	class SimpleExpr
-	{
+		public enum SimpleExprPrefix
+		{
+			Add, Sub
+		}
 		public void SetPrefix(string c)
 		{
 			switch (c)
@@ -283,115 +359,194 @@ namespace Ast {
 				default:
 					throw new Exception();
 			}
+
 		}
 		public SimpleExprPrefix? Prefix { get; set; }
 		public Term Term { get; set; }
 		public List<(AddOp, Term)> Terms { get; set; }
+		public void Accept(IAstVisitor v) => v.Visit(this);
 	}
-	class Term
+	public class Term : IAstElement
 	{
-		public Factor Factor { get; set; }
-		public List<(MulOp, Factor)> Factors { get; set; }
+		public IFactor Factor { get; set; }
+		public List<(MulOp, IFactor)> Factors { get; set; }
+		public void Accept(IAstVisitor v) => v.Visit(this);
 	}
 
-	class Expr
+	public class Expr : IAstElement
 	{
 		public SimpleExpr SimpleExpr { get; set; }
 		public Relation Relation { get; set; }
 		public SimpleExpr SimpleExpr2 { get; set; }
+		public void Accept(IAstVisitor v) => v.Visit(this);
 	}
 
-	class Case
+	public class Case : IAstElement
 	{
 		public CaseLabels CaseLabels { get; set; }
 		public List<CaseLabels> CaseLabelsList { get; set; }
 		public StatementSeq StatementSeq { get; set; }
+		public void Accept(IAstVisitor v) => v.Visit(this);
 
 	}
-	abstract class Statement { }
-	class AssignmentStatement : Statement
+	public interface IStatement : IAstElement
 	{
-        public Designator Designator { get; set; }
-        public Expr Expr { get; set; }
-	}
 
-	class ProcCallStatement : Statement {
-        public Designator Designator { get; set; }
-        public ExprList ExprList { get; set; }
-	}
-	class IfStatement : Statement
-	{
-		public class IfThen {
-			public Expr Cond { get; set; }
-			public StatementSeq ThenBody { get; set; }
-		}
-        public IfThen If { get; set; }
-        public List<IfThen> ELSIFs { get; set; }
-        public StatementSeq ElseBody { get; set; }
-	}
-	class CaseStatement : Statement
-	{
-        public Expr Expr { get; set; }
-        public List<Case> Cases { get; set; }
-		public StatementSeq ElseBody { get; set; }
-	}
-	class WhileStatement : Statement
-	{
-		public Expr Expr { get; set; }
-		public StatementSeq StatementSeq { get; set; }
-	}
-	class RepeatStatement : Statement {
-        public StatementSeq StatementSeq { get; set; }
-        public Expr Expr { get; set; }
-	}
-	class ForStatement : Statement {
-        public Ident Ident { get; set; }
-        public Expr Expr { get; set; }
-        public Expr ToExpr { get; set; }
-		public ConstExpr ByExpr { get; set; }
-        public StatementSeq StatementSeq { get; set; }
-	}
-	class LoopStatement : Statement {
-        public StatementSeq StatementSeq { get; set; }
-    }
-	class WithStatement : Statement {
-        public Guard Guard { get; set; }
-        public StatementSeq StatementSeq { get; set; }
-        public List<(Guard, StatementSeq)> AdditionalGuards { get; set; }
-        public StatementSeq ElseStatementSeq { get; set; }
-	}
-	class ExitStatement : Statement { }
-	class ReturnStatement : Statement {
-        public Expr Expr { get; set; }
-    }
-	abstract class Number {
-        public string Value { get; set; }
-    }
-	abstract class Factor {
-		class DesignatorFactor : Factor { public Designator Value { get; set; } }
-		class NumberFactor : Factor { public Number Value { get; set; } }
-		class CharacterFactor : Factor { public Char Value { get; set; } }
-		class StringFactor : Factor { public string Value { get; set; } }
-		class NilFactor : Factor { }
-		class SetFactor : Factor { public Set Value { get; set; } }
-		class ExprFactor : Factor { public Expr Value { get; set; } }
-		class NegFactor : Factor { public Factor Value { get; set; } }
-	}
-
-	abstract class Designator    {
-		public abstract class DesignatorSpec
+		public class AssignmentStatement : IStatement
 		{
-            public class RecordDesignatorSpec : DesignatorSpec { public Ident Value { get; set; }}
-			public class ArrayDesignatorSpec : DesignatorSpec { public ExprList Value { get; set; } }
-			public class PointerDesignatorSpec : DesignatorSpec {  }
-			public class CastDesignatorSpec : DesignatorSpec { public Qualident Value { get; set; } }
-			public class ProcCallDesignatorSpec : DesignatorSpec { public ExprList Value { get; set; } }
+			public Designator Designator { get; set; }
+			public Expr Expr { get; set; }
+			public void Accept(IAstVisitor v) => v.Visit(this);
 		}
+
+		public class ProcCallStatement : IStatement
+		{
+			public Designator Designator { get; set; }
+			public ExprList ExprList { get; set; }
+			public void Accept(IAstVisitor v) => v.Visit(this);
+		}
+		public class IfStatement : IStatement
+		{
+			public class IfThen
+			{
+				public Expr Cond { get; set; }
+				public StatementSeq ThenBody { get; set; }
+			}
+			public IfThen If { get; set; }
+			public List<IfThen> ELSIFs { get; set; }
+			public StatementSeq ElseBody { get; set; }
+			public void Accept(IAstVisitor v) => v.Visit(this);
+		}
+		public class CaseStatement : IStatement
+		{
+			public Expr Expr { get; set; }
+			public List<Case> Cases { get; set; }
+			public StatementSeq ElseBody { get; set; }
+			public void Accept(IAstVisitor v) => v.Visit(this);
+		}
+		public class WhileStatement : IStatement
+		{
+			public Expr Expr { get; set; }
+			public StatementSeq StatementSeq { get; set; }
+			public void Accept(IAstVisitor v) => v.Visit(this);
+		}
+		public class RepeatStatement : IStatement
+		{
+			public StatementSeq StatementSeq { get; set; }
+			public Expr Expr { get; set; }
+			public void Accept(IAstVisitor v) => v.Visit(this);
+		}
+		public class ForStatement : IStatement
+		{
+			public Ident Ident { get; set; }
+			public Expr Expr { get; set; }
+			public Expr ToExpr { get; set; }
+			public ConstExpr ByExpr { get; set; }
+			public StatementSeq StatementSeq { get; set; }
+			public void Accept(IAstVisitor v) => v.Visit(this);
+		}
+		public class LoopStatement : IStatement
+		{
+			public StatementSeq StatementSeq { get; set; }
+			public void Accept(IAstVisitor v) => v.Visit(this);
+		}
+		public class WithStatement : IStatement
+		{
+			public Guard Guard { get; set; }
+			public StatementSeq StatementSeq { get; set; }
+			public List<(Guard, StatementSeq)> AdditionalGuards { get; set; }
+			public StatementSeq ElseStatementSeq { get; set; }
+			public void Accept(IAstVisitor v) => v.Visit(this);
+		}
+		public class ExitStatement : IStatement
+		{
+			public void Accept(IAstVisitor v) => v.Visit(this);
+		}
+		public class ReturnStatement : IStatement
+		{
+			public Expr Expr { get; set; }
+			public void Accept(IAstVisitor v) => v.Visit(this);
+		}
+	}
 	
+	public abstract class Number : IAstElement
+	{
+        public string Value { get; set; }
+		public void Accept(IAstVisitor v) => v.Visit(this);
+	}
+
+	public interface IFactor : IAstElement
+	{
+		public class DesignatorFactor : IFactor
+		{ 
+			public Designator Value { get; set; }
+			public void Accept(IAstVisitor v) => v.Visit(this);
+		}
+		public class NumberFactor : IFactor
+		{ 
+			public Number Value { get; set; }
+			public void Accept(IAstVisitor v) => v.Visit(this);
+		}
+		public class CharacterFactor : IFactor
+		{ 
+			public Char Value { get; set; }
+			public void Accept(IAstVisitor v) => v.Visit(this);
+		}
+		public class StringFactor : IFactor
+		{ 
+			public string Value { get; set; }
+			public void Accept(IAstVisitor v) => v.Visit(this);
+		}
+		public class NilFactor : IFactor
+		{
+			public void Accept(IAstVisitor v) => v.Visit(this);
+		}
+		public class SetFactor : IFactor
+		{ 
+			public Set Value { get; set; }
+			public void Accept(IAstVisitor v) => v.Visit(this);
+		}
+		public class ExprFactor : IFactor
+		{ 
+			public Expr Value { get; set; }
+			public void Accept(IAstVisitor v) => v.Visit(this);
+		}
+		public class NegFactor : IFactor
+		{ 
+			public IFactor Value { get; set; }
+			public void Accept(IAstVisitor v) => v.Visit(this);
+		}
+	}
+
+	public abstract class Designator : IAstElement
+	{
+		public interface IDesignatorSpec : IAstElement
+		{
+            public class RecordDesignatorSpec : IDesignatorSpec { 
+				public Ident Value { get; set; }
+				public void Accept(IAstVisitor v) => v.Visit(this);
+			}
+			public class ArrayDesignatorSpec : IDesignatorSpec { 
+				public ExprList Value { get; set; }
+				public void Accept(IAstVisitor v) => v.Visit(this);
+			}
+			public class PointerDesignatorSpec : IDesignatorSpec {
+				public void Accept(IAstVisitor v) => v.Visit(this);
+			}
+			public class CastDesignatorSpec : IDesignatorSpec { 
+				public Qualident Value { get; set; }
+				public void Accept(IAstVisitor v) => v.Visit(this);
+			}
+			public class ProcCallDesignatorSpec : IDesignatorSpec { 
+				public ExprList Value { get; set; }
+				public void Accept(IAstVisitor v) => v.Visit(this);
+			}
+		}
 
         public Qualident Qualident { get; set; }
         public bool EndOfLine { get; set; }
-        public List<DesignatorSpec> DesignatorSpecs { get; set; }
-    }
+        public List<IDesignatorSpec> DesignatorSpecs { get; set; }
+		public void Accept(IAstVisitor v) => v.Visit(this);
+	}
 
 }

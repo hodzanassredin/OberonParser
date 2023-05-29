@@ -1,4 +1,4 @@
-using Ast;
+using CPParser;
 
 
 
@@ -26,7 +26,7 @@ public class Parser {
 	public Token la;   // lookahead token
 	int errDist = minErrDist;
 
-Module module;  // module
+public AstBuilder builder = new AstBuilder(); 
 
 
 
@@ -87,14 +87,14 @@ Module module;  // module
 	}
 
 	
-	void Oberon() {
+	void CP() {
 		Module();
 	}
 
 	void Module() {
 		Expect(6);
 		Expect(1);
-		module = new Module(t.val); 
+		builder.SetModuleName(t.val); 
 		Expect(7);
 		if (la.kind == 13) {
 			ImportList();
@@ -176,11 +176,10 @@ Module module;  // module
 		String name = null; String originalName; 
 		if (la.kind == 1) {
 			Get();
-			name = t.val; 
 			Expect(12);
 		}
 		Expect(1);
-		originalName = t.val; module.Import.Add(new Import(name, originalName)); 
+		originalName = t.val; builder.AddImport(name, originalName); 
 	}
 
 	void ConstDecl() {
@@ -718,7 +717,7 @@ Module module;  // module
 		la = new Token();
 		la.val = "";		
 		Get();
-		Oberon();
+		CP();
 		Expect(0);
 
 	}

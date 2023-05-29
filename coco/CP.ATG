@@ -1,9 +1,7 @@
-using Ast;
+using CPParser;
 
-COMPILER Oberon
-// A grammar for Oberon
-Module module; 
-Proc currProc; 
+COMPILER CP
+	public AstBuilder builder = new AstBuilder(); 
 
 CHARACTERS
   cr  = '\r'.
@@ -28,16 +26,16 @@ COMMENTS FROM "(*" TO "*)" NESTED
 IGNORE  tab + cr + lf
 
 PRODUCTIONS
-	Oberon           =  Module . 
+	CP           =  Module . 
 	number = integer | real.
 	Module 
-	=	"MODULE" ident (. module = new Module(t.val); .)
+	=	"MODULE" ident (. builder.SetModuleName(t.val); .)
 		";" [ImportList] DeclSeq ["BEGIN" StatementSeq] ["CLOSE" StatementSeq] "END" ident ".".
 	ImportedModule (. String name = null; String originalName; .)
 	= [ident (. name = t.val; .)
 		":=" 
 		] 
-		ident (. originalName = t.val; module.Import.Add(new Import(name, originalName)); .).
+		ident (. originalName = t.val; builder.AddImport(name, originalName); .).
 	ImportList 	=	"IMPORT" ImportedModule {"," ImportedModule} ";".
 	DeclSeq 	=	{ "CONST" {ConstDecl ";" } | "TYPE" {TypeDecl ";"} |
 			"VAR" {VarDecl ";"}} {ProcDecl ";" | ForwardDecl ";"}.
@@ -97,4 +95,4 @@ PRODUCTIONS
 	IdentList 	=	IdentDef {"," IdentDef}.
 	Qualident 	=	[ident "."] ident.
 	IdentDef 	=	ident ["*" | "-"].
-END Oberon.
+END CP.
