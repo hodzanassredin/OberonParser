@@ -1,3 +1,6 @@
+using Ast;
+
+
 
 using System;
 
@@ -22,6 +25,8 @@ public class Parser {
 	public Token t;    // last recognized token
 	public Token la;   // lookahead token
 	int errDist = minErrDist;
+
+Module module;  // module
 
 
 
@@ -89,8 +94,9 @@ public class Parser {
 	void Module() {
 		Expect(6);
 		Expect(1);
+		module = new Module(t.val); 
 		Expect(7);
-		if (la.kind == 12) {
+		if (la.kind == 13) {
 			ImportList();
 		}
 		DeclSeq();
@@ -116,19 +122,11 @@ public class Parser {
 	}
 
 	void ImportList() {
-		Expect(12);
-		if (la.kind == 1) {
-			Get();
-			Expect(13);
-		}
-		Expect(1);
+		Expect(13);
+		ImportedModule();
 		while (la.kind == 14) {
 			Get();
-			if (la.kind == 1) {
-				Get();
-				Expect(13);
-			}
-			Expect(1);
+			ImportedModule();
 		}
 		Expect(7);
 	}
@@ -172,6 +170,17 @@ public class Parser {
 			Get();
 			Statement();
 		}
+	}
+
+	void ImportedModule() {
+		String name = null; String originalName; 
+		if (la.kind == 1) {
+			Get();
+			Expect(12);
+			name = t.val; 
+		}
+		Expect(1);
+		originalName = t.val; module.Import.Add(new Import(name, originalName)); 
 	}
 
 	void ConstDecl() {
@@ -385,7 +394,7 @@ public class Parser {
 		if (StartOf(4)) {
 			if (la.kind == 1) {
 				Designator();
-				Expect(13);
+				Expect(12);
 				Expr();
 			} else if (la.kind == 1) {
 				Designator();
@@ -440,7 +449,7 @@ public class Parser {
 			} else if (la.kind == 46) {
 				Get();
 				Expect(1);
-				Expect(13);
+				Expect(12);
 				Expr();
 				Expect(35);
 				Expr();
@@ -748,8 +757,8 @@ public class Errors {
 			case 9: s = "\"CLOSE\" expected"; break;
 			case 10: s = "\"END\" expected"; break;
 			case 11: s = "\".\" expected"; break;
-			case 12: s = "\"IMPORT\" expected"; break;
-			case 13: s = "\":=\" expected"; break;
+			case 12: s = "\":=\" expected"; break;
+			case 13: s = "\"IMPORT\" expected"; break;
 			case 14: s = "\",\" expected"; break;
 			case 15: s = "\"CONST\" expected"; break;
 			case 16: s = "\"TYPE\" expected"; break;

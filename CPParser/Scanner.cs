@@ -352,7 +352,7 @@ public class Scanner {
 			case "BEGIN": t.kind = 8; break;
 			case "CLOSE": t.kind = 9; break;
 			case "END": t.kind = 10; break;
-			case "IMPORT": t.kind = 12; break;
+			case "IMPORT": t.kind = 13; break;
 			case "CONST": t.kind = 15; break;
 			case "TYPE": t.kind = 16; break;
 			case "VAR": t.kind = 17; break;
@@ -466,7 +466,7 @@ public class Scanner {
 			case 13:
 				{t.kind = 7; break;}
 			case 14:
-				{t.kind = 13; break;}
+				{t.kind = 12; break;}
 			case 15:
 				{t.kind = 14; break;}
 			case 16:
