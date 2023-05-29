@@ -5,6 +5,12 @@ namespace CPParser.Ast
 	{
 		void Accept(IAstVisitor v);
 	}
+
+	public abstract class AstList<T> where T : IAstElement
+	{
+		public List<T> Value { get; set; } = new List<T>();
+    }
+
 	public class Ident : IAstElement
 	{
 		public string Name { get; set; }
@@ -25,18 +31,18 @@ namespace CPParser.Ast
 	}
 	public class Module : IAstElement
 	{
-		public Ident Ident { get; set; }
-		public ImportList ImportList { get; set; } 
-		public DeclSeq DeclSeq { get; set; }
-		public StatementSeq Begin { get; set; }
-		public StatementSeq Close { get; set; }
+		public Ident Ident;
+		public ImportList ImportList;
+		public DeclSeq DeclSeq = new DeclSeq();
+		public StatementSeq Begin;
+		public StatementSeq Close;
 		public void Accept(IAstVisitor v) => v.Visit(this);
 	}
 
 	public class Import : IAstElement
 	{
-        public Ident Name { get; set; }
-		public Ident OriginalName { get; set; }
+		public Ident Name;
+		public Ident OriginalName;
 		public void Accept(IAstVisitor v) => v.Visit(this);
 	}
 	public class ImportList : IAstElement
@@ -71,27 +77,45 @@ namespace CPParser.Ast
 		public IdentExport Export { get; set; }
 		public void Accept(IAstVisitor v) => v.Visit(this);
 	}
-	public interface IConstTypeVarDecl : IAstElement { }
-	public interface IProcForwardDecl : IAstElement { }
+	public interface IConstTypeVarListDecl : IAstElement {
+		public class ConstDeclList : AstList<ConstDecl>, IAstElement, IConstTypeVarListDecl
+		{
+			public void Accept(IAstVisitor v) => v.Visit(this);
+		}
+		public class TypeDeclList : AstList<TypeDecl>, IAstElement, IConstTypeVarListDecl
+		{
+			public void Accept(IAstVisitor v) => v.Visit(this);
+		}
+		public class VarDeclList : AstList<VarDecl>, IAstElement, IConstTypeVarListDecl
+		{
+			public void Accept(IAstVisitor v) => v.Visit(this);
+		}
+
+	}
+	public interface IProcForwardDecl : IAstElement { 
+	
+	}
 	public class DeclSeq : IAstElement
 	{
-		public List<IConstTypeVarDecl> ConstTypeVarDecls { get; set; }
-		public List<IProcForwardDecl> ProcForwardDecls { get; set; }
+		public List<IConstTypeVarListDecl> ConstTypeVarDecls { get; set; } = new List<IConstTypeVarListDecl>();
+		public List<IProcForwardDecl> ProcForwardDecls { get; set; } = new List<IProcForwardDecl>();
 		public void Accept(IAstVisitor v) => v.Visit(this);
 	}
-	public class ConstDecl : IAstElement, IConstTypeVarDecl
+
+
+	public class ConstDecl : IAstElement
 	{
 		public IdentDef IdentDef { get; set; }
 		public ConstExpr ConstExpr { get; set; }
 		public void Accept(IAstVisitor v) => v.Visit(this);
 	}
-	public class TypeDecl : IAstElement, IConstTypeVarDecl
+	public class TypeDecl : IAstElement
 	{
 		public IdentDef IdentDef { get; set; }
 		public IType Type_ { get; set; }
         public void Accept(IAstVisitor v) => v.Visit(this);
 	}
-	public class VarDecl : IAstElement, IConstTypeVarDecl
+	public class VarDecl : IAstElement
 	{
 		public IdentList IdentList { get; set; }
 		public IType Type_ { get; set; }
@@ -243,23 +267,7 @@ namespace CPParser.Ast
 		{
 			Add, Sub, Or
 		}
-		public void SetOp(String c)
-		{
-			switch (c)
-			{
-				case "+":
-					Op = AddOps.Add;
-					break;
-				case "-":
-					Op = AddOps.Sub;
-					break;
-				case "OR":
-					Op = AddOps.Or;
-					break;
-				default:
-					throw new Exception();
-			}
-		}
+
 		public AddOps Op { get; set; }
 		public void Accept(IAstVisitor v) => v.Visit(this);
 
@@ -271,29 +279,7 @@ namespace CPParser.Ast
 		{
 			Mul, Division, DIV, MOD, AND
 		}
-		public void SetOp(String c)
-		{
-			switch (c)
-			{
-				case "*":
-					Op = MulOps.Mul;
-					break;
-				case "/":
-					Op = MulOps.Division;
-					break;
-				case "DIV":
-					Op = MulOps.DIV;
-					break;
-				case "MOD":
-					Op = MulOps.MOD;
-					break;
-				case "&":
-					Op = MulOps.AND;
-					break;
-				default:
-					throw new Exception();
-			}
-		}
+
 		public MulOps Op { get; set; }
 		public void Accept(IAstVisitor v) => v.Visit(this);
 	}
@@ -303,38 +289,6 @@ namespace CPParser.Ast
 		public enum Relations
 		{
 			Eq, Neq, Lss, Leq, Gtr, Geq, In, Is
-		}
-		public void Set(String c)
-		{
-			switch (c)
-			{
-				case "=":
-					Op = Relations.Eq;
-					break;
-				case "#":
-					Op = Relations.Neq;
-					break;
-				case "<":
-					Op = Relations.Lss;
-					break;
-				case "<=":
-					Op = Relations.Leq;
-					break;
-				case ">":
-					Op = Relations.Gtr;
-					break;
-				case ">=":
-					Op = Relations.Geq;
-					break;
-				case "IN":
-					Op = Relations.In;
-					break;
-				case "IS":
-					Op = Relations.Is;
-					break;
-				default:
-					throw new Exception();
-			}
 		}
 		public Relations Op { get; set; }
 		public void Accept(IAstVisitor v) => v.Visit(this);

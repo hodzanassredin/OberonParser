@@ -21,17 +21,13 @@ else
     }
     Console.WriteLine("   Parsing source file {0}", args[0]);
     parser.Parse();
-    if (parser.errors.count == 1)
-        Console.WriteLine("-- 1 error dectected");
-    else
-    {
-        Console.WriteLine("-- {0} errors dectected", parser.errors.count);
-        var sw = new StreamWriter(Console.OpenStandardOutput());
-        sw.AutoFlush = true;
-        Console.SetOut(sw);
-        var ppv = new PrettyPrintVisitor(sw);
-        ppv.Visit(parser.builder.Module);
-    }
+
+    Console.WriteLine("-- {0} errors dectected", parser.errors.count);
+    var sw = new StreamWriter(Console.OpenStandardOutput());
+    sw.AutoFlush = true;
+    Console.SetOut(sw);
+    var ppv = new PrettyPrintVisitor(sw);
+    ppv.Visit(parser.builder.Module);
 }
 
 

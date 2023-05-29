@@ -93,11 +93,10 @@ public AstBuilder builder = new AstBuilder();
 
 	void Module() {
 		Expect(6);
-		Expect(1);
-		builder.SetModuleName(t.val); 
+		Ident(out builder.Module.Ident);
 		Expect(7);
 		if (la.kind == 13) {
-			ImportList();
+			ImportList(out builder.Module.ImportList);
 		}
 		DeclSeq();
 		if (la.kind == 8) {
@@ -113,6 +112,11 @@ public AstBuilder builder = new AstBuilder();
 		Expect(11);
 	}
 
+	void Ident(out CPParser.Ast.Ident o) {
+		Expect(1);
+		o = new CPParser.Ast.Ident{Name = t.val}; 
+	}
+
 	void number() {
 		if (la.kind == 2) {
 			Get();
@@ -121,12 +125,13 @@ public AstBuilder builder = new AstBuilder();
 		} else SynErr(75);
 	}
 
-	void ImportList() {
+	void ImportList(out CPParser.Ast.ImportList lstdd) {
+		lst = new CPParser.Ast.ImportList(); 
 		Expect(13);
-		ImportedModule();
+		ImportedModule(o);
 		while (la.kind == 14) {
 			Get();
-			ImportedModule();
+			ImportedModule(o);
 		}
 		Expect(7);
 	}
@@ -172,14 +177,14 @@ public AstBuilder builder = new AstBuilder();
 		}
 	}
 
-	void ImportedModule() {
-		String name = null; String originalName; 
-		if (la.kind == 1) {
+	void ImportedModule(CPParser.Ast.ImportList i) {
+		var o = new CPParser.Ast.Import(); 
+		Ident(out o.Name);
+		if (la.kind == 12) {
 			Get();
-			Expect(12);
+			Ident(out o.OriginalName);
 		}
-		Expect(1);
-		originalName = t.val; builder.AddImport(name, originalName); 
+		i.Imports.Add(o); 
 	}
 
 	void ConstDecl() {

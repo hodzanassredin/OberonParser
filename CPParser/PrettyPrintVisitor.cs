@@ -1,9 +1,4 @@
 ﻿using CPParser.Ast;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CPParser
 {
@@ -47,6 +42,17 @@ namespace CPParser
             sw.WriteLine($"MODULE {o.Ident.Name};");
             EnterScope();
             o.ImportList?.Accept(this);
+            o.DeclSeq.Accept(this);
+            if (o.Begin != null) {
+                sw.Write("BEGIN");
+                o.Begin.Accept(this);
+            }
+
+            if (o.Close != null)
+            {
+                sw.Write("CLOSE");
+                o.Close.Accept(this);
+            }
             ExitScope();
             sw.WriteLine($"END {o.Ident.Name}.");
         }
@@ -54,7 +60,11 @@ namespace CPParser
         public void Visit(ImportList o)
         {
             WriteTabs();sw.Write("IMPORT ");
-
+            for (int i = 0; i < o.Imports.Count; i++)
+            {
+                o.Imports[i].Accept(this);
+                if (i != (o.Imports.Count - 1)) sw.Write(", ");
+            }
             sw.WriteLine(";");
         }
 
@@ -63,39 +73,90 @@ namespace CPParser
             throw new NotImplementedException();
         }
 
-        public void Visit(IConstTypeVarDecl o)
+        public void Visit(IConstTypeVarListDecl o)
         {
-            throw new NotImplementedException();
+            o.Accept(this);
         }
 
         public void Visit(IProcForwardDecl o)
         {
-            throw new NotImplementedException();
+            o.Accept(this);
+            sw.WriteLine(";");
         }
 
         public void Visit(DeclSeq o)
         {
-            throw new NotImplementedException();
+            foreach (var item in o.ConstTypeVarDecls)
+            {
+                item.Accept(this);
+            }
+            foreach (var item in o.ProcForwardDecls)
+            {
+                item.Accept(this);
+                
+            }
+            
+        }
+        public void Visit(IConstTypeVarListDecl.ConstDeclList o)
+        {
+            WriteTabs();
+            sw.Write("CONST ");
+            foreach (var item in o.Value)
+            {
+                item.Accept(this);
+            }
+            sw.WriteLine(";");
+
         }
 
+        public void Visit(IConstTypeVarListDecl.TypeDeclList o)
+        {
+            WriteTabs();
+            sw.Write("TYPE ");
+            foreach (var item in o.Value)
+            {
+                item.Accept(this);
+            }
+            sw.WriteLine(";");
+        }
+
+        public void Visit(IConstTypeVarListDecl.VarDeclList o)
+        {
+            WriteTabs();
+            sw.WriteLine("VAR");
+            foreach (var item in o.Value)
+            {
+                item.Accept(this);
+            }
+            sw.WriteLine(";");
+        }
         public void Visit(ConstDecl o)
         {
-            throw new NotImplementedException();
+            WriteTabs();
+            o.IdentDef.Accept(this);
+            sw.Write(" = ");
+            o.ConstExpr.Accept(this);
         }
 
         public void Visit(TypeDecl o)
         {
-            throw new NotImplementedException();
+            WriteTabs();
+            o.IdentDef.Accept(this);
+            sw.Write(" = ");
+            o.Type_.Accept(this);
         }
 
         public void Visit(VarDecl o)
         {
-            throw new NotImplementedException();
+            WriteTabs();
+            o.IdentList.Accept(this);
+            sw.Write(" : ");
+            o.Type_.Accept(this);
         }
 
         public void Visit(ProcDecl o)
         {
-            throw new NotImplementedException();
+   
         }
 
         public void Visit(MethAttributes o)
@@ -355,7 +416,15 @@ namespace CPParser
 
         public void Visit(Import o)
         {
-            throw new NotImplementedException();
+            sw.Write(o.Name.Name);
+            if (o.OriginalName != null)
+            {
+                sw.Write(" := ");
+                sw.Write(o.OriginalName.Name);
+            }
+            
         }
+
+
     }
 }

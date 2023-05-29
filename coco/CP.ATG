@@ -27,16 +27,24 @@ IGNORE  tab + cr + lf
 
 PRODUCTIONS
 	CP           =  Module . 
+
+	Ident<out CPParser.Ast.Ident o>
+	= ident                  (. o = new CPParser.Ast.Ident{Name = t.val}; .).
+
 	number = integer | real.
+
 	Module 
-	=	"MODULE" ident (. builder.SetModuleName(t.val); .)
-		";" [ImportList] DeclSeq ["BEGIN" StatementSeq] ["CLOSE" StatementSeq] "END" ident ".".
-	ImportedModule (. String name = null; String originalName; .)
-	= [ident (. name = t.val; .)
-		":=" 
-		] 
-		ident (. originalName = t.val; builder.AddImport(name, originalName); .).
-	ImportList 	=	"IMPORT" ImportedModule {"," ImportedModule} ";".
+	=	"MODULE" Ident<out builder.Module.Ident> 
+		";" [ImportList<out builder.Module.ImportList>] DeclSeq ["BEGIN" StatementSeq] ["CLOSE" StatementSeq] "END" ident ".".
+
+	ImportedModule<CPParser.Ast.ImportList i> 
+	= (. var o = new CPParser.Ast.Import(); .)
+	Ident<out o.Name> [ ":=" Ident<out o.OriginalName> 
+	] (. i.Imports.Add(o); .).
+
+	ImportList<out CPParser.Ast.ImportList o> 
+	= (. o = new CPParser.Ast.ImportList(); .)
+		"IMPORT" ImportedModule<o> {"," ImportedModule<o>} ";".
 	DeclSeq 	=	{ "CONST" {ConstDecl ";" } | "TYPE" {TypeDecl ";"} |
 			"VAR" {VarDecl ";"}} {ProcDecl ";" | ForwardDecl ";"}.
 	ConstDecl	=	IdentDef "=" ConstExpr.

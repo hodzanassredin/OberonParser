@@ -11,9 +11,12 @@ namespace CPParser
 		void Visit(ImportList o);
 		void Visit(Import o);
 		void Visit(IdentDef o);
-		void Visit(IConstTypeVarDecl o);
+		void Visit(IConstTypeVarListDecl o);
 		void Visit(IProcForwardDecl o);
 		void Visit(DeclSeq o);
+		void Visit(IConstTypeVarListDecl.ConstDeclList o);
+		void Visit(IConstTypeVarListDecl.TypeDeclList o);
+		void Visit(IConstTypeVarListDecl.VarDeclList o);
 		void Visit(ConstDecl o);
 		void Visit(TypeDecl o);
 		void Visit(VarDecl o);
