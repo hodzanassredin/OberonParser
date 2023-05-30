@@ -29,7 +29,11 @@ namespace CPParser
 
         public void Visit(Qualident o)
         {
-            throw new NotImplementedException();
+            if (o.Qualifier != null) {
+                o.Qualifier.Accept(this);
+                sw.Write('.');
+            }
+            o.Ident.Accept(this);
         }
 
         public void Visit(Guard o)
@@ -43,7 +47,7 @@ namespace CPParser
             EnterScope();
             if (o.ImportList != null) {
                 WriteTabs(); sw.Write("IMPORT ");
-                VisitList(o.ImportList, ", ");
+                VisitList(o.ImportList, () => { }, () => sw.Write(", "));
                 sw.WriteLine(";");
             }
             o.DeclSeq.Accept(this);
@@ -131,11 +135,9 @@ namespace CPParser
         {
             WriteTabs();
             sw.WriteLine("VAR");
-            foreach (var item in o.Value)
-            {
-                item.Accept(this);
-            }
-            sw.WriteLine(";");
+            EnterScope();
+            this.VisitList(o, () => WriteTabs(), () => { sw.WriteLine(";"); }, true);
+            ExitScope();
         }
         public void Visit(ConstDecl o)
         {
@@ -198,14 +200,15 @@ namespace CPParser
 
         public void Visit(IdentList o)
         {
-            VisitList(o.IdentDefs, ", ");
+            VisitList(o.IdentDefs, () => { }, () => sw.Write(", "));
         }
 
-        private void VisitList(AstList lst, String separator) {
+        private void VisitList(AstList lst, Action before, Action after, bool doAfterForLast = false) {
             for (int i = 0; i < lst.Value.Count; i++)
             {
+                before();
                 lst.Value[i].Accept(this);
-                if (i != (lst.Value.Count - 1)) sw.Write(separator);
+                if (i != (lst.Value.Count - 1) || doAfterForLast) after();
             }
         }
 
@@ -351,7 +354,7 @@ namespace CPParser
 
         public void Visit(IType.SynonimType o)
         {
-            throw new NotImplementedException();
+            o.Qualident.Accept(this);
         }
 
         public void Visit(Number o)

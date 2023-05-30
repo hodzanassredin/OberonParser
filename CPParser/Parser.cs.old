@@ -141,22 +141,28 @@ public AstBuilder builder = new AstBuilder();
 		while (la.kind == 15 || la.kind == 16 || la.kind == 17) {
 			if (la.kind == 15) {
 				Get();
+				var lst = new CPParser.Ast.IConstTypeVarListDecl.ConstDeclList(); 
 				while (la.kind == 1) {
-					ConstDecl(o.ConstTypeVarDecls);
+					ConstDecl(lst);
 					Expect(7);
 				}
+				o.ConstTypeVarDecls.Add(lst); 
 			} else if (la.kind == 16) {
 				Get();
+				var lst = new CPParser.Ast.IConstTypeVarListDecl.TypeDeclList(); 
 				while (la.kind == 1) {
-					TypeDecl(o.ConstTypeVarDecls);
+					TypeDecl(lst);
 					Expect(7);
 				}
+				o.ConstTypeVarDecls.Add(lst); 
 			} else {
 				Get();
+				var lst = new CPParser.Ast.IConstTypeVarListDecl.VarDeclList(); 
 				while (la.kind == 1) {
-					VarDecl(o.ConstTypeVarDecls);
+					VarDecl(lst);
 					Expect(7);
 				}
+				o.ConstTypeVarDecls.Add(lst); 
 			}
 		}
 		while (la.kind == 20) {
@@ -171,6 +177,7 @@ public AstBuilder builder = new AstBuilder();
 	}
 
 	void StatementSeq() {
+		var o = new CPParser.Ast.StatementSeq(); 
 		Statement();
 		while (la.kind == 7) {
 			Get();
@@ -200,7 +207,7 @@ public AstBuilder builder = new AstBuilder();
 		var o = new CPParser.Ast.TypeDecl(); 
 		IdentDef(out o.IdentDef);
 		Expect(18);
-		Type();
+		Type(out o.Type_);
 		lst.Add(o); 
 	}
 
@@ -208,7 +215,7 @@ public AstBuilder builder = new AstBuilder();
 		var o = new CPParser.Ast.VarDecl(); 
 		IdentList(out o.IdentList);
 		Expect(19);
-		Type();
+		Type(out o.Type_);
 		lst.Add(o); 
 	}
 
@@ -266,14 +273,19 @@ public AstBuilder builder = new AstBuilder();
 	}
 
 	void ConstExpr() {
+		var o = new CPParser.Ast.ConstExpr(); 
 		Expr();
 	}
 
-	void Type() {
+	void Type(out CPParser.Ast.IType o) {
+		o = null; 
 		if (la.kind == 1) {
-			Qualident();
+			var at = new CPParser.Ast.IType.SynonimType(); 
+			Qualident(out at.Qualident);
+			o = at; 
 		} else if (la.kind == 30) {
 			Get();
+			var at = new CPParser.Ast.IType.ArrayType(); 
 			if (StartOf(1)) {
 				ConstExpr();
 				while (la.kind == 14) {
@@ -282,8 +294,10 @@ public AstBuilder builder = new AstBuilder();
 				}
 			}
 			Expect(31);
-			Type();
+			Type(out at.Type_);
+			o = at; 
 		} else if (StartOf(2)) {
+			var at = new CPParser.Ast.IType.RecordType(); 
 			if (la.kind == 23 || la.kind == 25 || la.kind == 32) {
 				if (la.kind == 23) {
 					Get();
@@ -296,7 +310,7 @@ public AstBuilder builder = new AstBuilder();
 			Expect(33);
 			if (la.kind == 26) {
 				Get();
-				Qualident();
+				Qualident(out at.Qualident);
 				Expect(27);
 			}
 			FieldList();
@@ -305,15 +319,20 @@ public AstBuilder builder = new AstBuilder();
 				FieldList();
 			}
 			Expect(10);
+			o = at; 
 		} else if (la.kind == 34) {
+			var at = new CPParser.Ast.IType.PointerType(); 
 			Get();
 			Expect(35);
-			Type();
+			Type(out at.Type_);
+			o = at; 
 		} else if (la.kind == 20) {
+			var at = new CPParser.Ast.IType.ProcedureType(); 
 			Get();
 			if (la.kind == 26) {
 				FormalPars();
 			}
+			o = at; 
 		} else SynErr(76);
 	}
 
@@ -330,6 +349,7 @@ public AstBuilder builder = new AstBuilder();
 	}
 
 	void Receiver() {
+		var o = new CPParser.Ast.Receiver(); 
 		Expect(26);
 		if (la.kind == 17 || la.kind == 28) {
 			if (la.kind == 17) {
@@ -345,6 +365,7 @@ public AstBuilder builder = new AstBuilder();
 	}
 
 	void FormalPars() {
+		var o = new CPParser.Ast.FormalPars(); 
 		Expect(26);
 		if (StartOf(3)) {
 			FPSection();
@@ -356,11 +377,12 @@ public AstBuilder builder = new AstBuilder();
 		Expect(27);
 		if (la.kind == 19) {
 			Get();
-			Type();
+			Type(out o.Type_);
 		}
 	}
 
 	void MethAttributes() {
+		var o = new CPParser.Ast.MethAttributes(); 
 		if (la.kind == 14) {
 			Get();
 			Expect(22);
@@ -378,6 +400,7 @@ public AstBuilder builder = new AstBuilder();
 	}
 
 	void FPSection() {
+		var o = new CPParser.Ast.FPSection(); 
 		if (la.kind == 17 || la.kind == 28 || la.kind == 29) {
 			if (la.kind == 17) {
 				Get();
@@ -393,23 +416,24 @@ public AstBuilder builder = new AstBuilder();
 			Expect(1);
 		}
 		Expect(19);
-		Type();
+		Type(out o.Type_);
 	}
 
-	void Qualident() {
+	void Qualident(out CPParser.Ast.Qualident o) {
+		o = new CPParser.Ast.Qualident(); 
 		if (la.kind == 1) {
-			Get();
+			Ident(out o.Qualifier);
 			Expect(11);
 		}
-		Expect(1);
+		Ident(out o.Ident);
 	}
 
 	void FieldList() {
-		CPParser.Ast.IdentList a; 
+		CPParser.Ast.IdentList a; CPParser.Ast.IType t; 
 		if (la.kind == 1) {
 			IdentList(out a);
 			Expect(19);
-			Type();
+			Type(out t);
 		}
 	}
 
@@ -519,7 +543,8 @@ public AstBuilder builder = new AstBuilder();
 	}
 
 	void Designator() {
-		Qualident();
+		var o = new CPParser.Ast.Designator(); 
+		Qualident(out o.Qualident);
 		while (StartOf(5)) {
 			if (la.kind == 11) {
 				Get();
@@ -532,7 +557,7 @@ public AstBuilder builder = new AstBuilder();
 				Get();
 			} else if (la.kind == 26) {
 				Get();
-				Qualident();
+				Qualident(out o.Qualident);
 				Expect(27);
 			} else {
 				Get();
@@ -544,10 +569,12 @@ public AstBuilder builder = new AstBuilder();
 		}
 		if (la.kind == 73) {
 			Get();
+			o.EndOfLine = true; 
 		}
 	}
 
 	void Expr() {
+		var o = new CPParser.Ast.Expr(); 
 		SimpleExpr();
 		if (StartOf(6)) {
 			Relation();
@@ -556,6 +583,7 @@ public AstBuilder builder = new AstBuilder();
 	}
 
 	void ExprList() {
+		var o = new CPParser.Ast.ExprList(); 
 		Expr();
 		while (la.kind == 14) {
 			Get();
@@ -564,6 +592,7 @@ public AstBuilder builder = new AstBuilder();
 	}
 
 	void Case() {
+		var o = new CPParser.Ast.Case(); 
 		if (StartOf(1)) {
 			CaseLabels();
 			while (la.kind == 14) {
@@ -576,12 +605,14 @@ public AstBuilder builder = new AstBuilder();
 	}
 
 	void Guard() {
-		Qualident();
+		var o = new CPParser.Ast.Guard(); 
+		Qualident(out o.VarQualident);
 		Expect(19);
-		Qualident();
+		Qualident(out o.TypeQualident);
 	}
 
 	void CaseLabels() {
+		var o = new CPParser.Ast.CaseLabels(); 
 		ConstExpr();
 		if (la.kind == 52) {
 			Get();
@@ -590,6 +621,7 @@ public AstBuilder builder = new AstBuilder();
 	}
 
 	void SimpleExpr() {
+		var o = new CPParser.Ast.SimpleExpr(); 
 		if (la.kind == 53 || la.kind == 54) {
 			if (la.kind == 53) {
 				Get();
@@ -607,6 +639,7 @@ public AstBuilder builder = new AstBuilder();
 	void Relation() {
 		switch (la.kind) {
 		case 18: {
+			var o = new CPParser.Ast.Relation(); 
 			Get();
 			break;
 		}
@@ -643,6 +676,7 @@ public AstBuilder builder = new AstBuilder();
 	}
 
 	void Term() {
+		var o = new CPParser.Ast.Term(); 
 		Factor();
 		while (StartOf(7)) {
 			MulOp();
@@ -652,6 +686,7 @@ public AstBuilder builder = new AstBuilder();
 
 	void AddOp() {
 		if (la.kind == 53) {
+			var o = new CPParser.Ast.AddOp(); 
 			Get();
 		} else if (la.kind == 54) {
 			Get();
@@ -663,6 +698,7 @@ public AstBuilder builder = new AstBuilder();
 	void Factor() {
 		switch (la.kind) {
 		case 1: {
+			var o = new CPParser.Ast.IFactor.DesignatorFactor(); 
 			Designator();
 			break;
 		}
@@ -703,6 +739,7 @@ public AstBuilder builder = new AstBuilder();
 
 	void MulOp() {
 		if (la.kind == 66) {
+			var o = new CPParser.Ast.MulOp(); 
 			Get();
 		} else if (la.kind == 67) {
 			Get();
@@ -716,6 +753,7 @@ public AstBuilder builder = new AstBuilder();
 	}
 
 	void Set() {
+		var o = new CPParser.Ast.Set(); 
 		Expect(57);
 		if (StartOf(1)) {
 			Element();
@@ -728,6 +766,7 @@ public AstBuilder builder = new AstBuilder();
 	}
 
 	void Element() {
+		var o = new CPParser.Ast.Element(); 
 		Expr();
 		if (la.kind == 52) {
 			Get();

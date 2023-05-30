@@ -43,13 +43,14 @@ namespace CPParser.Ast
 
 	public class Qualident : IAstElement
 	{
-		public AstList Idents { get; set; }
-		public void Accept(IAstVisitor v) => v.Visit(this);
+		public Ident Qualifier;
+		public Ident Ident;
+        public void Accept(IAstVisitor v) => v.Visit(this);
 	}
 	public class Guard : IAstElement
 	{
-		public Qualident VarQualident { get; set; }
-		public Qualident TypeQualident { get; set; }
+		public Qualident VarQualident;
+		public Qualident TypeQualident;
 		public void Accept(IAstVisitor v) => v.Visit(this);
 	}
 
@@ -160,7 +161,7 @@ namespace CPParser.Ast
 	public class FormalPars : IAstElement
 	{
 		public AstList FPSections;
-        public IType Type_ { get; set; }
+		public IType Type_;
         public void Accept(IAstVisitor v) => v.Visit(this);
 	}
 
@@ -199,7 +200,7 @@ namespace CPParser.Ast
 		public class ArrayType : IType
 		{
 			public AstList ConstExprs;
-			public IType Type_ { get; set; }
+			public IType Type_;
 			public void Accept(IAstVisitor v) => v.Visit(this);
 		}
 
@@ -464,7 +465,7 @@ namespace CPParser.Ast
 		}
 	}
 
-	public abstract class Designator : IAstElement
+	public class Designator : IAstElement
 	{
 		public interface IDesignatorSpec : IAstElement
 		{
