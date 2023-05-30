@@ -43,8 +43,8 @@ namespace CPParser.Ast
 
 	public class Qualident : IAstElement
 	{
-		public Ident Qualifier;
-		public Ident Ident;
+		public Ident Ident1;
+		public Ident Ident2;
         public void Accept(IAstVisitor v) => v.Visit(this);
 	}
 	public class Guard : IAstElement
@@ -230,7 +230,7 @@ namespace CPParser.Ast
     
 
 	public class ExprList : IAstElement {
-		public AstList Exprs;
+		public AstList Exprs = new AstList();
 		public void Accept(IAstVisitor v) => v.Visit(this);
 	}
 	public class IdentList : IAstElement
@@ -265,8 +265,9 @@ namespace CPParser.Ast
         public void Accept(IAstVisitor v) => v.Visit(this);		
 	}
 	public class Element : IAstElement {
-		public AstList Exprs;
-        public void Accept(IAstVisitor v) => v.Visit(this); 
+		public Expr Expr1;
+		public Expr Expr2;
+		public void Accept(IAstVisitor v) => v.Visit(this); 
 	}
 	
 	public class AddOp : IAstElement
@@ -301,7 +302,16 @@ namespace CPParser.Ast
 		public Relations Op;
 		public void Accept(IAstVisitor v) => v.Visit(this);
 	}
-	
+
+	public class SimpleElementExpr : IAstElement {
+		public AddOp AddOp;
+		public Term Term;
+        public void Accept(IAstVisitor v)
+        {
+			v.Visit(this);
+        }
+    }
+
 	public class SimpleExpr : IAstElement
 	{
 		public enum SimpleExprPrefix
@@ -310,13 +320,23 @@ namespace CPParser.Ast
 		}
 		public SimpleExprPrefix? Prefix;
 		public Term Term;
-		public AstList Terms;
+		public AstList SimpleExprElements;
 		public void Accept(IAstVisitor v) => v.Visit(this);
+	}
+
+	public class TermElementExpr : IAstElement
+	{
+		public MulOp MulOp;
+		public IFactor Factor;
+		public void Accept(IAstVisitor v)
+		{
+			v.Visit(this);
+		}
 	}
 	public class Term : IAstElement
 	{
 		public IFactor Factor;
-		public AstList Factors = new AstList();
+		public AstList TermElements = new AstList();
 		public void Accept(IAstVisitor v) => v.Visit(this);
 	}
 
@@ -354,13 +374,18 @@ namespace CPParser.Ast
 		}
 		public class IfStatement : IStatement
 		{
-			public class IfThen
+			public class IfThen : IAstElement
 			{
 				public Expr Cond;
 				public StatementSeq ThenBody;
-			}
-			public IfThen If;
-			public AstList ELSIFs;
+
+                public void Accept(IAstVisitor v)
+                {
+					v.Visit(this);
+                }
+            }
+			public IfThen If = new IfThen();
+			public AstList ELSIFs = new AstList();
 			public StatementSeq ElseBody;
 			public void Accept(IAstVisitor v) => v.Visit(this);
 		}
@@ -492,7 +517,7 @@ namespace CPParser.Ast
 
 		public Qualident Qualident;
 		public bool EndOfLine;
-		public AstList DesignatorSpecs;
+		public AstList Specs = new AstList();
 		public void Accept(IAstVisitor v) => v.Visit(this);
 	}
 

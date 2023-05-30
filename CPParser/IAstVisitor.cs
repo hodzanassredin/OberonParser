@@ -4,6 +4,7 @@ namespace CPParser
 {
 	public interface IAstVisitor
 	{
+		void Visit(IStatement.IfStatement.IfThen o);
 		void Visit(Ident o);
 		void Visit(Qualident o);
 		void Visit(Guard o);
@@ -71,5 +72,7 @@ namespace CPParser
 		void Visit(Designator.IDesignatorSpec.CastDesignatorSpec o);
 		void Visit(Designator.IDesignatorSpec.PointerDesignatorSpec o);
 		void Visit(Designator.IDesignatorSpec.ProcCallDesignatorSpec o);
-	}
+        void Visit(SimpleElementExpr simpleElementExpr);
+        void Visit(TermElementExpr termElementExpr);
+    }
 }

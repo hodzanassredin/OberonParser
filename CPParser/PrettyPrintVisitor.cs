@@ -29,11 +29,11 @@ namespace CPParser
 
         public void Visit(Qualident o)
         {
-            if (o.Qualifier != null) {
-                o.Qualifier.Accept(this);
+            o.Ident1.Accept(this);
+            if (o.Ident2 != null) {
                 sw.Write('.');
+                o.Ident2.Accept(this);
             }
-            o.Ident.Accept(this);
         }
 
         public void Visit(Guard o)
@@ -299,7 +299,7 @@ namespace CPParser
 
         public void Visit(StatementSeq o)
         {
-            throw new NotImplementedException();
+            VisitList(o.Statements, () => { }, ()=>sw.WriteLine(";"));
         }
 
         public void Visit(Set o)
@@ -339,7 +339,11 @@ namespace CPParser
 
         public void Visit(Expr o)
         {
-            throw new NotImplementedException();
+            o.SimpleExpr.Accept(this);
+            if (o.Relation != null) { 
+                o.Relation.Accept(this);
+                o.SimpleExpr2.Accept(this);
+            }
         }
 
         public void Visit(Case o)
@@ -349,7 +353,9 @@ namespace CPParser
 
         public void Visit(IStatement.AssignmentStatement o)
         {
-            throw new NotImplementedException();
+            o.Designator.Accept(this);
+            sw.Write(":=");
+            o.Expr.Accept(this);
         }
 
         public void Visit(IStatement.ProcCallStatement o)
@@ -480,7 +486,11 @@ namespace CPParser
 
         public void Visit(Designator o)
         {
-            throw new NotImplementedException();
+            o.Qualident.Accept(this);
+            VisitList(o.Specs, () => { }, () => { });
+            if (o.EndOfLine) {
+                sw.Write("$");
+            }
         }
 
         public void Visit(Designator.IDesignatorSpec.RecordDesignatorSpec o)
@@ -505,7 +515,9 @@ namespace CPParser
 
         public void Visit(Designator.IDesignatorSpec.ProcCallDesignatorSpec o)
         {
-            throw new NotImplementedException();
+            sw.Write("(");
+            o.Value?.Accept(this);
+            sw.Write(")");
         }
 
         public void Visit(Import o)
@@ -519,6 +531,19 @@ namespace CPParser
             
         }
 
+        public void Visit(IStatement.IfStatement.IfThen o)
+        {
+            throw new NotImplementedException();
+        }
 
+        public void Visit(SimpleElementExpr simpleElementExpr)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Visit(TermElementExpr termElementExpr)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
