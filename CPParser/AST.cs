@@ -212,7 +212,7 @@ namespace CPParser.Ast
 			}
 			public Meta RecordMeta;
 			public Qualident Qualident;
-			public AstList FieldList;
+			public AstList FieldList = new AstList();
 			public void Accept(IAstVisitor v) => v.Visit(this);
 
 		}

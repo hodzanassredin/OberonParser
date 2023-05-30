@@ -224,7 +224,7 @@ public AstBuilder builder = new AstBuilder();
 	void ProcDecl(CPParser.Ast.AstList lst) {
 		var o = new CPParser.Ast.ProcDecl(); 
 		if (la.kind == 26) {
-			Receiver();
+			Receiver(out o.Receiver);
 		}
 		IdentDef(out o.IdentDef);
 		if (la.kind == 26) {
@@ -248,7 +248,7 @@ public AstBuilder builder = new AstBuilder();
 		var o = new CPParser.Ast.ForwardDecl(); 
 		Expect(21);
 		if (la.kind == 26) {
-			Receiver();
+			Receiver(out o.Receiver);
 		}
 		IdentDef(out o.IdentDef);
 		if (la.kind == 26) {
@@ -313,10 +313,13 @@ public AstBuilder builder = new AstBuilder();
 				Qualident(out at.Qualident);
 				Expect(27);
 			}
-			FieldList();
+			var fl = new CPParser.Ast.FieldList(); 
+			FieldList(out fl);
+			at.FieldList.Add(fl); 
 			while (la.kind == 7) {
 				Get();
-				FieldList();
+				FieldList(out fl);
+				at.FieldList.Add(fl); 
 			}
 			Expect(10);
 			o = at; 
@@ -348,19 +351,21 @@ public AstBuilder builder = new AstBuilder();
 		}
 	}
 
-	void Receiver() {
-		var o = new CPParser.Ast.Receiver(); 
+	void Receiver(out CPParser.Ast.Receiver o) {
+		o = new CPParser.Ast.Receiver(); 
 		Expect(26);
 		if (la.kind == 17 || la.kind == 28) {
 			if (la.kind == 17) {
 				Get();
+				o.ReceiverPrefix = CPParser.Ast.Receiver.Prefix.VAR; 
 			} else {
 				Get();
+				o.ReceiverPrefix = CPParser.Ast.Receiver.Prefix.IN; 
 			}
 		}
-		Expect(1);
+		Ident(out o.SelfIdent);
 		Expect(20);
-		Expect(1);
+		Ident(out o.TypeIdent);
 		Expect(27);
 	}
 
@@ -439,12 +444,12 @@ public AstBuilder builder = new AstBuilder();
 		}
 	}
 
-	void FieldList() {
-		CPParser.Ast.IdentList a; CPParser.Ast.IType t; 
+	void FieldList(out CPParser.Ast.FieldList o) {
+		o = new CPParser.Ast.FieldList(); 
 		if (la.kind == 1) {
-			IdentList(out a);
+			IdentList(out o.IdentList);
 			Expect(20);
-			Type(out t);
+			Type(out o.Type_);
 		}
 	}
 

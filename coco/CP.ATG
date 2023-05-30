@@ -70,12 +70,12 @@ PRODUCTIONS
 
 	ProcDecl<CPParser.Ast.AstList lst> 
 		= (. var o = new CPParser.Ast.ProcDecl(); .)	
-		[Receiver] IdentDef<out o.IdentDef> [FormalPars<out o.FormalPars>] MethAttributes<out o.MethAttributes>
+		[Receiver<out o.Receiver>] IdentDef<out o.IdentDef> [FormalPars<out o.FormalPars>] MethAttributes<out o.MethAttributes>
 		[";" DeclSeq<out o.DeclSeq> ["BEGIN" StatementSeq<out o.StatementSeq>] "END" ident] (. lst.Add(o); .).
 
 	ForwardDecl<CPParser.Ast.AstList lst> 
 		= (. var o = new CPParser.Ast.ForwardDecl(); .)	
-		 "^" [Receiver] IdentDef<out o.IdentDef> 
+		 "^" [Receiver<out o.Receiver>] IdentDef<out o.IdentDef> 
 		[ FormalPars<out o.FormalPars> ] MethAttributes<out o.MethAttributes> (. lst.Add(o); .).
 
 	MethAttributes<out CPParser.Ast.MethAttributes o>	
@@ -99,9 +99,11 @@ PRODUCTIONS
 		Ident<out i> (. o.Idents.Add(i); .) 
 		{"," Ident<out i> (. o.Idents.Add(i); .) } ":" Type<out o.Type_> (. lst.Add(o); .).
 
-	Receiver	
-		= (. var o = new CPParser.Ast.Receiver(); .)
-		"(" ["VAR" | "IN"] ident ":" ident ")".
+	Receiver<out CPParser.Ast.Receiver o>	
+		= (. o = new CPParser.Ast.Receiver(); .)
+		"(" ["VAR" (. o.ReceiverPrefix = CPParser.Ast.Receiver.Prefix.VAR; .)
+		| "IN" (. o.ReceiverPrefix = CPParser.Ast.Receiver.Prefix.IN; .)
+		] Ident<out o.SelfIdent> ":" Ident<out o.TypeIdent> ")".
 
 	Type<out CPParser.Ast.IType o> 	(. o = null; .) 
 		= (. var at = new CPParser.Ast.IType.SynonimType(); .)
@@ -110,15 +112,17 @@ PRODUCTIONS
 				[ConstExpr {"," ConstExpr}] "OF" Type<out at.Type_> (. o = at; .)
 			| (. var at = new CPParser.Ast.IType.RecordType(); .)
 				["ABSTRACT" | "EXTENSIBLE" | "LIMITED"]
-				"RECORD" ["(" Qualident<out at.Qualident> ")"] FieldList {";" FieldList} "END" (. o = at; .)
+				"RECORD" ["(" Qualident<out at.Qualident> ")"] 
+					(. var fl = new CPParser.Ast.FieldList(); .)
+					FieldList<out fl> (. at.FieldList.Add(fl); .) {";" FieldList<out fl> (. at.FieldList.Add(fl); .)} "END" (. o = at; .)
 			| (. var at = new CPParser.Ast.IType.PointerType(); .)
 				"POINTER" "TO" Type<out at.Type_> (. o = at; .)
 			| (. var at = new CPParser.Ast.IType.ProcedureType(); .)
 				"PROCEDURE" [FormalPars<out at.FormalPars>] (. o = at; .).
 
-	FieldList 	
-		= (. CPParser.Ast.IdentList a; CPParser.Ast.IType t; .)
-		[IdentList<out a> ":" Type<out t>].
+	FieldList<out CPParser.Ast.FieldList o> 	
+		= (. o = new CPParser.Ast.FieldList(); .)
+		[IdentList<out o.IdentList> ":" Type<out o.Type_>].
 
 	StatementSeq<out CPParser.Ast.StatementSeq o>	
 		= (. o = new CPParser.Ast.StatementSeq(); CPParser.Ast.IStatement s; .)
