@@ -98,7 +98,7 @@ public AstBuilder builder = new AstBuilder();
 		if (la.kind == 13) {
 			ImportList(out builder.Module.ImportList);
 		}
-		DeclSeq();
+		DeclSeq(out builder.Module.DeclSeq);
 		if (la.kind == 8) {
 			Get();
 			StatementSeq();
@@ -125,8 +125,8 @@ public AstBuilder builder = new AstBuilder();
 		} else SynErr(75);
 	}
 
-	void ImportList(out CPParser.Ast.ImportList o) {
-		o = new CPParser.Ast.ImportList(); 
+	void ImportList(out CPParser.Ast.AstList o) {
+		o = new CPParser.Ast.AstList(); 
 		Expect(13);
 		ImportedModule(o);
 		while (la.kind == 14) {
@@ -136,34 +136,35 @@ public AstBuilder builder = new AstBuilder();
 		Expect(7);
 	}
 
-	void DeclSeq() {
+	void DeclSeq(out CPParser.Ast.DeclSeq o) {
+		o = new CPParser.Ast.DeclSeq(); 
 		while (la.kind == 15 || la.kind == 16 || la.kind == 17) {
 			if (la.kind == 15) {
 				Get();
 				while (la.kind == 1) {
-					ConstDecl();
+					ConstDecl(o.ConstTypeVarDecls);
 					Expect(7);
 				}
 			} else if (la.kind == 16) {
 				Get();
 				while (la.kind == 1) {
-					TypeDecl();
+					TypeDecl(o.ConstTypeVarDecls);
 					Expect(7);
 				}
 			} else {
 				Get();
 				while (la.kind == 1) {
-					VarDecl();
+					VarDecl(o.ConstTypeVarDecls);
 					Expect(7);
 				}
 			}
 		}
 		while (la.kind == 20) {
 			if (la.kind == 20) {
-				ProcDecl();
+				ProcDecl(o.ProcForwardDecls);
 				Expect(7);
 			} else {
-				ForwardDecl();
+				ForwardDecl(o.ProcForwardDecls);
 				Expect(7);
 			}
 		}
@@ -177,47 +178,54 @@ public AstBuilder builder = new AstBuilder();
 		}
 	}
 
-	void ImportedModule(CPParser.Ast.ImportList i) {
+	void ImportedModule(CPParser.Ast.AstList i) {
 		var o = new CPParser.Ast.Import(); 
 		Ident(out o.Name);
 		if (la.kind == 12) {
 			Get();
 			Ident(out o.OriginalName);
 		}
-		i.Imports.Add(o); 
+		i.Add(o); 
 	}
 
-	void ConstDecl() {
-		IdentDef();
+	void ConstDecl(CPParser.Ast.AstList lst) {
+		var o = new CPParser.Ast.ConstDecl(); 
+		IdentDef(out o.IdentDef);
 		Expect(18);
 		ConstExpr();
+		lst.Add(o); 
 	}
 
-	void TypeDecl() {
-		IdentDef();
+	void TypeDecl(CPParser.Ast.AstList lst) {
+		var o = new CPParser.Ast.TypeDecl(); 
+		IdentDef(out o.IdentDef);
 		Expect(18);
 		Type();
+		lst.Add(o); 
 	}
 
-	void VarDecl() {
-		IdentList();
+	void VarDecl(CPParser.Ast.AstList lst) {
+		var o = new CPParser.Ast.VarDecl(); 
+		IdentList(out o.IdentList);
 		Expect(19);
 		Type();
+		lst.Add(o); 
 	}
 
-	void ProcDecl() {
+	void ProcDecl(CPParser.Ast.AstList lst) {
+		var o = new CPParser.Ast.ProcDecl(); 
 		Expect(20);
 		if (la.kind == 26) {
 			Receiver();
 		}
-		IdentDef();
+		IdentDef(out o.IdentDef);
 		if (la.kind == 26) {
 			FormalPars();
 		}
 		MethAttributes();
 		if (la.kind == 7) {
 			Get();
-			DeclSeq();
+			DeclSeq(out o.DeclSeq);
 			if (la.kind == 8) {
 				Get();
 				StatementSeq();
@@ -225,28 +233,34 @@ public AstBuilder builder = new AstBuilder();
 			Expect(10);
 			Expect(1);
 		}
+		lst.Add(o); 
 	}
 
-	void ForwardDecl() {
+	void ForwardDecl(CPParser.Ast.AstList lst) {
+		var o = new CPParser.Ast.ForwardDecl(); 
 		Expect(20);
-		Expect(25);
+		Expect(21);
 		if (la.kind == 26) {
 			Receiver();
 		}
-		IdentDef();
+		IdentDef(out o.IdentDef);
 		if (la.kind == 26) {
 			FormalPars();
 		}
 		MethAttributes();
+		lst.Add(o); 
 	}
 
-	void IdentDef() {
-		Expect(1);
+	void IdentDef(out CPParser.Ast.IdentDef o) {
+		o = new CPParser.Ast.IdentDef (); 
+		Ident(out o.Ident);
 		if (la.kind == 54 || la.kind == 66) {
 			if (la.kind == 66) {
 				Get();
+				o.Export = CPParser.Ast.IdentDef.IdentExport.Export; 
 			} else {
 				Get();
+				o.Export = CPParser.Ast.IdentDef.IdentExport.ExportReadonly; 
 			}
 		}
 	}
@@ -270,10 +284,10 @@ public AstBuilder builder = new AstBuilder();
 			Expect(31);
 			Type();
 		} else if (StartOf(2)) {
-			if (la.kind == 22 || la.kind == 24 || la.kind == 32) {
-				if (la.kind == 22) {
+			if (la.kind == 23 || la.kind == 25 || la.kind == 32) {
+				if (la.kind == 23) {
 					Get();
-				} else if (la.kind == 24) {
+				} else if (la.kind == 25) {
 					Get();
 				} else {
 					Get();
@@ -303,11 +317,15 @@ public AstBuilder builder = new AstBuilder();
 		} else SynErr(76);
 	}
 
-	void IdentList() {
-		IdentDef();
+	void IdentList(out CPParser.Ast.IdentList o) {
+		o = new CPParser.Ast.IdentList(); var id = new CPParser.Ast.IdentDef(); 
+		IdentDef(out id);
+		o.IdentDefs.Add(id); 
 		while (la.kind == 14) {
 			Get();
-			IdentDef();
+			id = new CPParser.Ast.IdentDef(); 
+			IdentDef(out id);
+			o.IdentDefs.Add(id); 
 		}
 	}
 
@@ -345,15 +363,15 @@ public AstBuilder builder = new AstBuilder();
 	void MethAttributes() {
 		if (la.kind == 14) {
 			Get();
-			Expect(21);
+			Expect(22);
 		}
 		if (la.kind == 14) {
 			Get();
-			if (la.kind == 22) {
-				Get();
-			} else if (la.kind == 23) {
+			if (la.kind == 23) {
 				Get();
 			} else if (la.kind == 24) {
+				Get();
+			} else if (la.kind == 25) {
 				Get();
 			} else SynErr(77);
 		}
@@ -387,8 +405,9 @@ public AstBuilder builder = new AstBuilder();
 	}
 
 	void FieldList() {
+		CPParser.Ast.IdentList a; 
 		if (la.kind == 1) {
-			IdentList();
+			IdentList(out a);
 			Expect(19);
 			Type();
 		}
@@ -509,7 +528,7 @@ public AstBuilder builder = new AstBuilder();
 				Get();
 				ExprList();
 				Expect(72);
-			} else if (la.kind == 25) {
+			} else if (la.kind == 21) {
 				Get();
 			} else if (la.kind == 26) {
 				Get();
@@ -730,10 +749,10 @@ public AstBuilder builder = new AstBuilder();
 	static readonly bool[,] set = {
 		{_T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
 		{_x,_T,_T,_T, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_T,_T,_T, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
-		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_x, _T,_x,_x,_x, _x,_x,_x,_x, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
+		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _x,_T,_x,_x, _x,_x,_x,_x, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
 		{_x,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
 		{_x,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _T,_x,_x,_x, _T,_x,_T,_x, _T,_x,_T,_x, _T,_T,_T,_T, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
-		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_T,_T,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _x,_x,_x,_x},
+		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _x,_x,_x,_x, _x,_x,_x,_x, _x,_T,_x,_x, _x,_x,_T,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _x,_x,_x,_x},
 		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_x, _x,_x,_x,_x, _x,_x,_x,_x, _T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _T,_T,_T,_T, _T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
 		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_T, _T,_T,_T,_x, _x,_x,_x,_x}
 
@@ -770,11 +789,11 @@ public class Errors {
 			case 18: s = "\"=\" expected"; break;
 			case 19: s = "\":\" expected"; break;
 			case 20: s = "\"PROCEDURE\" expected"; break;
-			case 21: s = "\"NEW\" expected"; break;
-			case 22: s = "\"ABSTRACT\" expected"; break;
-			case 23: s = "\"EMPTY\" expected"; break;
-			case 24: s = "\"EXTENSIBLE\" expected"; break;
-			case 25: s = "\"^\" expected"; break;
+			case 21: s = "\"^\" expected"; break;
+			case 22: s = "\"NEW\" expected"; break;
+			case 23: s = "\"ABSTRACT\" expected"; break;
+			case 24: s = "\"EMPTY\" expected"; break;
+			case 25: s = "\"EXTENSIBLE\" expected"; break;
 			case 26: s = "\"(\" expected"; break;
 			case 27: s = "\")\" expected"; break;
 			case 28: s = "\"IN\" expected"; break;

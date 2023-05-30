@@ -1,3 +1,5 @@
+using System.Collections;
+
 namespace CPParser.Ast
 {
 
@@ -6,9 +8,30 @@ namespace CPParser.Ast
 		void Accept(IAstVisitor v);
 	}
 
-	public abstract class AstList<T> where T : IAstElement
+	public class AstList : IEnumerable<IAstElement>
 	{
-		public List<T> Value { get; set; } = new List<T>();
+		public List<IAstElement> Value { get; set; } = new List<IAstElement>();
+
+        public void Add(IAstElement obj)
+        {
+			Value.Add(obj);
+        }
+		public List<T> Cast<T>()
+			where T : IAstElement
+		{
+			return Value.Cast<T>().ToList();
+		}
+
+        public IEnumerator<IAstElement> GetEnumerator()
+        {
+			return Value.GetEnumerator();
+
+		}
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+			return Value.GetEnumerator();
+		}
     }
 
 	public class Ident : IAstElement
@@ -20,7 +43,7 @@ namespace CPParser.Ast
 
 	public class Qualident : IAstElement
 	{
-		public List<Ident> Idents { get; set; }
+		public AstList Idents { get; set; }
 		public void Accept(IAstVisitor v) => v.Visit(this);
 	}
 	public class Guard : IAstElement
@@ -29,10 +52,11 @@ namespace CPParser.Ast
 		public Qualident TypeQualident { get; set; }
 		public void Accept(IAstVisitor v) => v.Visit(this);
 	}
+
 	public class Module : IAstElement
 	{
 		public Ident Ident;
-		public ImportList ImportList;
+		public AstList ImportList;
 		public DeclSeq DeclSeq = new DeclSeq();
 		public StatementSeq Begin;
 		public StatementSeq Close;
@@ -45,11 +69,6 @@ namespace CPParser.Ast
 		public Ident OriginalName;
 		public void Accept(IAstVisitor v) => v.Visit(this);
 	}
-	public class ImportList : IAstElement
-	{
-        public List<Import> Imports { get; set; } = new List<Import>();
-		public void Accept(IAstVisitor v) => v.Visit(this);
-	}
 
 	public class IdentDef : IAstElement
 	{
@@ -59,34 +78,20 @@ namespace CPParser.Ast
 			ExportReadonly,
 			Export
 		}
-		public Ident Ident { get; set; }
-		public void SetExport(String c) {
-            switch (c)
-            {
-				case "*":
-					Export = IdentExport.Export;
-					break;
-				case "-":
-					Export = IdentExport.ExportReadonly;
-					break;
-				default:
-					Export = IdentExport.Private;
-					break;
-            }
-        }
-		public IdentExport Export { get; set; }
+		public Ident Ident;
+		public IdentExport Export;
 		public void Accept(IAstVisitor v) => v.Visit(this);
 	}
 	public interface IConstTypeVarListDecl : IAstElement {
-		public class ConstDeclList : AstList<ConstDecl>, IAstElement, IConstTypeVarListDecl
+		public class ConstDeclList : AstList, IAstElement, IConstTypeVarListDecl
 		{
 			public void Accept(IAstVisitor v) => v.Visit(this);
 		}
-		public class TypeDeclList : AstList<TypeDecl>, IAstElement, IConstTypeVarListDecl
+		public class TypeDeclList : AstList, IAstElement, IConstTypeVarListDecl
 		{
 			public void Accept(IAstVisitor v) => v.Visit(this);
 		}
-		public class VarDeclList : AstList<VarDecl>, IAstElement, IConstTypeVarListDecl
+		public class VarDeclList : AstList, IAstElement, IConstTypeVarListDecl
 		{
 			public void Accept(IAstVisitor v) => v.Visit(this);
 		}
@@ -95,39 +100,41 @@ namespace CPParser.Ast
 	public interface IProcForwardDecl : IAstElement { 
 	
 	}
+
 	public class DeclSeq : IAstElement
 	{
-		public List<IConstTypeVarListDecl> ConstTypeVarDecls { get; set; } = new List<IConstTypeVarListDecl>();
-		public List<IProcForwardDecl> ProcForwardDecls { get; set; } = new List<IProcForwardDecl>();
+		public AstList ConstTypeVarDecls = new ();
+		public AstList ProcForwardDecls = new ();
 		public void Accept(IAstVisitor v) => v.Visit(this);
 	}
 
 
 	public class ConstDecl : IAstElement
 	{
-		public IdentDef IdentDef { get; set; }
-		public ConstExpr ConstExpr { get; set; }
+		public IdentDef IdentDef;
+		public ConstExpr ConstExpr;
 		public void Accept(IAstVisitor v) => v.Visit(this);
 	}
 	public class TypeDecl : IAstElement
 	{
-		public IdentDef IdentDef { get; set; }
-		public IType Type_ { get; set; }
+		public IdentDef IdentDef;
+		public IType Type_;
         public void Accept(IAstVisitor v) => v.Visit(this);
 	}
 	public class VarDecl : IAstElement
 	{
-		public IdentList IdentList { get; set; }
-		public IType Type_ { get; set; }
+		public IdentList IdentList;
+		public IType Type_;
         public void Accept(IAstVisitor v) => v.Visit(this);
 	}
 	public class ProcDecl : IAstElement, IProcForwardDecl
 	{
-		public Receiver Receiver { get; set; }
-		public IdentDef IdentDef { get; set; }
-		public FormalPars FormalPars { get; set; }
-		public MethAttributes MethAttributes { get; set; }
-        public StatementSeq StatementSeq { get; set; }
+		public Receiver Receiver;
+		public IdentDef IdentDef;
+		public FormalPars FormalPars;
+		public MethAttributes MethAttributes;
+		public DeclSeq DeclSeq;
+        public StatementSeq StatementSeq;
 		public void Accept(IAstVisitor v) => v.Visit(this);
 	}
 
@@ -138,21 +145,21 @@ namespace CPParser.Ast
 		{
 			ABSTRACT, EMPTY, EXTENSIBLE
 		}
-		public bool IsNew { get; set; }
-		public MethodAttr? Attr { get; set; }
+		public bool IsNew;
+		public MethodAttr? Attr;
 		public void Accept(IAstVisitor v) => v.Visit(this);
 	}
 	public class ForwardDecl : IAstElement, IProcForwardDecl
 	{
-		public Receiver Receiver { get; set; }
-		public IdentDef IdentDef { get; set; }
-		public FormalPars FormalPars { get; set; }
-		public MethAttributes MethAttributes { get; set; }
+		public Receiver Receiver;
+		public IdentDef IdentDef;
+		public FormalPars FormalPars;
+		public MethAttributes MethAttributes;
 		public void Accept(IAstVisitor v) => v.Visit(this);
 	}
 	public class FormalPars : IAstElement
 	{
-        public List<FPSection> FPSections { get; set; }
+		public AstList FPSections;
         public IType Type_ { get; set; }
         public void Accept(IAstVisitor v) => v.Visit(this);
 	}
@@ -165,9 +172,9 @@ namespace CPParser.Ast
 		{
 			VAR, IN, OUT
 		}
-		public Prefix? FpSectionPrefix { get; set; }
-        public List<Ident> Idents { get; set; }
-		public IType Type_ { get; set; }
+		public Prefix? FpSectionPrefix;
+		public AstList Idents;
+		public IType Type_;
 		public void Accept(IAstVisitor v) => v.Visit(this);
 	}
 	
@@ -177,21 +184,21 @@ namespace CPParser.Ast
 		{
 			VAR, IN
 		}
-		public Prefix? ReceiverPrefix { get; set; }
-		public Ident SelfIdent { get; set; }
-		public Ident TypeIdent { get; set; }
+		public Prefix? ReceiverPrefix;
+		public Ident SelfIdent;
+		public Ident TypeIdent;
 		public void Accept(IAstVisitor v) => v.Visit(this);
 	}
     public interface IType : IAstElement
     {
 		public class SynonimType : IType
 		{
-			public Qualident Qualident { get; set; }
+			public Qualident Qualident;
 			public void Accept(IAstVisitor v) => v.Visit(this);
 		}
 		public class ArrayType : IType
 		{
-			public List<ConstExpr> ConstExprs { get; set; }
+			public AstList ConstExprs;
 			public IType Type_ { get; set; }
 			public void Accept(IAstVisitor v) => v.Visit(this);
 		}
@@ -202,62 +209,62 @@ namespace CPParser.Ast
 			{
 				ABSTRACT, EXTENSIBLE, LIMITED
 			}
-			public Meta RecordMeta { get; set; }
-			public Qualident Qualident { get; set; }
-			public List<FieldList> FieldList { get; set; }
+			public Meta RecordMeta;
+			public Qualident Qualident;
+			public AstList FieldList;
 			public void Accept(IAstVisitor v) => v.Visit(this);
 
 		}
 		public class PointerType : IType
 		{
-			public IType Type_ { get; set; }
+			public IType Type_;
 			public void Accept(IAstVisitor v) => v.Visit(this);
 		}
 		public class ProcedureType : IType
 		{
-			public FormalPars FormalPars { get; set; }
+			public FormalPars FormalPars;
 			public void Accept(IAstVisitor v) => v.Visit(this);
 		}
 	}
     
 
-	public class ExprList : IAstElement { 
-		public List<Expr> Exprs { get; set; }
+	public class ExprList : IAstElement {
+		public AstList Exprs;
 		public void Accept(IAstVisitor v) => v.Visit(this);
 	}
 	public class IdentList : IAstElement
 	{
-		public List<IdentDef> IdentDefs { get; set; }
+		public AstList IdentDefs = new AstList();
 		public void Accept(IAstVisitor v) => v.Visit(this);
 	}
 	public class FieldList : IAstElement
 	{
-		public IdentList IdentList { get; set; }
-		public IType Type_ { get; set; }
+		public IdentList IdentList;
+		public IType Type_;
 		public void Accept(IAstVisitor v) => v.Visit(this);
 	}
 	
 	
-	public class ConstExpr : IAstElement { 
-		public Expr Expr { get; set; }
+	public class ConstExpr : IAstElement {
+		public Expr Expr;
 		public void Accept(IAstVisitor v) => v.Visit(this);
 	}
 	public class CaseLabels : IAstElement
 	{
-		public List<ConstExpr> ConstExprs { get; set; }
+		public AstList ConstExprs;
 		public void Accept(IAstVisitor v) => v.Visit(this);
 	}
 	public class StatementSeq : IAstElement
 	{
-		public List<IStatement> Statements { get; set; }
+		public AstList Statements;
         public void Accept(IAstVisitor v) => v.Visit(this);
     }
-	public class Set : IAstElement { 
-		public List<Element> Elements { get; set; }
+	public class Set : IAstElement {
+		public AstList Elements;
         public void Accept(IAstVisitor v) => v.Visit(this);		
 	}
-	public class Element : IAstElement { 
-		public List<Expr> Exprs { get; set; }
+	public class Element : IAstElement {
+		public AstList Exprs;
         public void Accept(IAstVisitor v) => v.Visit(this); 
 	}
 	
@@ -268,7 +275,7 @@ namespace CPParser.Ast
 			Add, Sub, Or
 		}
 
-		public AddOps Op { get; set; }
+		public AddOps Op;
 		public void Accept(IAstVisitor v) => v.Visit(this);
 
 	}
@@ -280,7 +287,7 @@ namespace CPParser.Ast
 			Mul, Division, DIV, MOD, AND
 		}
 
-		public MulOps Op { get; set; }
+		public MulOps Op;
 		public void Accept(IAstVisitor v) => v.Visit(this);
 	}
 	
@@ -290,7 +297,7 @@ namespace CPParser.Ast
 		{
 			Eq, Neq, Lss, Leq, Gtr, Geq, In, Is
 		}
-		public Relations Op { get; set; }
+		public Relations Op;
 		public void Accept(IAstVisitor v) => v.Visit(this);
 	}
 	
@@ -300,46 +307,31 @@ namespace CPParser.Ast
 		{
 			Add, Sub
 		}
-		public void SetPrefix(string c)
-		{
-			switch (c)
-			{
-				case "+":
-					Prefix = SimpleExprPrefix.Add;
-					break;
-				case "-":
-					Prefix = SimpleExprPrefix.Sub;
-					break;
-				default:
-					throw new Exception();
-			}
-
-		}
-		public SimpleExprPrefix? Prefix { get; set; }
-		public Term Term { get; set; }
-		public List<(AddOp, Term)> Terms { get; set; }
+		public SimpleExprPrefix? Prefix;
+		public Term Term;
+		public AstList Terms;
 		public void Accept(IAstVisitor v) => v.Visit(this);
 	}
 	public class Term : IAstElement
 	{
-		public IFactor Factor { get; set; }
-		public List<(MulOp, IFactor)> Factors { get; set; }
+		public IFactor Factor;
+		public AstList Factors;
 		public void Accept(IAstVisitor v) => v.Visit(this);
 	}
 
 	public class Expr : IAstElement
 	{
-		public SimpleExpr SimpleExpr { get; set; }
-		public Relation Relation { get; set; }
-		public SimpleExpr SimpleExpr2 { get; set; }
+		public SimpleExpr SimpleExpr;
+		public Relation Relation;
+		public SimpleExpr SimpleExpr2;
 		public void Accept(IAstVisitor v) => v.Visit(this);
 	}
 
 	public class Case : IAstElement
 	{
-		public CaseLabels CaseLabels { get; set; }
-		public List<CaseLabels> CaseLabelsList { get; set; }
-		public StatementSeq StatementSeq { get; set; }
+		public CaseLabels CaseLabels;
+		public AstList CaseLabelsList;
+		public StatementSeq StatementSeq;
 		public void Accept(IAstVisitor v) => v.Visit(this);
 
 	}
@@ -348,68 +340,68 @@ namespace CPParser.Ast
 
 		public class AssignmentStatement : IStatement
 		{
-			public Designator Designator { get; set; }
-			public Expr Expr { get; set; }
+			public Designator Designator;
+			public Expr Expr;
 			public void Accept(IAstVisitor v) => v.Visit(this);
 		}
 
 		public class ProcCallStatement : IStatement
 		{
-			public Designator Designator { get; set; }
-			public ExprList ExprList { get; set; }
+			public Designator Designator;
+			public ExprList ExprList;
 			public void Accept(IAstVisitor v) => v.Visit(this);
 		}
 		public class IfStatement : IStatement
 		{
 			public class IfThen
 			{
-				public Expr Cond { get; set; }
-				public StatementSeq ThenBody { get; set; }
+				public Expr Cond;
+				public StatementSeq ThenBody;
 			}
-			public IfThen If { get; set; }
-			public List<IfThen> ELSIFs { get; set; }
-			public StatementSeq ElseBody { get; set; }
+			public IfThen If;
+			public AstList ELSIFs;
+			public StatementSeq ElseBody;
 			public void Accept(IAstVisitor v) => v.Visit(this);
 		}
 		public class CaseStatement : IStatement
 		{
-			public Expr Expr { get; set; }
-			public List<Case> Cases { get; set; }
-			public StatementSeq ElseBody { get; set; }
+			public Expr Expr;
+			public AstList Cases;
+			public StatementSeq ElseBody;
 			public void Accept(IAstVisitor v) => v.Visit(this);
 		}
 		public class WhileStatement : IStatement
 		{
-			public Expr Expr { get; set; }
-			public StatementSeq StatementSeq { get; set; }
+			public Expr Expr;
+			public StatementSeq StatementSeq;
 			public void Accept(IAstVisitor v) => v.Visit(this);
 		}
 		public class RepeatStatement : IStatement
 		{
-			public StatementSeq StatementSeq { get; set; }
-			public Expr Expr { get; set; }
+			public StatementSeq StatementSeq;
+			public Expr Expr;
 			public void Accept(IAstVisitor v) => v.Visit(this);
 		}
 		public class ForStatement : IStatement
 		{
-			public Ident Ident { get; set; }
-			public Expr Expr { get; set; }
-			public Expr ToExpr { get; set; }
-			public ConstExpr ByExpr { get; set; }
-			public StatementSeq StatementSeq { get; set; }
+			public Ident Ident;
+			public Expr Expr;
+			public Expr ToExpr;
+			public ConstExpr ByExpr;
+			public StatementSeq StatementSeq;
 			public void Accept(IAstVisitor v) => v.Visit(this);
 		}
 		public class LoopStatement : IStatement
 		{
-			public StatementSeq StatementSeq { get; set; }
+			public StatementSeq StatementSeq;
 			public void Accept(IAstVisitor v) => v.Visit(this);
 		}
 		public class WithStatement : IStatement
 		{
-			public Guard Guard { get; set; }
-			public StatementSeq StatementSeq { get; set; }
-			public List<(Guard, StatementSeq)> AdditionalGuards { get; set; }
-			public StatementSeq ElseStatementSeq { get; set; }
+			public Guard Guard;
+			public StatementSeq StatementSeq;
+			public AstList AdditionalGuards;
+			public StatementSeq ElseStatementSeq;
 			public void Accept(IAstVisitor v) => v.Visit(this);
 		}
 		public class ExitStatement : IStatement
@@ -418,37 +410,37 @@ namespace CPParser.Ast
 		}
 		public class ReturnStatement : IStatement
 		{
-			public Expr Expr { get; set; }
+			public Expr Expr;
 			public void Accept(IAstVisitor v) => v.Visit(this);
 		}
 	}
 	
 	public abstract class Number : IAstElement
 	{
-        public string Value { get; set; }
+		public string Value;
 		public void Accept(IAstVisitor v) => v.Visit(this);
 	}
 
 	public interface IFactor : IAstElement
 	{
 		public class DesignatorFactor : IFactor
-		{ 
-			public Designator Value { get; set; }
+		{
+			public Designator Value;
 			public void Accept(IAstVisitor v) => v.Visit(this);
 		}
 		public class NumberFactor : IFactor
-		{ 
-			public Number Value { get; set; }
+		{
+			public Number Value;
 			public void Accept(IAstVisitor v) => v.Visit(this);
 		}
 		public class CharacterFactor : IFactor
-		{ 
-			public Char Value { get; set; }
+		{
+			public Char Value;
 			public void Accept(IAstVisitor v) => v.Visit(this);
 		}
 		public class StringFactor : IFactor
-		{ 
-			public string Value { get; set; }
+		{
+			public string Value;
 			public void Accept(IAstVisitor v) => v.Visit(this);
 		}
 		public class NilFactor : IFactor
@@ -456,18 +448,18 @@ namespace CPParser.Ast
 			public void Accept(IAstVisitor v) => v.Visit(this);
 		}
 		public class SetFactor : IFactor
-		{ 
-			public Set Value { get; set; }
+		{
+			public Set Value;
 			public void Accept(IAstVisitor v) => v.Visit(this);
 		}
 		public class ExprFactor : IFactor
-		{ 
-			public Expr Value { get; set; }
+		{
+			public Expr Value;
 			public void Accept(IAstVisitor v) => v.Visit(this);
 		}
 		public class NegFactor : IFactor
-		{ 
-			public IFactor Value { get; set; }
+		{
+			public IFactor Value;
 			public void Accept(IAstVisitor v) => v.Visit(this);
 		}
 	}
@@ -476,30 +468,30 @@ namespace CPParser.Ast
 	{
 		public interface IDesignatorSpec : IAstElement
 		{
-            public class RecordDesignatorSpec : IDesignatorSpec { 
-				public Ident Value { get; set; }
+            public class RecordDesignatorSpec : IDesignatorSpec {
+				public Ident Value;
 				public void Accept(IAstVisitor v) => v.Visit(this);
 			}
-			public class ArrayDesignatorSpec : IDesignatorSpec { 
-				public ExprList Value { get; set; }
+			public class ArrayDesignatorSpec : IDesignatorSpec {
+				public ExprList Value;
 				public void Accept(IAstVisitor v) => v.Visit(this);
 			}
 			public class PointerDesignatorSpec : IDesignatorSpec {
 				public void Accept(IAstVisitor v) => v.Visit(this);
 			}
-			public class CastDesignatorSpec : IDesignatorSpec { 
-				public Qualident Value { get; set; }
+			public class CastDesignatorSpec : IDesignatorSpec {
+				public Qualident Value;
 				public void Accept(IAstVisitor v) => v.Visit(this);
 			}
-			public class ProcCallDesignatorSpec : IDesignatorSpec { 
-				public ExprList Value { get; set; }
+			public class ProcCallDesignatorSpec : IDesignatorSpec {
+				public ExprList Value;
 				public void Accept(IAstVisitor v) => v.Visit(this);
 			}
 		}
 
-        public Qualident Qualident { get; set; }
-        public bool EndOfLine { get; set; }
-        public List<IDesignatorSpec> DesignatorSpecs { get; set; }
+		public Qualident Qualident;
+		public bool EndOfLine;
+		public AstList DesignatorSpecs;
 		public void Accept(IAstVisitor v) => v.Visit(this);
 	}
 

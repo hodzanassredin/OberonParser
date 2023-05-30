@@ -357,10 +357,10 @@ public class Scanner {
 			case "TYPE": t.kind = 16; break;
 			case "VAR": t.kind = 17; break;
 			case "PROCEDURE": t.kind = 20; break;
-			case "NEW": t.kind = 21; break;
-			case "ABSTRACT": t.kind = 22; break;
-			case "EMPTY": t.kind = 23; break;
-			case "EXTENSIBLE": t.kind = 24; break;
+			case "NEW": t.kind = 22; break;
+			case "ABSTRACT": t.kind = 23; break;
+			case "EMPTY": t.kind = 24; break;
+			case "EXTENSIBLE": t.kind = 25; break;
 			case "IN": t.kind = 28; break;
 			case "OUT": t.kind = 29; break;
 			case "ARRAY": t.kind = 30; break;
@@ -472,7 +472,7 @@ public class Scanner {
 			case 16:
 				{t.kind = 18; break;}
 			case 17:
-				{t.kind = 25; break;}
+				{t.kind = 21; break;}
 			case 18:
 				{t.kind = 26; break;}
 			case 19:

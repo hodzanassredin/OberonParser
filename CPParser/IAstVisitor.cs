@@ -8,7 +8,6 @@ namespace CPParser
 		void Visit(Qualident o);
 		void Visit(Guard o);
 		void Visit(Module o);
-		void Visit(ImportList o);
 		void Visit(Import o);
 		void Visit(IdentDef o);
 		void Visit(IConstTypeVarListDecl o);

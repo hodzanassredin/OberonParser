@@ -24,7 +24,7 @@ namespace CPParser
         } 
         public void Visit(Ident o)
         {
-            throw new NotImplementedException();
+            sw.Write(o.Name);
         }
 
         public void Visit(Qualident o)
@@ -41,7 +41,11 @@ namespace CPParser
         {
             sw.WriteLine($"MODULE {o.Ident.Name};");
             EnterScope();
-            o.ImportList?.Accept(this);
+            if (o.ImportList != null) {
+                WriteTabs(); sw.Write("IMPORT ");
+                VisitList(o.ImportList, ", ");
+                sw.WriteLine(";");
+            }
             o.DeclSeq.Accept(this);
             if (o.Begin != null) {
                 sw.Write("BEGIN");
@@ -57,20 +61,23 @@ namespace CPParser
             sw.WriteLine($"END {o.Ident.Name}.");
         }
 
-        public void Visit(ImportList o)
-        {
-            WriteTabs();sw.Write("IMPORT ");
-            for (int i = 0; i < o.Imports.Count; i++)
-            {
-                o.Imports[i].Accept(this);
-                if (i != (o.Imports.Count - 1)) sw.Write(", ");
-            }
-            sw.WriteLine(";");
-        }
-
         public void Visit(IdentDef o)
         {
-            throw new NotImplementedException();
+            o.Ident.Accept(this);
+
+            switch (o.Export)
+            {
+                case IdentDef.IdentExport.Private:
+                    break;
+                case IdentDef.IdentExport.ExportReadonly:
+                    sw.Write("-");
+                    break;
+                case IdentDef.IdentExport.Export:
+                    sw.Write("*");
+                    break;
+                default:
+                    break;
+            }
         }
 
         public void Visit(IConstTypeVarListDecl o)
@@ -191,7 +198,15 @@ namespace CPParser
 
         public void Visit(IdentList o)
         {
-            throw new NotImplementedException();
+            VisitList(o.IdentDefs, ", ");
+        }
+
+        private void VisitList(AstList lst, String separator) {
+            for (int i = 0; i < lst.Value.Count; i++)
+            {
+                lst.Value[i].Accept(this);
+                if (i != (lst.Value.Count - 1)) sw.Write(separator);
+            }
         }
 
         public void Visit(FieldList o)

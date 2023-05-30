@@ -29,41 +29,69 @@ PRODUCTIONS
 	CP           =  Module . 
 
 	Ident<out CPParser.Ast.Ident o>
-	= ident                  (. o = new CPParser.Ast.Ident{Name = t.val}; .).
+		= ident                  (. o = new CPParser.Ast.Ident{Name = t.val}; .).
 
 	number = integer | real.
 
 	Module 
-	=	"MODULE" Ident<out builder.Module.Ident> 
-		";" [ImportList<out builder.Module.ImportList>] DeclSeq ["BEGIN" StatementSeq] ["CLOSE" StatementSeq] "END" ident ".".
+		=	"MODULE" Ident<out builder.Module.Ident> 
+		";" [ImportList<out builder.Module.ImportList>] DeclSeq<out builder.Module.DeclSeq> ["BEGIN" StatementSeq] ["CLOSE" StatementSeq] "END" ident ".".
 
-	ImportedModule<CPParser.Ast.ImportList i> 
-	= (. var o = new CPParser.Ast.Import(); .)
-	Ident<out o.Name> [ ":=" Ident<out o.OriginalName> 
-	] (. i.Imports.Add(o); .).
+	ImportedModule<CPParser.Ast.AstList i> 
+		= (. var o = new CPParser.Ast.Import(); .)
+		Ident<out o.Name> [ ":=" Ident<out o.OriginalName> 
+		] (. i.Add(o); .).
 
-	ImportList<out CPParser.Ast.ImportList o> 
-	= (. o = new CPParser.Ast.ImportList(); .)
+	ImportList<out CPParser.Ast.AstList o> 
+		= (. o = new CPParser.Ast.AstList(); .)
 		"IMPORT" ImportedModule<o> {"," ImportedModule<o>} ";".
-	DeclSeq 	=	{ "CONST" {ConstDecl ";" } | "TYPE" {TypeDecl ";"} |
-			"VAR" {VarDecl ";"}} {ProcDecl ";" | ForwardDecl ";"}.
-	ConstDecl	=	IdentDef "=" ConstExpr.
-	TypeDecl	=	IdentDef "=" Type.
-	VarDecl	=	IdentList ":" Type.
-	ProcDecl 	=	"PROCEDURE" [Receiver] IdentDef [FormalPars] MethAttributes
-			[";" DeclSeq ["BEGIN" StatementSeq] "END" ident].
-	MethAttributes	=	["," "NEW"] ["," ("ABSTRACT" | "EMPTY" | "EXTENSIBLE")].
-	ForwardDecl 	=	"PROCEDURE" "^" [Receiver] IdentDef [FormalPars] MethAttributes.
-	FormalPars 	=	"(" [FPSection {";" FPSection}] ")" [":" Type].
-	FPSection 	=	["VAR" | "IN" | "OUT"] ident {"," ident} ":" Type.
-	Receiver	=	"(" ["VAR" | "IN"] ident ":" ident ")".
-	Type 	=	Qualident
+	DeclSeq<out CPParser.Ast.DeclSeq o> 
+		=	(. o = new CPParser.Ast.DeclSeq(); .)
+		{ "CONST" {ConstDecl<o.ConstTypeVarDecls> ";" } | "TYPE" {TypeDecl<o.ConstTypeVarDecls> ";"} |
+			"VAR" {VarDecl<o.ConstTypeVarDecls> ";"}} {ProcDecl<o.ProcForwardDecls> ";" | ForwardDecl<o.ProcForwardDecls> ";"}.
+	ConstDecl<CPParser.Ast.AstList lst> 
+		= (. var o = new CPParser.Ast.ConstDecl(); .)	
+		IdentDef<out o.IdentDef> "=" ConstExpr (. lst.Add(o); .) .
+	TypeDecl<CPParser.Ast.AstList lst> 
+		= (. var o = new CPParser.Ast.TypeDecl(); .)	
+		IdentDef<out o.IdentDef> "=" Type (. lst.Add(o); .).
+	VarDecl<CPParser.Ast.AstList lst> 
+		= (. var o = new CPParser.Ast.VarDecl(); .)	
+		IdentList<out o.IdentList> ":" Type (. lst.Add(o); .).
+
+	ProcDecl<CPParser.Ast.AstList lst> 
+		= (. var o = new CPParser.Ast.ProcDecl(); .)	
+		"PROCEDURE" [Receiver] IdentDef<out o.IdentDef> [FormalPars] MethAttributes
+		[";" DeclSeq<out o.DeclSeq> ["BEGIN" StatementSeq] "END" ident] (. lst.Add(o); .).
+
+	ForwardDecl<CPParser.Ast.AstList lst> 
+		= (. var o = new CPParser.Ast.ForwardDecl(); .)	
+		"PROCEDURE" "^" [Receiver] IdentDef<out o.IdentDef> [FormalPars] MethAttributes(. lst.Add(o); .).
+
+	MethAttributes	
+		=	
+		["," "NEW"] ["," ("ABSTRACT" | "EMPTY" | "EXTENSIBLE")].
+	
+	FormalPars 	
+		=	
+		"(" [FPSection {";" FPSection}] ")" [":" Type].
+	FPSection 	
+		=	
+		["VAR" | "IN" | "OUT"] ident {"," ident} ":" Type.
+	Receiver	
+		=
+		"(" ["VAR" | "IN"] ident ":" ident ")".
+	Type 	
+		=
+		Qualident
 			|  "ARRAY" [ConstExpr {"," ConstExpr}] "OF" Type 
 			| ["ABSTRACT" | "EXTENSIBLE" | "LIMITED"]
 				"RECORD" ["(" Qualident ")"] FieldList {";" FieldList} "END"
 			| "POINTER" "TO" Type
 			| "PROCEDURE" [FormalPars].
-	FieldList 	=	[IdentList ":" Type].
+	FieldList 	
+		= (. CPParser.Ast.IdentList a; .)
+		[IdentList<out a> ":" Type].
 	StatementSeq	=	Statement {";" Statement}.
 	Statement 	=	[ Designator ":=" Expr 
 			| Designator ["(" [ExprList] ")"] 
@@ -100,7 +128,15 @@ PRODUCTIONS
 	Designator 	=	Qualident {"." ident | "[" ExprList "]" | "^" | "(" Qualident ")"
 			| "(" [ExprList] ")"} [ "$" ].
 	ExprList 	=	Expr {"," Expr}.
-	IdentList 	=	IdentDef {"," IdentDef}.
+	IdentList<out CPParser.Ast.IdentList o> 	
+		= (. o = new CPParser.Ast.IdentList(); var id = new CPParser.Ast.IdentDef(); .)
+		IdentDef<out id> (. o.IdentDefs.Add(id); .)
+		{"," (. id = new CPParser.Ast.IdentDef(); .)
+		IdentDef<out id> (. o.IdentDefs.Add(id); .)}.
 	Qualident 	=	[ident "."] ident.
-	IdentDef 	=	ident ["*" | "-"].
+	IdentDef<out CPParser.Ast.IdentDef o> 	
+		= (. o = new CPParser.Ast.IdentDef (); .)
+		Ident<out o.Ident> 
+		["*" (. o.Export = CPParser.Ast.IdentDef.IdentExport.Export; .)
+		| "-" (. o.Export = CPParser.Ast.IdentDef.IdentExport.ExportReadonly; .)].
 END CP.
