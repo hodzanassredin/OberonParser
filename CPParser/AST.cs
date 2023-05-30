@@ -130,9 +130,9 @@ namespace CPParser.Ast
 	}
 	public class ProcDecl : IAstElement, IProcForwardDecl
 	{
-		public Receiver Receiver;
+		public Receiver? Receiver;
 		public IdentDef IdentDef;
-		public FormalPars FormalPars;
+		public FormalPars? FormalPars;
 		public MethAttributes MethAttributes;
 		public DeclSeq DeclSeq;
         public StatementSeq StatementSeq;
@@ -160,7 +160,7 @@ namespace CPParser.Ast
 	}
 	public class FormalPars : IAstElement
 	{
-		public AstList FPSections;
+		public AstList FPSections = new AstList();
 		public IType Type_;
         public void Accept(IAstVisitor v) => v.Visit(this);
 	}
@@ -174,7 +174,7 @@ namespace CPParser.Ast
 			VAR, IN, OUT
 		}
 		public Prefix? FpSectionPrefix;
-		public AstList Idents;
+		public AstList Idents = new AstList();
 		public IType Type_;
 		public void Accept(IAstVisitor v) => v.Visit(this);
 	}
@@ -257,7 +257,7 @@ namespace CPParser.Ast
 	}
 	public class StatementSeq : IAstElement
 	{
-		public AstList Statements;
+		public AstList Statements = new AstList();
         public void Accept(IAstVisitor v) => v.Visit(this);
     }
 	public class Set : IAstElement {
@@ -316,7 +316,7 @@ namespace CPParser.Ast
 	public class Term : IAstElement
 	{
 		public IFactor Factor;
-		public AstList Factors;
+		public AstList Factors = new AstList();
 		public void Accept(IAstVisitor v) => v.Visit(this);
 	}
 

@@ -165,23 +165,25 @@ public AstBuilder builder = new AstBuilder();
 				o.ConstTypeVarDecls.Add(lst); 
 			}
 		}
-		while (la.kind == 20) {
-			if (la.kind == 20) {
+		while (la.kind == 18) {
+			Get();
+			if (la.kind == 1 || la.kind == 26) {
 				ProcDecl(o.ProcForwardDecls);
-				Expect(7);
-			} else {
+			} else if (la.kind == 21) {
 				ForwardDecl(o.ProcForwardDecls);
-				Expect(7);
-			}
+			} else SynErr(76);
+			Expect(7);
 		}
 	}
 
 	void StatementSeq() {
-		var o = new CPParser.Ast.StatementSeq(); 
-		Statement();
+		var o = new CPParser.Ast.StatementSeq(); CPParser.Ast.IStatement s; 
+		Statement(out s);
+		o.Statements.Add(s); 
 		while (la.kind == 7) {
 			Get();
-			Statement();
+			Statement(out s);
+			o.Statements.Add(s); 
 		}
 	}
 
@@ -198,7 +200,7 @@ public AstBuilder builder = new AstBuilder();
 	void ConstDecl(CPParser.Ast.AstList lst) {
 		var o = new CPParser.Ast.ConstDecl(); 
 		IdentDef(out o.IdentDef);
-		Expect(18);
+		Expect(19);
 		ConstExpr();
 		lst.Add(o); 
 	}
@@ -206,7 +208,7 @@ public AstBuilder builder = new AstBuilder();
 	void TypeDecl(CPParser.Ast.AstList lst) {
 		var o = new CPParser.Ast.TypeDecl(); 
 		IdentDef(out o.IdentDef);
-		Expect(18);
+		Expect(19);
 		Type(out o.Type_);
 		lst.Add(o); 
 	}
@@ -214,22 +216,21 @@ public AstBuilder builder = new AstBuilder();
 	void VarDecl(CPParser.Ast.AstList lst) {
 		var o = new CPParser.Ast.VarDecl(); 
 		IdentList(out o.IdentList);
-		Expect(19);
+		Expect(20);
 		Type(out o.Type_);
 		lst.Add(o); 
 	}
 
 	void ProcDecl(CPParser.Ast.AstList lst) {
 		var o = new CPParser.Ast.ProcDecl(); 
-		Expect(20);
 		if (la.kind == 26) {
 			Receiver();
 		}
 		IdentDef(out o.IdentDef);
 		if (la.kind == 26) {
-			FormalPars();
+			FormalPars(out o.FormalPars);
 		}
-		MethAttributes();
+		MethAttributes(out o.MethAttributes);
 		if (la.kind == 7) {
 			Get();
 			DeclSeq(out o.DeclSeq);
@@ -245,16 +246,15 @@ public AstBuilder builder = new AstBuilder();
 
 	void ForwardDecl(CPParser.Ast.AstList lst) {
 		var o = new CPParser.Ast.ForwardDecl(); 
-		Expect(20);
 		Expect(21);
 		if (la.kind == 26) {
 			Receiver();
 		}
 		IdentDef(out o.IdentDef);
 		if (la.kind == 26) {
-			FormalPars();
+			FormalPars(out o.FormalPars);
 		}
-		MethAttributes();
+		MethAttributes(out o.MethAttributes);
 		lst.Add(o); 
 	}
 
@@ -326,14 +326,14 @@ public AstBuilder builder = new AstBuilder();
 			Expect(35);
 			Type(out at.Type_);
 			o = at; 
-		} else if (la.kind == 20) {
+		} else if (la.kind == 18) {
 			var at = new CPParser.Ast.IType.ProcedureType(); 
 			Get();
 			if (la.kind == 26) {
-				FormalPars();
+				FormalPars(out at.FormalPars);
 			}
 			o = at; 
-		} else SynErr(76);
+		} else SynErr(77);
 	}
 
 	void IdentList(out CPParser.Ast.IdentList o) {
@@ -359,64 +359,75 @@ public AstBuilder builder = new AstBuilder();
 			}
 		}
 		Expect(1);
-		Expect(19);
+		Expect(20);
 		Expect(1);
 		Expect(27);
 	}
 
-	void FormalPars() {
-		var o = new CPParser.Ast.FormalPars(); 
+	void FormalPars(out CPParser.Ast.FormalPars o) {
+		o = new CPParser.Ast.FormalPars(); 
 		Expect(26);
 		if (StartOf(3)) {
-			FPSection();
+			FPSection(o.FPSections);
 			while (la.kind == 7) {
 				Get();
-				FPSection();
+				FPSection(o.FPSections);
 			}
 		}
 		Expect(27);
-		if (la.kind == 19) {
+		if (la.kind == 20) {
 			Get();
 			Type(out o.Type_);
 		}
 	}
 
-	void MethAttributes() {
-		var o = new CPParser.Ast.MethAttributes(); 
+	void MethAttributes(out CPParser.Ast.MethAttributes o) {
+		o = new CPParser.Ast.MethAttributes(); 
 		if (la.kind == 14) {
 			Get();
 			Expect(22);
+			o.IsNew = true; 
 		}
 		if (la.kind == 14) {
 			Get();
 			if (la.kind == 23) {
 				Get();
+				o.Attr = CPParser.Ast.MethAttributes.MethodAttr.ABSTRACT; 
 			} else if (la.kind == 24) {
 				Get();
+				o.Attr = CPParser.Ast.MethAttributes.MethodAttr.EMPTY; 
 			} else if (la.kind == 25) {
 				Get();
-			} else SynErr(77);
+				o.Attr = CPParser.Ast.MethAttributes.MethodAttr.EXTENSIBLE; 
+			} else SynErr(78);
 		}
 	}
 
-	void FPSection() {
+	void FPSection(CPParser.Ast.AstList lst) {
 		var o = new CPParser.Ast.FPSection(); 
 		if (la.kind == 17 || la.kind == 28 || la.kind == 29) {
 			if (la.kind == 17) {
 				Get();
+				o.FpSectionPrefix = CPParser.Ast.FPSection.Prefix.VAR; 
 			} else if (la.kind == 28) {
 				Get();
+				o.FpSectionPrefix = CPParser.Ast.FPSection.Prefix.IN; 
 			} else {
 				Get();
+				o.FpSectionPrefix = CPParser.Ast.FPSection.Prefix.OUT; 
 			}
 		}
-		Expect(1);
+		CPParser.Ast.Ident i; 
+		Ident(out i);
+		o.Idents.Add(i); 
 		while (la.kind == 14) {
 			Get();
-			Expect(1);
+			Ident(out i);
+			o.Idents.Add(i); 
 		}
-		Expect(19);
+		Expect(20);
 		Type(out o.Type_);
+		lst.Add(o); 
 	}
 
 	void Qualident(out CPParser.Ast.Qualident o) {
@@ -432,19 +443,23 @@ public AstBuilder builder = new AstBuilder();
 		CPParser.Ast.IdentList a; CPParser.Ast.IType t; 
 		if (la.kind == 1) {
 			IdentList(out a);
-			Expect(19);
+			Expect(20);
 			Type(out t);
 		}
 	}
 
-	void Statement() {
+	void Statement(out CPParser.Ast.IStatement os) {
+		os=null; 
 		if (StartOf(4)) {
 			if (la.kind == 1) {
-				Designator();
+				var o = new CPParser.Ast.IStatement.AssignmentStatement(); 
+				Designator(out o.Designator);
 				Expect(12);
 				Expr();
+				os = o;
 			} else if (la.kind == 1) {
-				Designator();
+				var o = new CPParser.Ast.IStatement.ProcCallStatement(); 
+				Designator(out o.Designator);
 				if (la.kind == 26) {
 					Get();
 					if (StartOf(1)) {
@@ -452,7 +467,9 @@ public AstBuilder builder = new AstBuilder();
 					}
 					Expect(27);
 				}
+				os = o;
 			} else if (la.kind == 36) {
+				var o = new CPParser.Ast.IStatement.IfStatement(); 
 				Get();
 				Expr();
 				Expect(37);
@@ -468,7 +485,9 @@ public AstBuilder builder = new AstBuilder();
 					StatementSeq();
 				}
 				Expect(10);
+				os = o;
 			} else if (la.kind == 40) {
+				var o = new CPParser.Ast.IStatement.CaseStatement(); 
 				Get();
 				Expr();
 				Expect(31);
@@ -482,18 +501,24 @@ public AstBuilder builder = new AstBuilder();
 					StatementSeq();
 				}
 				Expect(10);
+				os = o;
 			} else if (la.kind == 42) {
+				var o = new CPParser.Ast.IStatement.WhileStatement(); 
 				Get();
 				Expr();
 				Expect(43);
 				StatementSeq();
 				Expect(10);
+				os = o;
 			} else if (la.kind == 44) {
+				var o = new CPParser.Ast.IStatement.RepeatStatement(); 
 				Get();
 				StatementSeq();
 				Expect(45);
 				Expr();
+				os = o;
 			} else if (la.kind == 46) {
+				var o = new CPParser.Ast.IStatement.ForStatement(); 
 				Get();
 				Expect(1);
 				Expect(12);
@@ -507,11 +532,15 @@ public AstBuilder builder = new AstBuilder();
 				Expect(43);
 				StatementSeq();
 				Expect(10);
+				os = o;
 			} else if (la.kind == 48) {
+				var o = new CPParser.Ast.IStatement.LoopStatement(); 
 				Get();
 				StatementSeq();
 				Expect(10);
+				os = o;
 			} else if (la.kind == 49) {
+				var o = new CPParser.Ast.IStatement.WithStatement(); 
 				Get();
 				if (la.kind == 1) {
 					Guard();
@@ -531,19 +560,24 @@ public AstBuilder builder = new AstBuilder();
 					StatementSeq();
 				}
 				Expect(10);
+				os = o;
 			} else if (la.kind == 50) {
+				var o = new CPParser.Ast.IStatement.ExitStatement(); 
 				Get();
+				os = o;
 			} else {
+				var o = new CPParser.Ast.IStatement.ReturnStatement(); 
 				Get();
 				if (StartOf(1)) {
 					Expr();
 				}
+				os = o;
 			}
 		}
 	}
 
-	void Designator() {
-		var o = new CPParser.Ast.Designator(); 
+	void Designator(out CPParser.Ast.Designator o) {
+		o = new CPParser.Ast.Designator(); 
 		Qualident(out o.Qualident);
 		while (StartOf(5)) {
 			if (la.kind == 11) {
@@ -555,15 +589,15 @@ public AstBuilder builder = new AstBuilder();
 				Expect(72);
 			} else if (la.kind == 21) {
 				Get();
-			} else if (la.kind == 26) {
-				Get();
-				Qualident(out o.Qualident);
-				Expect(27);
 			} else {
 				Get();
-				if (StartOf(1)) {
-					ExprList();
-				}
+				if (la.kind == 1) {
+					Qualident(out o.Qualident);
+				} else if (StartOf(6)) {
+					if (StartOf(1)) {
+						ExprList();
+					}
+				} else SynErr(79);
 				Expect(27);
 			}
 		}
@@ -576,7 +610,7 @@ public AstBuilder builder = new AstBuilder();
 	void Expr() {
 		var o = new CPParser.Ast.Expr(); 
 		SimpleExpr();
-		if (StartOf(6)) {
+		if (StartOf(7)) {
 			Relation();
 			SimpleExpr();
 		}
@@ -599,7 +633,7 @@ public AstBuilder builder = new AstBuilder();
 				Get();
 				CaseLabels();
 			}
-			Expect(19);
+			Expect(20);
 			StatementSeq();
 		}
 	}
@@ -607,7 +641,7 @@ public AstBuilder builder = new AstBuilder();
 	void Guard() {
 		var o = new CPParser.Ast.Guard(); 
 		Qualident(out o.VarQualident);
-		Expect(19);
+		Expect(20);
 		Qualident(out o.TypeQualident);
 	}
 
@@ -638,7 +672,7 @@ public AstBuilder builder = new AstBuilder();
 
 	void Relation() {
 		switch (la.kind) {
-		case 18: {
+		case 19: {
 			var o = new CPParser.Ast.Relation(); 
 			Get();
 			break;
@@ -671,16 +705,16 @@ public AstBuilder builder = new AstBuilder();
 			Get();
 			break;
 		}
-		default: SynErr(78); break;
+		default: SynErr(80); break;
 		}
 	}
 
 	void Term() {
-		var o = new CPParser.Ast.Term(); 
-		Factor();
-		while (StartOf(7)) {
+		var o = new CPParser.Ast.Term(); CPParser.Ast.MulOp m; CPParser.Ast.IFactor f; 
+		Factor(out o.Factor);
+		while (StartOf(8)) {
 			MulOp();
-			Factor();
+			Factor(out f);
 		}
 	}
 
@@ -692,48 +726,64 @@ public AstBuilder builder = new AstBuilder();
 			Get();
 		} else if (la.kind == 65) {
 			Get();
-		} else SynErr(79);
+		} else SynErr(81);
 	}
 
-	void Factor() {
+	void Factor(out CPParser.Ast.IFactor f) {
+		f = null;
 		switch (la.kind) {
 		case 1: {
 			var o = new CPParser.Ast.IFactor.DesignatorFactor(); 
-			Designator();
+			Designator(out o.Value);
+			f = o; 
 			break;
 		}
 		case 2: case 3: {
+			var o = new CPParser.Ast.IFactor.NumberFactor(); 
 			number();
+			f = o; 
 			break;
 		}
 		case 4: {
+			var o = new CPParser.Ast.IFactor.CharacterFactor(); 
 			Get();
+			f = o; 
 			break;
 		}
 		case 5: {
+			var o = new CPParser.Ast.IFactor.StringFactor(); 
 			Get();
+			f = o; 
 			break;
 		}
 		case 55: {
+			var o = new CPParser.Ast.IFactor.NilFactor(); 
 			Get();
+			f = o; 
 			break;
 		}
 		case 57: {
+			var o = new CPParser.Ast.IFactor.SetFactor(); 
 			Set();
+			f = o; 
 			break;
 		}
 		case 26: {
+			var o = new CPParser.Ast.IFactor.ExprFactor(); 
 			Get();
 			Expr();
 			Expect(27);
+			f = o; 
 			break;
 		}
 		case 56: {
+			var o = new CPParser.Ast.IFactor.NegFactor(); 
 			Get();
-			Factor();
+			Factor(out o.Value);
+			f = o; 
 			break;
 		}
-		default: SynErr(80); break;
+		default: SynErr(82); break;
 		}
 	}
 
@@ -749,7 +799,7 @@ public AstBuilder builder = new AstBuilder();
 			Get();
 		} else if (la.kind == 70) {
 			Get();
-		} else SynErr(81);
+		} else SynErr(83);
 	}
 
 	void Set() {
@@ -792,7 +842,8 @@ public AstBuilder builder = new AstBuilder();
 		{_x,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
 		{_x,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _T,_x,_x,_x, _T,_x,_T,_x, _T,_x,_T,_x, _T,_T,_T,_T, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
 		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _x,_x,_x,_x, _x,_x,_x,_x, _x,_T,_x,_x, _x,_x,_T,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _x,_x,_x,_x},
-		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_x, _x,_x,_x,_x, _x,_x,_x,_x, _T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _T,_T,_T,_T, _T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
+		{_x,_T,_T,_T, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_T, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_T,_T,_T, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
+		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _x,_x,_x,_x, _x,_x,_x,_x, _T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _T,_T,_T,_T, _T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
 		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_T, _T,_T,_T,_x, _x,_x,_x,_x}
 
 	};
@@ -825,9 +876,9 @@ public class Errors {
 			case 15: s = "\"CONST\" expected"; break;
 			case 16: s = "\"TYPE\" expected"; break;
 			case 17: s = "\"VAR\" expected"; break;
-			case 18: s = "\"=\" expected"; break;
-			case 19: s = "\":\" expected"; break;
-			case 20: s = "\"PROCEDURE\" expected"; break;
+			case 18: s = "\"PROCEDURE\" expected"; break;
+			case 19: s = "\"=\" expected"; break;
+			case 20: s = "\":\" expected"; break;
 			case 21: s = "\"^\" expected"; break;
 			case 22: s = "\"NEW\" expected"; break;
 			case 23: s = "\"ABSTRACT\" expected"; break;
@@ -883,12 +934,14 @@ public class Errors {
 			case 73: s = "\"$\" expected"; break;
 			case 74: s = "??? expected"; break;
 			case 75: s = "invalid number"; break;
-			case 76: s = "invalid Type"; break;
-			case 77: s = "invalid MethAttributes"; break;
-			case 78: s = "invalid Relation"; break;
-			case 79: s = "invalid AddOp"; break;
-			case 80: s = "invalid Factor"; break;
-			case 81: s = "invalid MulOp"; break;
+			case 76: s = "invalid DeclSeq"; break;
+			case 77: s = "invalid Type"; break;
+			case 78: s = "invalid MethAttributes"; break;
+			case 79: s = "invalid Designator"; break;
+			case 80: s = "invalid Relation"; break;
+			case 81: s = "invalid AddOp"; break;
+			case 82: s = "invalid Factor"; break;
+			case 83: s = "invalid MulOp"; break;
 
 			default: s = "error " + n; break;
 		}

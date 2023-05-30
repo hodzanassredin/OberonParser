@@ -44,11 +44,13 @@ namespace CPParser
         public void Visit(Module o)
         {
             sw.WriteLine($"MODULE {o.Ident.Name};");
+            sw.WriteLine();
             EnterScope();
             if (o.ImportList != null) {
                 WriteTabs(); sw.Write("IMPORT ");
                 VisitList(o.ImportList, () => { }, () => sw.Write(", "));
                 sw.WriteLine(";");
+                sw.WriteLine();
             }
             o.DeclSeq.Accept(this);
             if (o.Begin != null) {
@@ -103,8 +105,9 @@ namespace CPParser
             }
             foreach (var item in o.ProcForwardDecls)
             {
+                sw.Write("PROCEDURE ");
                 item.Accept(this);
-                
+                sw.WriteLine(";");
             }
             
         }
@@ -137,6 +140,7 @@ namespace CPParser
             sw.WriteLine("VAR");
             EnterScope();
             this.VisitList(o, () => WriteTabs(), () => { sw.WriteLine(";"); }, true);
+            sw.WriteLine("");
             ExitScope();
         }
         public void Visit(ConstDecl o)
@@ -165,12 +169,52 @@ namespace CPParser
 
         public void Visit(ProcDecl o)
         {
-   
+            if (o.Receiver != null)
+            {
+                o.Receiver?.Accept(this);
+                sw.Write(" ");
+            }
+            
+            o.IdentDef.Accept(this);
+            sw.Write(" ");
+            o.FormalPars?.Accept(this);
+            o.MethAttributes.Accept(this);
+            sw.WriteLine(";");
+            EnterScope();
+            o.DeclSeq.Accept(this);
+            if (o.StatementSeq != null) {
+                sw.WriteLine("BEGIN");
+                EnterScope();
+                o.StatementSeq.Accept(this);
+                ExitScope();
+            }
+
+            ExitScope();
+            sw.Write("END ");
+            o.IdentDef.Ident.Accept(this);
         }
 
         public void Visit(MethAttributes o)
         {
-            throw new NotImplementedException();
+            if (o.IsNew) {
+                sw.Write(", NEW");
+            }
+            if (o.Attr != null) {
+                switch (o.Attr.Value)
+                {
+                    case MethAttributes.MethodAttr.ABSTRACT:
+                        sw.Write(", ABSTRACT");
+                        break;
+                    case MethAttributes.MethodAttr.EMPTY:
+                        sw.Write(", EMPTY");
+                        break;
+                    case MethAttributes.MethodAttr.EXTENSIBLE:
+                        sw.Write(", EXTENSIBLE");
+                        break;
+                    default:
+                        break;
+                }
+            }
         }
 
         public void Visit(ForwardDecl o)
@@ -180,12 +224,38 @@ namespace CPParser
 
         public void Visit(FormalPars o)
         {
-            throw new NotImplementedException();
+            sw.Write("(");
+            VisitList(o.FPSections, () => { }, ()=> sw.Write("; "), false);
+            
+            sw.Write(")");
+            if (o.Type_ != null) {
+                sw.Write(":");
+                o.Type_.Accept(this);
+            }
         }
 
         public void Visit(FPSection o)
         {
-            throw new NotImplementedException();
+            if (o.FpSectionPrefix != null) {
+                switch (o.FpSectionPrefix)
+                {
+                    case FPSection.Prefix.VAR:
+                        sw.Write("VAR");
+                        break;
+                    case FPSection.Prefix.IN:
+                        sw.Write("IN");
+                        break;
+                    case FPSection.Prefix.OUT:
+                        sw.Write("OUT");
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            VisitList(o.Idents, () => { }, () => sw.Write(", "));
+            sw.Write(" : ");
+            o.Type_.Accept(this);
         }
 
         public void Visit(Receiver o)
@@ -334,7 +404,13 @@ namespace CPParser
 
         public void Visit(IType.ArrayType o)
         {
-            throw new NotImplementedException();
+            sw.Write("ARRAY ");
+            if (o.ConstExprs != null)
+            {
+                VisitList(o.ConstExprs, () => { }, () => sw.Write(", "));
+            }
+            sw.Write("OF ");
+            o.Type_.Accept(this);
         }
 
         public void Visit(IType.PointerType o)

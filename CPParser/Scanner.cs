@@ -356,7 +356,7 @@ public class Scanner {
 			case "CONST": t.kind = 15; break;
 			case "TYPE": t.kind = 16; break;
 			case "VAR": t.kind = 17; break;
-			case "PROCEDURE": t.kind = 20; break;
+			case "PROCEDURE": t.kind = 18; break;
 			case "NEW": t.kind = 22; break;
 			case "ABSTRACT": t.kind = 23; break;
 			case "EMPTY": t.kind = 24; break;
@@ -470,7 +470,7 @@ public class Scanner {
 			case 15:
 				{t.kind = 14; break;}
 			case 16:
-				{t.kind = 18; break;}
+				{t.kind = 19; break;}
 			case 17:
 				{t.kind = 21; break;}
 			case 18:
@@ -514,9 +514,9 @@ public class Scanner {
 				if (ch == '.') {AddCh(); goto case 21;}
 				else {t.kind = 11; break;}
 			case 37:
-				recEnd = pos; recKind = 19;
+				recEnd = pos; recKind = 20;
 				if (ch == '=') {AddCh(); goto case 14;}
-				else {t.kind = 19; break;}
+				else {t.kind = 20; break;}
 			case 38:
 				recEnd = pos; recKind = 60;
 				if (ch == '=') {AddCh(); goto case 28;}
