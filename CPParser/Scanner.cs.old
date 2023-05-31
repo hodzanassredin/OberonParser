@@ -232,9 +232,9 @@ public class Scanner {
 		for (int i = 48; i <= 57; ++i) start[i] = 11;
 		start[34] = 8; 
 		start[39] = 9; 
+		start[58] = 36; 
 		start[59] = 13; 
-		start[46] = 36; 
-		start[58] = 37; 
+		start[46] = 37; 
 		start[44] = 15; 
 		start[61] = 16; 
 		start[94] = 17; 
@@ -348,15 +348,15 @@ public class Scanner {
 
 	void CheckLiteral() {
 		switch (t.val) {
-			case "MODULE": t.kind = 6; break;
-			case "BEGIN": t.kind = 8; break;
-			case "CLOSE": t.kind = 9; break;
-			case "END": t.kind = 10; break;
-			case "IMPORT": t.kind = 13; break;
-			case "CONST": t.kind = 15; break;
-			case "TYPE": t.kind = 16; break;
-			case "VAR": t.kind = 17; break;
-			case "PROCEDURE": t.kind = 18; break;
+			case "MODULE": t.kind = 7; break;
+			case "BEGIN": t.kind = 9; break;
+			case "CLOSE": t.kind = 10; break;
+			case "END": t.kind = 11; break;
+			case "IMPORT": t.kind = 14; break;
+			case "CONST": t.kind = 16; break;
+			case "TYPE": t.kind = 17; break;
+			case "VAR": t.kind = 18; break;
+			case "PROCEDURE": t.kind = 19; break;
 			case "ABSTRACT": t.kind = 22; break;
 			case "EMPTY": t.kind = 23; break;
 			case "EXTENSIBLE": t.kind = 24; break;
@@ -464,13 +464,13 @@ public class Scanner {
 				else if (ch == 'X') {AddCh(); goto case 7;}
 				else {goto case 0;}
 			case 13:
-				{t.kind = 7; break;}
+				{t.kind = 8; break;}
 			case 14:
-				{t.kind = 12; break;}
+				{t.kind = 13; break;}
 			case 15:
-				{t.kind = 14; break;}
+				{t.kind = 15; break;}
 			case 16:
-				{t.kind = 19; break;}
+				{t.kind = 20; break;}
 			case 17:
 				{t.kind = 21; break;}
 			case 18:
@@ -510,13 +510,13 @@ public class Scanner {
 			case 35:
 				{t.kind = 73; break;}
 			case 36:
-				recEnd = pos; recKind = 11;
-				if (ch == '.') {AddCh(); goto case 21;}
-				else {t.kind = 11; break;}
-			case 37:
-				recEnd = pos; recKind = 20;
+				recEnd = pos; recKind = 6;
 				if (ch == '=') {AddCh(); goto case 14;}
-				else {t.kind = 20; break;}
+				else {t.kind = 6; break;}
+			case 37:
+				recEnd = pos; recKind = 12;
+				if (ch == '.') {AddCh(); goto case 21;}
+				else {t.kind = 12; break;}
 			case 38:
 				recEnd = pos; recKind = 60;
 				if (ch == '=') {AddCh(); goto case 28;}

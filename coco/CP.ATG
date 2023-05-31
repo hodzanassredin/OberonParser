@@ -3,6 +3,13 @@ using CPParser;
 COMPILER CP
 	public AstBuilder builder = new AstBuilder(); 
 
+	bool FollowedByColon() { 
+	  Token x = la; 
+	  while (x.kind == _ident) 
+		x = scanner.Peek(); 
+	  return x.kind == _colon; 
+	} 
+
 CHARACTERS
   cr  = '\r'.
   lf  = '\n'.
@@ -20,6 +27,7 @@ TOKENS
 	real = digit {digit} "." {digit} [ "E" ["+" | "-"] digit {digit} ].
 	character  = digit {hexDigit} "X".
 	string  = '"' {noQuote} '"' | "'" {noQuote2} "'".
+	colon  = ':'.
 
 COMMENTS FROM "(*" TO "*)" NESTED
 
@@ -138,23 +146,36 @@ PRODUCTIONS
 
 	Statement<out CPParser.Ast.IStatement os> (. os=null; .)
 		= 	
-		[ (. var o = new CPParser.Ast.IStatement.AssignmentStatement(); .) Designator<out o.Designator> ":=" Expr<out o.Expr> (. os = o;.)
-		| (. var o = new CPParser.Ast.IStatement.ProcCallStatement(); .) Designator<out o.Designator> ["(" [ExprList<out o.ExprList>] ")"] (. os = o;.)
-		| (. var o = new CPParser.Ast.IStatement.IfStatement(); .) "IF" Expr<out o.If.Cond> "THEN" StatementSeq<out o.If.ThenBody>
+		[ (. CPParser.Ast.Designator d; .)
+			Designator<out d>	
+			(	(. var o = new CPParser.Ast.IStatement.AssignmentStatement(); o.Designator = d; .) 
+				 ":=" Expr<out o.Expr> (. os = o;.)
+				| (. var o = new CPParser.Ast.IStatement.ProcCallStatement(); o.Designator = d; .) 
+				["(" [ExprList<out o.ExprList>] ")"] (. os = o;.) )
+		| (. var o = new CPParser.Ast.IStatement.IfStatement(); .) 
+			"IF" Expr<out o.If.Cond> "THEN" StatementSeq<out o.If.ThenBody>
 				{ (. var elsif = new CPParser.Ast.IStatement.IfStatement.IfThen(); .) "ELSIF" Expr<out elsif.Cond> "THEN" StatementSeq<out elsif.ThenBody> (. o.ELSIFs.Add(elsif); .)}
 				["ELSE" StatementSeq<out o.ElseBody>] "END" (. os = o; .)
-		| (. var o = new CPParser.Ast.IStatement.CaseStatement(); .) "CASE" Expr<out o.Expr> "OF" (. var c = new CPParser.Ast.Case(); .) Case<out c> (. o.Cases.Add(c); .) {"|" Case<out c> (. o.Cases.Add(c); .)}
+		| (. var o = new CPParser.Ast.IStatement.CaseStatement(); .) 
+			"CASE" Expr<out o.Expr> "OF" (. var c = new CPParser.Ast.Case(); .) Case<out c> (. o.Cases.Add(c); .) {"|" Case<out c> (. o.Cases.Add(c); .)}
 				["ELSE" StatementSeq<out o.ElseBody>] "END" (. os = o;.)
-		| (. var o = new CPParser.Ast.IStatement.WhileStatement(); .) "WHILE" Expr<out o.Expr> "DO" StatementSeq<out o.StatementSeq> "END" (. os = o; .)
-		| (. var o = new CPParser.Ast.IStatement.RepeatStatement(); .) "REPEAT" StatementSeq<out o.StatementSeq> "UNTIL" Expr<out o.Expr> (. os = o; .)
-		| (. var o = new CPParser.Ast.IStatement.ForStatement(); .) "FOR" ident ":=" Expr<out o.Expr> "TO" Expr<out o.ToExpr> ["BY" ConstExpr<out o.ByExpr>]
+		| (. var o = new CPParser.Ast.IStatement.WhileStatement(); .) 
+			"WHILE" Expr<out o.Expr> "DO" StatementSeq<out o.StatementSeq> "END" (. os = o; .)
+		| (. var o = new CPParser.Ast.IStatement.RepeatStatement(); .) 
+			"REPEAT" StatementSeq<out o.StatementSeq> "UNTIL" Expr<out o.Expr> (. os = o; .)
+		| (. var o = new CPParser.Ast.IStatement.ForStatement(); .) 
+			"FOR" Ident<out o.Ident> ":=" Expr<out o.Expr> "TO" Expr<out o.ToExpr> ["BY" ConstExpr<out o.ByExpr>]
 				"DO" StatementSeq<out o.StatementSeq> "END" (. os = o;.)
-		| (. var o = new CPParser.Ast.IStatement.LoopStatement(); .) "LOOP" StatementSeq<out o.StatementSeq> "END"(. os = o;.)
-		| (. var o = new CPParser.Ast.IStatement.WithStatement(); CPParser.Ast.IStatement.WithAlternativeStatement alt; .) "WITH" WithAlt<out alt> (. o.Alternatives.Add(alt); .)
+		| (. var o = new CPParser.Ast.IStatement.LoopStatement(); .) 
+			"LOOP" StatementSeq<out o.StatementSeq> "END"(. os = o;.)
+		| (. var o = new CPParser.Ast.IStatement.WithStatement(); CPParser.Ast.IStatement.WithAlternativeStatement alt; .) 
+			"WITH" WithAlt<out alt> (. o.Alternatives.Add(alt); .)
 				{"|" WithAlt<out alt> (. o.Alternatives.Add(alt); .) }
 				["ELSE" StatementSeq<out o.ElseStatementSeq>] "END" (. os = o;.)
-		| (. var o = new CPParser.Ast.IStatement.ExitStatement(); .) "EXIT" (. os = o;.)
-		| (. var o = new CPParser.Ast.IStatement.ReturnStatement(); .) "RETURN" [Expr<out o.Expr>](. os = o;.)
+		| (. var o = new CPParser.Ast.IStatement.ExitStatement(); .) 
+			"EXIT" (. os = o;.)
+		| (. var o = new CPParser.Ast.IStatement.ReturnStatement(); .) 
+			"RETURN" [Expr<out o.Expr>](. os = o;.)
 			].
 
 	Case<out CPParser.Ast.Case o> 	
@@ -231,10 +252,10 @@ PRODUCTIONS
 	Designator<out CPParser.Ast.Designator o>
 		= (. o = new CPParser.Ast.Designator(); .) Qualident<out o.Qualident> 
 		{ 
-			  (. var s = new CPParser.Ast.Designator.IDesignatorSpec.RecordDesignatorSpec(); .) "." Ident<out s.Value> (. o.Specs.Add(s); .)
-			| (. var s = new CPParser.Ast.Designator.IDesignatorSpec.ArrayDesignatorSpec(); .) "[" ExprList<out s.Value> "]" (. o.Specs.Add(s); .)
-			| (. var s = new CPParser.Ast.Designator.IDesignatorSpec.PointerDesignatorSpec(); .) "^" (. o.Specs.Add(s); .)
-			|  "(" (
+			  "." (. var s = new CPParser.Ast.Designator.IDesignatorSpec.RecordDesignatorSpec(); .) Ident<out s.Value> (. o.Specs.Add(s); .)
+			| "[" (. var s = new CPParser.Ast.Designator.IDesignatorSpec.ArrayDesignatorSpec(); .) ExprList<out s.Value> "]" (. o.Specs.Add(s); .)
+			| "^" (. var s = new CPParser.Ast.Designator.IDesignatorSpec.PointerDesignatorSpec(); .) (. o.Specs.Add(s); .)
+			| "(" (
 					(. var s = new CPParser.Ast.Designator.IDesignatorSpec.CastDesignatorSpec(); .) Qualident<out s.Value> (. o.Specs.Add(s); .)
 					| (. var s = new CPParser.Ast.Designator.IDesignatorSpec.ProcCallDesignatorSpec(); .) [ExprList<out s.Value>] (. o.Specs.Add(s); .) ) ")" 
 			} 
