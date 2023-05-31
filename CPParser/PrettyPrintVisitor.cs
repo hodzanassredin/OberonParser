@@ -38,7 +38,9 @@ namespace CPParser
 
         public void Visit(Guard o)
         {
-            throw new NotImplementedException();
+            o.VarQualident.Accept(this);
+            sw.Write(" : ");
+            o.TypeQualident.Accept(this);
         }
 
         public void Visit(Module o)
@@ -258,7 +260,24 @@ namespace CPParser
 
         public void Visit(Receiver o)
         {
-            throw new NotImplementedException();
+            sw.Write("(");
+            if (o.ReceiverPrefix != null) {
+                switch (o.ReceiverPrefix.Value)
+                {
+                    case Receiver.Prefix.VAR:
+                        sw.Write("VAR ");
+                        break;
+                    case Receiver.Prefix.IN:
+                        sw.Write("IN ");
+                        break;
+                    default:
+                        break;
+                }
+            }
+            o.SelfIdent.Accept(this);
+            sw.Write(": ");
+            o.TypeIdent.Accept(this);
+            sw.Write(")");
         }
 
         public void Visit(ExprList o)
@@ -300,7 +319,11 @@ namespace CPParser
 
         public void Visit(CaseLabels o)
         {
-            throw new NotImplementedException();
+            o.ConstExpr1.Accept(this);
+            if (o.ConstExpr2 != null) {
+                sw.Write("..");
+                o.ConstExpr2.Accept(this);
+            }
         }
 
         public void Visit(StatementSeq o)
@@ -438,7 +461,11 @@ namespace CPParser
 
         public void Visit(Case o)
         {
-            throw new NotImplementedException();
+            if (o.CaseLabels.Any()) {
+                VisitList(o.CaseLabels, () => { }, () => sw.Write(","));
+                sw.Write(" : ");
+                o.StatementSeq.Accept(this);
+            }
         }
 
         public void Visit(IStatement.AssignmentStatement o)
@@ -474,7 +501,19 @@ namespace CPParser
 
         public void Visit(IStatement.CaseStatement o)
         {
-            throw new NotImplementedException();
+            WriteTabs(); sw.Write("CASE "); o.Expr.Accept(this); sw.WriteLine("OF");
+            for (int i = 0; i < o.Cases.Value.Count; i++)
+            {
+                if (i != 0)
+                {
+                    sw.Write("|"); 
+                }
+                WriteTabs(); o.Cases.Value[i].Accept(this);
+            }
+            if (o.ElseBody != null) {
+                WriteTabs(); sw.Write("ELSE"); o.ElseBody.Accept (this);
+            }
+            WriteTabs(); sw.Write("END");
         }
 
         public void Visit(IStatement.WhileStatement o)
@@ -488,32 +527,64 @@ namespace CPParser
 
         public void Visit(IStatement.LoopStatement o)
         {
-            throw new NotImplementedException();
+            WriteTabs(); sw.WriteLine("LOOP");
+            EnterScope();
+            o.StatementSeq.Accept(this);
+            ExitScope();
+            WriteTabs(); sw.Write("END");
         }
 
         public void Visit(IStatement.RepeatStatement o)
         {
-            throw new NotImplementedException();
+            WriteTabs(); sw.WriteLine("REPEAT");
+            EnterScope();
+            o.StatementSeq.Accept(this);
+            ExitScope();
+            WriteTabs(); sw.Write("UNTIL "); o.Expr.Accept(this);
         }
 
         public void Visit(IStatement.WithStatement o)
         {
-            throw new NotImplementedException();
+            WriteTabs(); sw.Write("WITH "); 
+            VisitList(o.Alternatives, () => { sw.WriteLine(); WriteTabs(); sw.Write("|"); }, () => { });
+            if (o.ElseStatementSeq != null)
+            {
+                WriteTabs(); sw.WriteLine("ELSE");
+                EnterScope();
+                o.ElseStatementSeq.Accept(this);
+                ExitScope();
+            }
+            WriteTabs(); sw.Write("END");
         }
 
         public void Visit(IStatement.ExitStatement o)
         {
-            throw new NotImplementedException();
+            sw.Write("EXIT");
         }
 
         public void Visit(IStatement.ReturnStatement o)
         {
-            throw new NotImplementedException();
+            sw.Write("RETURN"); 
+            if (o.Expr != null)
+            {
+                sw.Write(" ");
+                o.Expr.Accept(this);
+            }
+            
         }
 
         public void Visit(IStatement.ForStatement o)
         {
-            throw new NotImplementedException();
+            WriteTabs(); sw.Write("FOR "); o.Ident.Accept(this); 
+                sw.Write(" := "); o.Expr.Accept(this); sw.Write(" TO "); o.ToExpr.Accept(this); 
+            if (o.ByExpr != null) {
+                sw.Write(" BY "); o.ToExpr.Accept(this);
+            }
+            sw.WriteLine(" DO");
+            EnterScope();
+            o.StatementSeq.Accept(this);
+            ExitScope();
+            WriteTabs(); sw.Write("END");
         }
 
         public void Visit(IType.ArrayType o)
@@ -593,7 +664,7 @@ namespace CPParser
 
         public void Visit(IFactor.CharacterFactor o)
         {
-            throw new NotImplementedException();
+            sw.Write(o.Value);
         }
 
         public void Visit(IFactor.DesignatorFactor o)
@@ -603,7 +674,7 @@ namespace CPParser
 
         public void Visit(IFactor.ExprFactor o)
         {
-            throw new NotImplementedException();
+            sw.Write("("); o.Value.Accept(this); sw.Write(")");
         }
 
         public void Visit(IFactor.NegFactor o)
@@ -661,7 +732,7 @@ namespace CPParser
 
         public void Visit(Designator.IDesignatorSpec.PointerDesignatorSpec o)
         {
-            throw new NotImplementedException();
+            sw.Write("^");
         }
 
         public void Visit(Designator.IDesignatorSpec.ProcCallDesignatorSpec o)
@@ -704,7 +775,10 @@ namespace CPParser
 
         public void Visit(IStatement.WithAlternativeStatement o)
         {
-            throw new NotImplementedException();
+            if (o.Guard != null) {
+                o.Guard.Accept(this); sw.WriteLine(" DO");
+                o.StatementSeq.Accept(this);
+            }
         }
     }
 }

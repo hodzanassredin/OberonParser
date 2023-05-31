@@ -439,7 +439,7 @@ namespace CPParser.Ast
 
 	public class Case : IAstElement
 	{
-		public AstList CaseLabels;
+		public AstList CaseLabels = new AstList();
 		public StatementSeq StatementSeq;
 		public void Accept(IAstVisitor v) => v.Visit(this);
 
@@ -488,7 +488,7 @@ namespace CPParser.Ast
 		public class CaseStatement : IStatement
 		{
 			public Expr Expr;
-			public AstList Cases;
+			public AstList Cases = new AstList();
 			public StatementSeq ElseBody;
 			public void Accept(IAstVisitor v) => v.Visit(this);
 		}
