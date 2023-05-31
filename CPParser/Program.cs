@@ -27,6 +27,7 @@ else
     sw.AutoFlush = true;
     Console.SetOut(sw);
     var ppv = new PrettyPrintVisitor(sw);
+    var str = parser.builder.Module.ToString();
     ppv.Visit(parser.builder.Module);
 }
 

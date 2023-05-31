@@ -62,7 +62,7 @@ namespace CPParser.Ast
         public void Accept(IAstVisitor v) => v.Visit(this);
         public override string ToString()
         {
-            return $"{Ident1} {Ident2}";
+            return Ident2 != null ? $"{Ident1}.{Ident2}" : Ident1.ToString();
         }
     }
 	public class Guard : IAstElement
@@ -267,7 +267,7 @@ namespace CPParser.Ast
 
 		public override string ToString()
 		{
-			return Exprs.ToString();
+			return String.Join(',', Exprs);
 		}
 	}
 	public class IdentList : IAstElement
@@ -300,13 +300,18 @@ namespace CPParser.Ast
     }
 	public class Set : IAstElement {
 		public AstList Elements = new AstList();
-        public void Accept(IAstVisitor v) => v.Visit(this);		
+		public void Accept(IAstVisitor v) => v.Visit(this);
+		override public string ToString() => $"{{ {String.Join(", ", Elements)} }}";
 	}
 	public class Element : IAstElement {
 		public Expr Expr1;
 		public Expr Expr2;
-		public void Accept(IAstVisitor v) => v.Visit(this); 
-	}
+		public void Accept(IAstVisitor v) => v.Visit(this);
+        public override string ToString()
+        {
+            return Expr2 == null? Expr1.ToString(): $"{Expr1}..{Expr2}";
+        }
+    }
 	
 	public class AddOp : IAstElement
 	{
@@ -318,7 +323,12 @@ namespace CPParser.Ast
 		public AddOps Op;
 		public void Accept(IAstVisitor v) => v.Visit(this);
 
-	}
+        public override string ToString()
+        {
+            return Op.ToString();
+        }
+
+    }
 
 	public class MulOp : IAstElement
 	{
@@ -353,6 +363,10 @@ namespace CPParser.Ast
         {
 			v.Visit(this);
         }
+        public override string ToString()
+        {
+            return $"{AddOp} {Term} ";
+        }
     }
 
 	public class SimpleExpr : IAstElement
@@ -368,7 +382,20 @@ namespace CPParser.Ast
 
         public override string ToString()
         {
-            return $"{Prefix} {Term} {SimpleExprElements}";
+			var sb = new StringBuilder();
+			if (Prefix.HasValue)
+			{
+				sb.Append(Prefix.Value.ToString());
+				sb.Append(" ");
+			}
+			
+			sb.Append(Term.ToString());
+			if (SimpleExprElements.Count() > 0)
+			{
+				sb.Append(" ");
+				sb.Append(SimpleExprElements);
+			}
+			return sb.ToString();
         }
     }
 
@@ -389,7 +416,7 @@ namespace CPParser.Ast
 
 		public override string ToString()
 		{
-			return $"{Factor} {TermElements}";
+			return !TermElements.Any() ? Factor.ToString() : $"{Factor} {TermElements}";
 		}
 	}
 
@@ -422,14 +449,22 @@ namespace CPParser.Ast
 			public Designator Designator;
 			public Expr Expr;
 			public void Accept(IAstVisitor v) => v.Visit(this);
-		}
+            public override string ToString()
+            {
+                return $"{Designator} := {Expr}";
+            }
+        }
 
 		public class ProcCallStatement : IStatement
 		{
 			public Designator Designator;
 			public ExprList ExprList;
 			public void Accept(IAstVisitor v) => v.Visit(this);
-		}
+            public override string ToString()
+            {
+                return $"{Designator}";
+            }
+        }
 		public class IfStatement : IStatement
 		{
 			public class IfThen : IAstElement
@@ -508,7 +543,11 @@ namespace CPParser.Ast
 	{
 		public string Value;
 		public void Accept(IAstVisitor v) => v.Visit(this);
-	}
+        public override string ToString()
+        {
+            return Value;
+        }
+    }
 
 	public interface IFactor : IAstElement
 	{
@@ -581,7 +620,7 @@ namespace CPParser.Ast
 			public void Accept(IAstVisitor v) => v.Visit(this);
 			public override string ToString()
 			{
-				return $"{Value}";
+				return $"~{Value}";
 			}
 		}
 	}
@@ -595,7 +634,7 @@ namespace CPParser.Ast
 				public void Accept(IAstVisitor v) => v.Visit(this);
 				public override string ToString()
 				{
-					return $"{Value}";
+					return $".{Value}";
 				}
 			}
 			public class ArrayDesignatorSpec : IDesignatorSpec {
@@ -638,7 +677,7 @@ namespace CPParser.Ast
 
         public override string ToString()
         {
-            return $"{Qualident} {Specs}" + (EndOfLine ? "$" : "");
+            return $"{Qualident}{Specs}" + (EndOfLine ? "$" : "");
         }
     }
 

@@ -109,6 +109,7 @@ namespace CPParser
             foreach (var item in o.ConstTypeVarDecls)
             {
                 item.Accept(this);
+                sw.WriteLine();
             }
             foreach (var item in o.ProcForwardDecls)
             {
@@ -124,8 +125,6 @@ namespace CPParser
             EnterScope();
             this.VisitList(o, () => { }, () => { sw.WriteLine(";"); }, true);
             ExitScope();
-            sw.WriteLine();
-
         }
 
         public void Visit(IConstTypeVarListDecl.TypeDeclList o)
@@ -134,7 +133,6 @@ namespace CPParser
             EnterScope();
             this.VisitList(o, () => { }, () => { sw.WriteLine(";"); }, true);
             ExitScope();
-            sw.WriteLine();
         }
 
         public void Visit(IConstTypeVarListDecl.VarDeclList o)
@@ -143,7 +141,6 @@ namespace CPParser
             EnterScope();
             this.VisitList(o, () => { }, () => { sw.WriteLine(";"); }, true);
             ExitScope();
-            sw.WriteLine();
         }
         public void Visit(ConstDecl o)
         {
@@ -182,8 +179,7 @@ namespace CPParser
                 o.StatementSeq.Accept(this);
                 ExitScope();
             }
-            WriteTabs(); sw.Write("END ");
-            o.IdentDef.Ident.Accept(this);
+            WriteTabs();sw.Write("END ");o.IdentDef.Ident.Accept(this);
         }
 
         public void Visit(MethAttributes o)
@@ -275,12 +271,14 @@ namespace CPParser
             VisitList(o.IdentDefs, () => { }, () => sw.Write(", "));
         }
 
-        private void VisitList(AstList lst, Action before, Action after, bool doAfterForLast = false) {
-            for (int i = 0; i < lst.Value.Count; i++)
+        private void VisitList(AstList lst, Action before, Action after, bool doAfterForLast = false, bool removeNulls = false) {
+            var stats = removeNulls ? lst.Value.Where(x => x != null).ToList() : lst.Value;
+            
+            for (int i = 0; i < stats.Count; i++)
             {
                 before();
-                lst.Value[i]?.Accept(this);
-                if (i != (lst.Value.Count - 1) || doAfterForLast) after();
+                stats[i]?.Accept(this);
+                if (i != (stats.Count - 1) || doAfterForLast) after();
             }
         }
 
@@ -301,7 +299,8 @@ namespace CPParser
 
         public void Visit(StatementSeq o)
         {
-            VisitList(o.Statements, () => {  }, ()=>sw.WriteLine(";"));
+            VisitList(o.Statements, () => {  }, ()=>sw.WriteLine(";"), removeNulls:true);
+            sw.WriteLine();
         }
 
         public void Visit(Set o)
@@ -340,7 +339,26 @@ namespace CPParser
 
         public void Visit(MulOp o)
         {
-            throw new NotImplementedException();
+            switch (o.Op)
+            {
+                case MulOp.MulOps.Mul:
+                    sw.Write("*");
+                    break;
+                case MulOp.MulOps.Division:
+                    sw.Write("/");
+                    break;
+                case MulOp.MulOps.DIV:
+                    sw.Write("DIV");
+                    break;
+                case MulOp.MulOps.MOD:
+                    sw.Write("MOD");
+                    break;
+                case MulOp.MulOps.AND:
+                    sw.Write("AND");
+                    break;
+                default:
+                    break;
+            }
         }
 
         public void Visit(Relation o)
@@ -405,7 +423,9 @@ namespace CPParser
         {
             o.SimpleExpr.Accept(this);
             if (o.Relation != null) { 
+                sw.Write(' ');
                 o.Relation.Accept(this);
+                sw.Write(' ');
                 o.SimpleExpr2.Accept(this);
             }
         }
@@ -418,7 +438,7 @@ namespace CPParser
         public void Visit(IStatement.AssignmentStatement o)
         {
             WriteTabs();o.Designator.Accept(this);
-            sw.Write(":=");
+            sw.Write(" := ");
             o.Expr.Accept(this);
         }
 
@@ -435,15 +455,15 @@ namespace CPParser
 
         public void Visit(IStatement.IfStatement o)
         {
-            WriteTabs();
-            sw.Write("IF");
-            o.If.Accept(this);
+            WriteTabs();sw.Write("IF ");o.If.Accept(this);
             VisitList(o.ELSIFs, () => sw.Write("ELSIF"), () => { });
             if (o.ElseBody != null) {
-                sw.Write("ELSE");
+                WriteTabs(); sw.WriteLine("ELSE");
+                EnterScope();
                 o.ElseBody.Accept(this);
+                ExitScope();
             }
-            sw.Write("END");
+            WriteTabs(); sw.Write("END");
         }
 
         public void Visit(IStatement.CaseStatement o)
@@ -453,11 +473,7 @@ namespace CPParser
 
         public void Visit(IStatement.WhileStatement o)
         {
-            WriteTabs(); sw.Write("WHILE");
-                EnterScope();
-                o.Expr.Accept(this);
-                ExitScope();
-            WriteTabs(); sw.Write("DO");
+            WriteTabs();sw.Write("WHILE ");o.Expr.Accept(this);sw.WriteLine(" DO");
             EnterScope();
             o.StatementSeq.Accept(this);
             ExitScope();
@@ -624,8 +640,10 @@ namespace CPParser
         public void Visit(IStatement.IfStatement.IfThen o)
         {
             o.Cond.Accept(this);
-            sw.Write("THEN");
+            sw.WriteLine(" THEN");
+            EnterScope();
             o.ThenBody.Accept(this);
+            ExitScope();
         }
 
         public void Visit(SimpleElementExpr o)
@@ -636,7 +654,7 @@ namespace CPParser
 
         public void Visit(TermElementExpr o)
         {
-            o.MulOp.Accept(this);
+            o.MulOp.Accept(this);sw.Write(" ");
             o.Factor.Accept(this);
         }
 
