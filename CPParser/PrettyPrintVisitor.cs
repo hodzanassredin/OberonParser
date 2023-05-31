@@ -227,7 +227,7 @@ namespace CPParser
             
             sw.Write(")");
             if (o.Type_ != null) {
-                sw.Write(":");
+                sw.Write(": ");
                 o.Type_.Accept(this);
             }
         }
@@ -284,12 +284,18 @@ namespace CPParser
 
         public void Visit(FieldList o)
         {
-            throw new NotImplementedException();
+            if (o.IdentList != null)
+            {
+                WriteTabs();
+                o.IdentList.Accept(this);
+                sw.Write(" : ");
+                o.Type_.Accept(this);
+            }
         }
 
         public void Visit(ConstExpr o)
         {
-            throw new NotImplementedException();
+            o.Expr.Accept(this);
         }
 
         public void Visit(CaseLabels o)
@@ -513,9 +519,10 @@ namespace CPParser
         public void Visit(IType.ArrayType o)
         {
             sw.Write("ARRAY ");
-            if (o.ConstExprs != null)
+            if (o.ConstExprs.Any())
             {
                 VisitList(o.ConstExprs, () => { }, () => sw.Write(", "));
+                sw.Write(" ");
             }
             sw.Write("OF ");
             o.Type_.Accept(this);
@@ -523,17 +530,55 @@ namespace CPParser
 
         public void Visit(IType.PointerType o)
         {
-            throw new NotImplementedException();
+            sw.Write("POINTER TO ");
+            o.Type_.Accept(this);
         }
 
         public void Visit(IType.ProcedureType o)
         {
-            throw new NotImplementedException();
+            sw.Write("PROCEDURE");
+            o.FormalPars?.Accept(this);
         }
 
         public void Visit(IType.RecordType o)
         {
-            throw new NotImplementedException();
+            if (o.RecordMeta.HasValue)
+            {
+                switch (o.RecordMeta.Value)
+                {
+                    case IType.RecordType.Meta.ABSTRACT:
+                        sw.Write("ABSTRACT ");
+                        break;
+                    case IType.RecordType.Meta.EXTENSIBLE:
+                        sw.Write("EXTENSIBLE ");
+                        break;
+                    case IType.RecordType.Meta.LIMITED:
+                        sw.Write("LIMITED ");
+                        break;
+                    default:
+                        break;
+                }
+            }
+            sw.Write("RECORD");
+            if (o.Qualident != null) {
+                sw.Write("(");
+                o.Qualident.Accept(this);
+                sw.Write(")");
+            }
+            if (o.FieldList.Any())
+            {
+                sw.WriteLine();
+                EnterScope();
+                VisitList(o.FieldList, () => { }, () => sw.WriteLine(";"));
+                ExitScope();
+                sw.WriteLine();
+                WriteTabs(); sw.Write("END");
+            }
+            else {
+                sw.Write(" END");
+            }
+
+            
         }
 
         public void Visit(IType.SynonimType o)

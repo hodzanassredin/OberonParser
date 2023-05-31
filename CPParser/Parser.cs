@@ -313,10 +313,13 @@ public AstBuilder builder = new AstBuilder();
 			if (la.kind == 22 || la.kind == 24 || la.kind == 32) {
 				if (la.kind == 22) {
 					Get();
+					at.RecordMeta = CPParser.Ast.IType.RecordType.Meta.ABSTRACT; 
 				} else if (la.kind == 24) {
 					Get();
+					at.RecordMeta = CPParser.Ast.IType.RecordType.Meta.EXTENSIBLE; 
 				} else {
 					Get();
+					at.RecordMeta = CPParser.Ast.IType.RecordType.Meta.LIMITED; 
 				}
 			}
 			Expect(33);
@@ -468,8 +471,9 @@ public AstBuilder builder = new AstBuilder();
 	}
 
 	void FieldList(out CPParser.Ast.FieldList o) {
-		o = new CPParser.Ast.FieldList(); 
+		o = null; 
 		if (la.kind == 1) {
+			o = new CPParser.Ast.FieldList(); 
 			IdentList(out o.IdentList);
 			Expect(20);
 			Type(out o.Type_);
@@ -726,8 +730,10 @@ public AstBuilder builder = new AstBuilder();
 		if (la.kind == 53 || la.kind == 54) {
 			if (la.kind == 53) {
 				Get();
+				o.Prefix = CPParser.Ast.SimpleExpr.SimpleExprPrefix.Add; 
 			} else {
 				Get();
+				o.Prefix = CPParser.Ast.SimpleExpr.SimpleExprPrefix.Sub; 
 			}
 		}
 		Term(out o.Term);

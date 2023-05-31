@@ -125,7 +125,9 @@ PRODUCTIONS
 			|  "ARRAY" (. var at = new CPParser.Ast.IType.ArrayType(); CPParser.Ast.ConstExpr ce; .)
 				[ConstExpr<out ce> (. at.ConstExprs.Add(ce); .) {"," ConstExpr<out ce> (. at.ConstExprs.Add(ce); .)}] "OF" Type<out at.Type_> (. o = at; .)
 			| (. var at = new CPParser.Ast.IType.RecordType(); .)
-				["ABSTRACT" | "EXTENSIBLE" | "LIMITED"]
+				["ABSTRACT" (. at.RecordMeta = CPParser.Ast.IType.RecordType.Meta.ABSTRACT; .)
+				| "EXTENSIBLE" (. at.RecordMeta = CPParser.Ast.IType.RecordType.Meta.EXTENSIBLE; .)
+				| "LIMITED" (. at.RecordMeta = CPParser.Ast.IType.RecordType.Meta.LIMITED; .)]
 				"RECORD" ["(" Qualident<out at.Qualident> ")"] 
 					(. var fl = new CPParser.Ast.FieldList(); .)
 					FieldList<out fl> (. at.FieldList.Add(fl); .) {";" FieldList<out fl> (. at.FieldList.Add(fl); .)} "END" (. o = at; .)
@@ -135,8 +137,8 @@ PRODUCTIONS
 				"PROCEDURE" [FormalPars<out at.FormalPars>] (. o = at; .).
 
 	FieldList<out CPParser.Ast.FieldList o> 	
-		= (. o = new CPParser.Ast.FieldList(); .)
-		[IdentList<out o.IdentList> ":" Type<out o.Type_>].
+		= (. o = null; .)
+		[(. o = new CPParser.Ast.FieldList(); .) IdentList<out o.IdentList> ":" Type<out o.Type_>].
 
 	StatementSeq<out CPParser.Ast.StatementSeq o>	
 		= (. o = new CPParser.Ast.StatementSeq(); CPParser.Ast.IStatement s; .)
@@ -203,7 +205,9 @@ PRODUCTIONS
 
 	SimpleExpr<out CPParser.Ast.SimpleExpr o>	
 		= (. o = new CPParser.Ast.SimpleExpr(); CPParser.Ast.SimpleElementExpr e; .)		
-		["+" | "-"] Term<out o.Term> {(. e = new CPParser.Ast.SimpleElementExpr(); .)  AddOp<out e.AddOp> Term<out e.Term> (. o.SimpleExprElements.Add(e); .)}.
+		["+" (. o.Prefix = CPParser.Ast.SimpleExpr.SimpleExprPrefix.Add; .)
+		| "-" (. o.Prefix = CPParser.Ast.SimpleExpr.SimpleExprPrefix.Sub; .)
+		] Term<out o.Term> {(. e = new CPParser.Ast.SimpleElementExpr(); .)  AddOp<out e.AddOp> Term<out e.Term> (. o.SimpleExprElements.Add(e); .)}.
 
 	Term<out CPParser.Ast.Term o> 	
 		= (. o = new CPParser.Ast.Term(); CPParser.Ast.TermElementExpr e; .)		

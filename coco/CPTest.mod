@@ -8,6 +8,21 @@ MODULE PaketController;
 		downloading: m.Package;
 		compile: m.PackageList;
 
+	TYPE
+		Table = ARRAY 10 OF REAL;
+		Tree = POINTER TO Node;
+		Node =  EXTENSIBLE RECORD
+			key : INTEGER;
+			left, right: Tree
+		END;
+		CenterTree = POINTER TO CenterNode;
+		CenterNode = RECORD (Node)
+			width: INTEGER;
+			subnode: Tree
+		END;
+		Object = POINTER TO ABSTRACT RECORD END;
+		Function = PROCEDURE (x: INTEGER): INTEGER;
+
 	PROCEDURE FillList (f: Files.File; url: ARRAY OF CHAR);
 		VAR s: Stores.Store; sc: TextMappers.Scanner;
 	BEGIN

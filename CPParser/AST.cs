@@ -15,7 +15,10 @@ namespace CPParser.Ast
 
         public void Add(IAstElement obj)
         {
-			Value.Add(obj);
+			if (obj != null)
+			{
+				Value.Add(obj);
+			}
         }
 		public List<T> Cast<T>()
 			where T : IAstElement
@@ -242,7 +245,7 @@ namespace CPParser.Ast
 			{
 				ABSTRACT, EXTENSIBLE, LIMITED
 			}
-			public Meta RecordMeta;
+			public Meta? RecordMeta;
 			public Qualident Qualident;
 			public AstList FieldList = new AstList();
 			public void Accept(IAstVisitor v) => v.Visit(this);
