@@ -2,6 +2,17 @@ MODULE PaketController;
 	
 	IMPORT m := PaketModel, Files, PaketFeed, PaketFiles, PaketReader, PaketView, StdCoder, StdLog, StdTextConv, Stores, TextMappers, TextModels, TextViews;
 
+	CONST
+		N = 100;
+		limit = 2*N - 1;
+		fullSet = {MIN(SET) .. MAX(SET)};	
+		a = 1234567;
+		b = 0DH;
+		c = 12.3;
+		d = 4.567E8;
+		e = 0FFFF0000H;
+		l = 0FFFF0000L;
+
 	VAR
 		packages: m.PackageList;
 		download: m.PackageList;
@@ -9,9 +20,11 @@ MODULE PaketController;
 		compile: m.PackageList;
 
 	TYPE
+		T0 = EXTENSIBLE RECORD x: INTEGER END;
+		T1 = RECORD (T0) y: REAL END;
 		Table = ARRAY 10 OF REAL;
 		Tree = POINTER TO Node;
-		Node =  EXTENSIBLE RECORD
+		Node =  EXTENSIBLE RECORD(T0)
 			key : INTEGER;
 			left, right: Tree
 		END;

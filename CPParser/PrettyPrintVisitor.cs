@@ -144,7 +144,7 @@ namespace CPParser
         }
         public void Visit(ConstDecl o)
         {
-            o.IdentDef.Accept(this);sw.Write(" = ");o.ConstExpr.Accept(this);
+            WriteTabs();o.IdentDef.Accept(this);sw.Write(" = ");o.ConstExpr.Accept(this);
         }
 
         public void Visit(TypeDecl o)
@@ -699,8 +699,7 @@ namespace CPParser
 
         public void Visit(TermElementExpr o)
         {
-            o.MulOp.Accept(this);sw.Write(" ");
-            o.Factor.Accept(this);
+            sw.Write(" ");o.MulOp.Accept(this);sw.Write(" ");o.Factor.Accept(this);
         }
 
         public void Visit(IStatement.WithAlternativeStatement o)
