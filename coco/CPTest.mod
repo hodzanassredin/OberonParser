@@ -36,6 +36,20 @@ MODULE PaketController;
 		Object = POINTER TO ABSTRACT RECORD END;
 		Function = PROCEDURE (x: INTEGER): INTEGER;
 
+	VAR
+		i, j, k: INTEGER;
+		x, y: REAL;
+		p, q: BOOLEAN;
+		s: SET;
+		F: Function;
+		a: ARRAY 100 OF REAL;
+		w: ARRAY 16 OF RECORD
+			name: ARRAY 32 OF CHAR;
+			count: INTEGER
+		END;
+		t, c: Tree;
+
+
 	PROCEDURE FillList (f: Files.File; url: ARRAY OF CHAR);
 		VAR s: Stores.Store; sc: TextMappers.Scanner;
 	BEGIN

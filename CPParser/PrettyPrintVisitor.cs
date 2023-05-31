@@ -154,7 +154,7 @@ namespace CPParser
 
         public void Visit(VarDecl o)
         {
-            WriteTabs();o.IdentList.Accept(this);sw.Write(" : ");o.Type_.Accept(this);
+            WriteTabs();o.IdentList.Accept(this);sw.Write(": ");o.Type_.Accept(this);
         }
 
         public void Visit(ProcDecl o)
