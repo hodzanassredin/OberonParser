@@ -58,7 +58,7 @@ namespace CPParser
             o.DeclSeq.Accept(this);
             ExitScope();
             if (o.Begin != null) {
-                sw.Write("BEGIN");
+                sw.WriteLine("BEGIN");
                 EnterScope();
                 o.Begin.Accept(this);
                 ExitScope();
@@ -66,7 +66,7 @@ namespace CPParser
 
             if (o.Close != null)
             {
-                sw.Write("CLOSE");
+                sw.WriteLine("CLOSE");
                 EnterScope();
                 o.Close.Accept(this);
                 ExitScope();
@@ -209,7 +209,7 @@ namespace CPParser
 
         public void Visit(ForwardDecl o)
         {
-            sw.Write("^");
+            sw.Write("^ ");
             if (o.Receiver != null)
             {
                 o.Receiver?.Accept(this);
@@ -251,8 +251,9 @@ namespace CPParser
                     default:
                         break;
                 }
+                sw.Write(" ");
             }
-
+            
             VisitList(o.Idents, () => { }, () => sw.Write(", "));
             sw.Write(" : ");
             o.Type_.Accept(this);
@@ -383,7 +384,7 @@ namespace CPParser
                     sw.Write("MOD");
                     break;
                 case MulOp.MulOps.AND:
-                    sw.Write("AND");
+                    sw.Write("&");
                     break;
                 default:
                     break;
@@ -489,7 +490,7 @@ namespace CPParser
         public void Visit(IStatement.IfStatement o)
         {
             WriteTabs();sw.Write("IF ");o.If.Accept(this);
-            VisitList(o.ELSIFs, () => sw.Write("ELSIF"), () => { });
+            VisitList(o.ELSIFs, () => { WriteTabs(); sw.Write("ELSIF"); }, () => { });
             if (o.ElseBody != null) {
                 WriteTabs(); sw.WriteLine("ELSE");
                 EnterScope();
@@ -501,17 +502,21 @@ namespace CPParser
 
         public void Visit(IStatement.CaseStatement o)
         {
-            WriteTabs(); sw.Write("CASE "); o.Expr.Accept(this); sw.WriteLine("OF");
+            WriteTabs(); sw.Write("CASE "); o.Expr.Accept(this); sw.WriteLine(" OF");
             for (int i = 0; i < o.Cases.Value.Count; i++)
             {
+                WriteTabs();
                 if (i != 0)
                 {
                     sw.Write("|"); 
                 }
-                WriteTabs(); o.Cases.Value[i].Accept(this);
+                sw.Write("\t"); o.Cases.Value[i].Accept(this);
             }
             if (o.ElseBody != null) {
-                WriteTabs(); sw.Write("ELSE"); o.ElseBody.Accept (this);
+                WriteTabs(); sw.WriteLine("ELSE");
+                EnterScope();
+                o.ElseBody.Accept (this);
+                ExitScope();
             }
             WriteTabs(); sw.Write("END");
         }
@@ -545,8 +550,16 @@ namespace CPParser
 
         public void Visit(IStatement.WithStatement o)
         {
-            WriteTabs(); sw.Write("WITH "); 
-            VisitList(o.Alternatives, () => { sw.WriteLine(); WriteTabs(); sw.Write("|"); }, () => { });
+            WriteTabs(); sw.Write("WITH ");
+            for (int i = 0; i < o.Alternatives.Value.Count; i++)
+            {
+                if (i != 0) {
+                    WriteTabs(); sw.Write("|");
+                }
+                EnterScope();
+                o.Alternatives.Value[i].Accept(this);
+                ExitScope();
+            }
             if (o.ElseStatementSeq != null)
             {
                 WriteTabs(); sw.WriteLine("ELSE");
@@ -559,12 +572,12 @@ namespace CPParser
 
         public void Visit(IStatement.ExitStatement o)
         {
-            sw.Write("EXIT");
+            WriteTabs(); sw.Write("EXIT");
         }
 
         public void Visit(IStatement.ReturnStatement o)
         {
-            sw.Write("RETURN"); 
+            WriteTabs(); sw.Write("RETURN"); 
             if (o.Expr != null)
             {
                 sw.Write(" ");
@@ -578,7 +591,7 @@ namespace CPParser
             WriteTabs(); sw.Write("FOR "); o.Ident.Accept(this); 
                 sw.Write(" := "); o.Expr.Accept(this); sw.Write(" TO "); o.ToExpr.Accept(this); 
             if (o.ByExpr != null) {
-                sw.Write(" BY "); o.ToExpr.Accept(this);
+                sw.Write(" BY "); o.ByExpr.Accept(this);
             }
             sw.WriteLine(" DO");
             EnterScope();
