@@ -199,7 +199,7 @@ namespace CPParser.Ast
 		}
 		public class ArrayType : IType
 		{
-			public AstList ConstExprs;
+			public AstList ConstExprs = new AstList();
 			public IType Type_;
 			public void Accept(IAstVisitor v) => v.Visit(this);
 		}
@@ -252,7 +252,8 @@ namespace CPParser.Ast
 	}
 	public class CaseLabels : IAstElement
 	{
-		public AstList ConstExprs;
+		public ConstExpr ConstExpr1;
+		public ConstExpr ConstExpr2;
 		public void Accept(IAstVisitor v) => v.Visit(this);
 	}
 	public class StatementSeq : IAstElement
@@ -350,8 +351,7 @@ namespace CPParser.Ast
 
 	public class Case : IAstElement
 	{
-		public CaseLabels CaseLabels;
-		public AstList CaseLabelsList;
+		public AstList CaseLabels;
 		public StatementSeq StatementSeq;
 		public void Accept(IAstVisitor v) => v.Visit(this);
 
@@ -422,11 +422,16 @@ namespace CPParser.Ast
 			public StatementSeq StatementSeq;
 			public void Accept(IAstVisitor v) => v.Visit(this);
 		}
-		public class WithStatement : IStatement
+
+		public class WithAlternativeStatement : IStatement
 		{
 			public Guard Guard;
 			public StatementSeq StatementSeq;
-			public AstList AdditionalGuards;
+			public void Accept(IAstVisitor v) => v.Visit(this);
+		}
+		public class WithStatement : IStatement
+		{
+			public AstList Alternatives = new AstList();
 			public StatementSeq ElseStatementSeq;
 			public void Accept(IAstVisitor v) => v.Visit(this);
 		}

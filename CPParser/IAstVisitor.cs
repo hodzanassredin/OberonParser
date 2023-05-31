@@ -74,5 +74,6 @@ namespace CPParser
 		void Visit(Designator.IDesignatorSpec.ProcCallDesignatorSpec o);
         void Visit(SimpleElementExpr simpleElementExpr);
         void Visit(TermElementExpr termElementExpr);
+        void Visit(IStatement.WithAlternativeStatement withAlternativeStatement);
     }
 }

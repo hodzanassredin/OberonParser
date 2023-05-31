@@ -201,7 +201,7 @@ public AstBuilder builder = new AstBuilder();
 		var o = new CPParser.Ast.ConstDecl(); 
 		IdentDef(out o.IdentDef);
 		Expect(19);
-		ConstExpr();
+		ConstExpr(out o.ConstExpr);
 		lst.Add(o); 
 	}
 
@@ -272,8 +272,8 @@ public AstBuilder builder = new AstBuilder();
 		}
 	}
 
-	void ConstExpr() {
-		var o = new CPParser.Ast.ConstExpr(); 
+	void ConstExpr(out CPParser.Ast.ConstExpr o) {
+		o = new CPParser.Ast.ConstExpr(); 
 		Expr(out o.Expr);
 	}
 
@@ -285,12 +285,14 @@ public AstBuilder builder = new AstBuilder();
 			o = at; 
 		} else if (la.kind == 30) {
 			Get();
-			var at = new CPParser.Ast.IType.ArrayType(); 
+			var at = new CPParser.Ast.IType.ArrayType(); CPParser.Ast.ConstExpr ce; 
 			if (StartOf(1)) {
-				ConstExpr();
+				ConstExpr(out ce);
+				at.ConstExprs.Add(ce); 
 				while (la.kind == 14) {
 					Get();
-					ConstExpr();
+					ConstExpr(out ce);
+					at.ConstExprs.Add(ce); 
 				}
 			}
 			Expect(31);
@@ -363,9 +365,9 @@ public AstBuilder builder = new AstBuilder();
 				o.ReceiverPrefix = CPParser.Ast.Receiver.Prefix.IN; 
 			}
 		}
-		Ident(o.SelfIdent);
+		Ident(out o.SelfIdent);
 		Expect(20);
-		Ident(o.TypeIdent);
+		Ident(out o.TypeIdent);
 		Expect(27);
 	}
 
@@ -468,52 +470,55 @@ public AstBuilder builder = new AstBuilder();
 				if (la.kind == 26) {
 					Get();
 					if (StartOf(1)) {
-						ExprList();
+						ExprList(out o.ExprList);
 					}
 					Expect(27);
 				}
 				os = o;
-			} else if (la.kind == 36) {
+			} else if (la.kind == 37) {
 				var o = new CPParser.Ast.IStatement.IfStatement(); 
 				Get();
 				Expr(out o.If.Cond);
-				Expect(37);
+				Expect(38);
 				StatementSeq(out o.If.ThenBody);
-				while (la.kind == 38) {
+				while (la.kind == 39) {
 					var elsif = new CPParser.Ast.IStatement.IfStatement.IfThen(); 
 					Get();
 					Expr(out elsif.Cond);
-					Expect(37);
+					Expect(38);
 					StatementSeq(out elsif.ThenBody);
 					o.ELSIFs.Add(elsif); 
 				}
-				if (la.kind == 39) {
+				if (la.kind == 40) {
 					Get();
 					StatementSeq(out o.ElseBody);
 				}
 				Expect(10);
 				os = o; 
-			} else if (la.kind == 40) {
+			} else if (la.kind == 41) {
 				var o = new CPParser.Ast.IStatement.CaseStatement(); 
 				Get();
 				Expr(out o.Expr);
 				Expect(31);
-				Case();
-				while (la.kind == 41) {
+				var c = new CPParser.Ast.Case(); 
+				Case(out c);
+				o.Cases.Add(c); 
+				while (la.kind == 42) {
 					Get();
-					Case();
+					Case(out c);
+					o.Cases.Add(c); 
 				}
-				if (la.kind == 39) {
+				if (la.kind == 40) {
 					Get();
 					StatementSeq(out o.ElseBody);
 				}
 				Expect(10);
 				os = o;
-			} else if (la.kind == 42) {
+			} else if (la.kind == 43) {
 				var o = new CPParser.Ast.IStatement.WhileStatement(); 
 				Get();
 				Expr(out o.Expr);
-				Expect(43);
+				Expect(36);
 				StatementSeq(out o.StatementSeq);
 				Expect(10);
 				os = o; 
@@ -534,9 +539,9 @@ public AstBuilder builder = new AstBuilder();
 				Expr(out o.ToExpr);
 				if (la.kind == 47) {
 					Get();
-					ConstExpr();
+					ConstExpr(out o.ByExpr);
 				}
-				Expect(43);
+				Expect(36);
 				StatementSeq(out o.StatementSeq);
 				Expect(10);
 				os = o;
@@ -547,22 +552,16 @@ public AstBuilder builder = new AstBuilder();
 				Expect(10);
 				os = o;
 			} else if (la.kind == 49) {
-				var o = new CPParser.Ast.IStatement.WithStatement(); 
+				var o = new CPParser.Ast.IStatement.WithStatement(); CPParser.Ast.IStatement.WithAlternativeStatement alt; 
 				Get();
-				if (la.kind == 1) {
-					Guard();
-					Expect(43);
-					StatementSeq(out o.StatementSeq);
-				}
-				while (la.kind == 41) {
+				WithAlt(out alt);
+				o.Alternatives.Add(alt); 
+				while (la.kind == 42) {
 					Get();
-					if (la.kind == 1) {
-						Guard();
-						Expect(43);
-						StatementSeq(out o.ElseStatementSeq);
-					}
+					WithAlt(out alt);
+					o.Alternatives.Add(alt); 
 				}
-				if (la.kind == 39) {
+				if (la.kind == 40) {
 					Get();
 					StatementSeq(out o.ElseStatementSeq);
 				}
@@ -583,6 +582,22 @@ public AstBuilder builder = new AstBuilder();
 		}
 	}
 
+	void WithAlt(out CPParser.Ast.IStatement.WithAlternativeStatement o) {
+		o = new CPParser.Ast.IStatement.WithAlternativeStatement(); 
+		if (la.kind == 1) {
+			Guard(out o.Guard);
+			Expect(36);
+			StatementSeq(out o.StatementSeq);
+		}
+	}
+
+	void Guard(out CPParser.Ast.Guard o) {
+		o = new CPParser.Ast.Guard(); 
+		Qualident(out o.VarQualident);
+		Expect(20);
+		Qualident(out o.TypeQualident);
+	}
+
 	void Designator(out CPParser.Ast.Designator o) {
 		o = new CPParser.Ast.Designator(); 
 		Qualident(out o.Qualident);
@@ -595,7 +610,7 @@ public AstBuilder builder = new AstBuilder();
 			} else if (la.kind == 71) {
 				var s = new CPParser.Ast.Designator.IDesignatorSpec.ArrayDesignatorSpec(); 
 				Get();
-				ExprList();
+				ExprList(out s.Value);
 				Expect(72);
 				o.Specs.Add(s); 
 			} else if (la.kind == 21) {
@@ -611,7 +626,7 @@ public AstBuilder builder = new AstBuilder();
 				} else if (StartOf(6)) {
 					var s = new CPParser.Ast.Designator.IDesignatorSpec.ProcCallDesignatorSpec(); 
 					if (StartOf(1)) {
-						ExprList();
+						ExprList(out s.Value);
 					}
 					o.Specs.Add(s); 
 				} else SynErr(79);
@@ -628,13 +643,13 @@ public AstBuilder builder = new AstBuilder();
 		o = new CPParser.Ast.Expr(); 
 		SimpleExpr(out o.SimpleExpr);
 		if (StartOf(7)) {
-			Relation();
+			Relation(out o.Relation);
 			SimpleExpr(out o.SimpleExpr2);
 		}
 	}
 
-	void ExprList() {
-		var o = new CPParser.Ast.ExprList(); CPParser.Ast.Expr e; 
+	void ExprList(out CPParser.Ast.ExprList o) {
+		o = new CPParser.Ast.ExprList(); CPParser.Ast.Expr e; 
 		Expr(out e);
 		o.Exprs.Add(e); 
 		while (la.kind == 14) {
@@ -644,32 +659,27 @@ public AstBuilder builder = new AstBuilder();
 		}
 	}
 
-	void Case() {
-		var o = new CPParser.Ast.Case(); 
+	void Case(out CPParser.Ast.Case o) {
+		o = new CPParser.Ast.Case(); CPParser.Ast.CaseLabels cl; 
 		if (StartOf(1)) {
-			CaseLabels();
+			CaseLabels(out cl);
+			o.CaseLabels.Add(cl); 
 			while (la.kind == 14) {
 				Get();
-				CaseLabels();
+				CaseLabels(out cl);
+				o.CaseLabels.Add(cl); 
 			}
 			Expect(20);
 			StatementSeq(out o.StatementSeq);
 		}
 	}
 
-	void Guard() {
-		var o = new CPParser.Ast.Guard(); 
-		Qualident(out o.VarQualident);
-		Expect(20);
-		Qualident(out o.TypeQualident);
-	}
-
-	void CaseLabels() {
-		var o = new CPParser.Ast.CaseLabels(); 
-		ConstExpr();
+	void CaseLabels(out CPParser.Ast.CaseLabels o) {
+		o = new CPParser.Ast.CaseLabels(); 
+		ConstExpr(out o.ConstExpr1);
 		if (la.kind == 52) {
 			Get();
-			ConstExpr();
+			ConstExpr(out o.ConstExpr2);
 		}
 	}
 
@@ -691,39 +701,47 @@ public AstBuilder builder = new AstBuilder();
 		}
 	}
 
-	void Relation() {
+	void Relation(out CPParser.Ast.Relation o) {
 		switch (la.kind) {
 		case 19: {
-			var o = new CPParser.Ast.Relation(); 
+			o = new CPParser.Ast.Relation(); 
 			Get();
+			o.Op = CPParser.Ast.Relation.Relations.Eq ; 
 			break;
 		}
 		case 59: {
 			Get();
+			o.Op = CPParser.Ast.Relation.Relations.Neq ; 
 			break;
 		}
 		case 60: {
 			Get();
+			o.Op = CPParser.Ast.Relation.Relations.Lss ; 
 			break;
 		}
 		case 61: {
 			Get();
+			o.Op = CPParser.Ast.Relation.Relations.Leq ; 
 			break;
 		}
 		case 62: {
 			Get();
+			o.Op = CPParser.Ast.Relation.Relations.Gtr ; 
 			break;
 		}
 		case 63: {
 			Get();
+			o.Op = CPParser.Ast.Relation.Relations.Geq ; 
 			break;
 		}
 		case 28: {
 			Get();
+			o.Op = CPParser.Ast.Relation.Relations.In ; 
 			break;
 		}
 		case 64: {
 			Get();
+			o.Op = CPParser.Ast.Relation.Relations.Is ; 
 			break;
 		}
 		default: SynErr(80); break;
@@ -790,7 +808,7 @@ public AstBuilder builder = new AstBuilder();
 		}
 		case 57: {
 			var o = new CPParser.Ast.IFactor.SetFactor(); 
-			Set();
+			Set(out o.Value);
 			f = o; 
 			break;
 		}
@@ -833,21 +851,23 @@ public AstBuilder builder = new AstBuilder();
 		} else SynErr(83);
 	}
 
-	void Set() {
-		var o = new CPParser.Ast.Set(); 
+	void Set(out CPParser.Ast.Set o) {
+		o = new CPParser.Ast.Set(); CPParser.Ast.Element e; 
 		Expect(57);
 		if (StartOf(1)) {
-			Element();
+			Element(out e);
+			o.Elements.Add(e); 
 			while (la.kind == 14) {
 				Get();
-				Element();
+				Element(out e);
+				o.Elements.Add(e); 
 			}
 		}
 		Expect(58);
 	}
 
-	void Element() {
-		var o = new CPParser.Ast.Element(); 
+	void Element(out CPParser.Ast.Element o) {
+		o = new CPParser.Ast.Element(); 
 		Expr(out o.Expr1);
 		if (la.kind == 52) {
 			Get();
@@ -871,7 +891,7 @@ public AstBuilder builder = new AstBuilder();
 		{_x,_T,_T,_T, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_T,_T,_T, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
 		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _x,_T,_x,_x, _x,_x,_x,_x, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
 		{_x,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
-		{_x,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _T,_x,_x,_x, _T,_x,_T,_x, _T,_x,_T,_x, _T,_T,_T,_T, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
+		{_x,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_T,_x,_x, _x,_T,_x,_T, _T,_x,_T,_x, _T,_T,_T,_T, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
 		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _x,_x,_x,_x, _x,_x,_x,_x, _x,_T,_x,_x, _x,_x,_T,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _x,_x,_x,_x},
 		{_x,_T,_T,_T, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_T, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_T,_T,_T, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
 		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _x,_x,_x,_x, _x,_x,_x,_x, _T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _T,_T,_T,_T, _T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
@@ -925,14 +945,14 @@ public class Errors {
 			case 33: s = "\"RECORD\" expected"; break;
 			case 34: s = "\"POINTER\" expected"; break;
 			case 35: s = "\"TO\" expected"; break;
-			case 36: s = "\"IF\" expected"; break;
-			case 37: s = "\"THEN\" expected"; break;
-			case 38: s = "\"ELSIF\" expected"; break;
-			case 39: s = "\"ELSE\" expected"; break;
-			case 40: s = "\"CASE\" expected"; break;
-			case 41: s = "\"|\" expected"; break;
-			case 42: s = "\"WHILE\" expected"; break;
-			case 43: s = "\"DO\" expected"; break;
+			case 36: s = "\"DO\" expected"; break;
+			case 37: s = "\"IF\" expected"; break;
+			case 38: s = "\"THEN\" expected"; break;
+			case 39: s = "\"ELSIF\" expected"; break;
+			case 40: s = "\"ELSE\" expected"; break;
+			case 41: s = "\"CASE\" expected"; break;
+			case 42: s = "\"|\" expected"; break;
+			case 43: s = "\"WHILE\" expected"; break;
 			case 44: s = "\"REPEAT\" expected"; break;
 			case 45: s = "\"UNTIL\" expected"; break;
 			case 46: s = "\"FOR\" expected"; break;

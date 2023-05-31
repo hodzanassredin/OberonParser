@@ -369,13 +369,13 @@ public class Scanner {
 			case "RECORD": t.kind = 33; break;
 			case "POINTER": t.kind = 34; break;
 			case "TO": t.kind = 35; break;
-			case "IF": t.kind = 36; break;
-			case "THEN": t.kind = 37; break;
-			case "ELSIF": t.kind = 38; break;
-			case "ELSE": t.kind = 39; break;
-			case "CASE": t.kind = 40; break;
-			case "WHILE": t.kind = 42; break;
-			case "DO": t.kind = 43; break;
+			case "DO": t.kind = 36; break;
+			case "IF": t.kind = 37; break;
+			case "THEN": t.kind = 38; break;
+			case "ELSIF": t.kind = 39; break;
+			case "ELSE": t.kind = 40; break;
+			case "CASE": t.kind = 41; break;
+			case "WHILE": t.kind = 43; break;
 			case "REPEAT": t.kind = 44; break;
 			case "UNTIL": t.kind = 45; break;
 			case "FOR": t.kind = 46; break;
@@ -478,7 +478,7 @@ public class Scanner {
 			case 19:
 				{t.kind = 27; break;}
 			case 20:
-				{t.kind = 41; break;}
+				{t.kind = 42; break;}
 			case 21:
 				{t.kind = 52; break;}
 			case 22:

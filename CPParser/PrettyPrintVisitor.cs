@@ -545,5 +545,10 @@ namespace CPParser
         {
             throw new NotImplementedException();
         }
+
+        public void Visit(IStatement.WithAlternativeStatement withAlternativeStatement)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
