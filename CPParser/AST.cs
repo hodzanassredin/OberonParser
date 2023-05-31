@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Text;
 
 namespace CPParser.Ast
 {
@@ -32,6 +33,15 @@ namespace CPParser.Ast
         {
 			return Value.GetEnumerator();
 		}
+
+        public override string ToString()
+        {
+			var sb = new StringBuilder();
+			foreach (var item in Value) { 
+				sb.AppendLine(item.ToString());
+			}	
+            return sb.ToString();
+        }
     }
 
 	public class Ident : IAstElement
@@ -39,6 +49,10 @@ namespace CPParser.Ast
 		public string Name { get; set; }
 
         public void Accept(IAstVisitor v) => v.Visit(this);
+        public override string ToString()
+        {
+            return Name;
+        }
     }
 
 	public class Qualident : IAstElement
@@ -46,12 +60,20 @@ namespace CPParser.Ast
 		public Ident Ident1;
 		public Ident Ident2;
         public void Accept(IAstVisitor v) => v.Visit(this);
-	}
+        public override string ToString()
+        {
+            return $"{Ident1} {Ident2}";
+        }
+    }
 	public class Guard : IAstElement
 	{
 		public Qualident VarQualident;
 		public Qualident TypeQualident;
 		public void Accept(IAstVisitor v) => v.Visit(this);
+		public override string ToString()
+		{
+			return $"{VarQualident}:{TypeQualident}";
+		}
 	}
 
 	public class Module : IAstElement
@@ -62,6 +84,11 @@ namespace CPParser.Ast
 		public StatementSeq Begin;
 		public StatementSeq Close;
 		public void Accept(IAstVisitor v) => v.Visit(this);
+
+		public override string ToString()
+		{
+			return $"MODULE {Ident}";
+		}
 	}
 
 	public class Import : IAstElement
@@ -69,6 +96,11 @@ namespace CPParser.Ast
 		public Ident Name;
 		public Ident OriginalName;
 		public void Accept(IAstVisitor v) => v.Visit(this);
+
+		public override string ToString()
+		{
+			return $"{Name} : {OriginalName}";
+		}
 	}
 
 	public class IdentDef : IAstElement
@@ -232,6 +264,11 @@ namespace CPParser.Ast
 	public class ExprList : IAstElement {
 		public AstList Exprs = new AstList();
 		public void Accept(IAstVisitor v) => v.Visit(this);
+
+		public override string ToString()
+		{
+			return Exprs.ToString();
+		}
 	}
 	public class IdentList : IAstElement
 	{
@@ -262,7 +299,7 @@ namespace CPParser.Ast
         public void Accept(IAstVisitor v) => v.Visit(this);
     }
 	public class Set : IAstElement {
-		public AstList Elements;
+		public AstList Elements = new AstList();
         public void Accept(IAstVisitor v) => v.Visit(this);		
 	}
 	public class Element : IAstElement {
@@ -302,7 +339,12 @@ namespace CPParser.Ast
 		}
 		public Relations Op;
 		public void Accept(IAstVisitor v) => v.Visit(this);
-	}
+
+        public override string ToString()
+        {
+            return Op.ToString();
+        }
+    }
 
 	public class SimpleElementExpr : IAstElement {
 		public AddOp AddOp;
@@ -323,7 +365,12 @@ namespace CPParser.Ast
 		public Term Term;
 		public AstList SimpleExprElements = new AstList();
 		public void Accept(IAstVisitor v) => v.Visit(this);
-	}
+
+        public override string ToString()
+        {
+            return $"{Prefix} {Term} {SimpleExprElements}";
+        }
+    }
 
 	public class TermElementExpr : IAstElement
 	{
@@ -339,6 +386,11 @@ namespace CPParser.Ast
 		public IFactor Factor;
 		public AstList TermElements = new AstList();
 		public void Accept(IAstVisitor v) => v.Visit(this);
+
+		public override string ToString()
+		{
+			return $"{Factor} {TermElements}";
+		}
 	}
 
 	public class Expr : IAstElement
@@ -347,6 +399,12 @@ namespace CPParser.Ast
 		public Relation Relation;
 		public SimpleExpr SimpleExpr2;
 		public void Accept(IAstVisitor v) => v.Visit(this);
+
+		public override string ToString()
+		{
+			if (Relation!=null) return $"{SimpleExpr} {Relation} {SimpleExpr2}";
+			return $"{SimpleExpr}";
+		}
 	}
 
 	public class Case : IAstElement
@@ -458,40 +516,73 @@ namespace CPParser.Ast
 		{
 			public Designator Value;
 			public void Accept(IAstVisitor v) => v.Visit(this);
+
+			public override string ToString()
+			{
+				return $"{Value}";
+			}
 		}
 		public class NumberFactor : IFactor
 		{
 			public Number Value;
 			public void Accept(IAstVisitor v) => v.Visit(this);
+			public override string ToString()
+			{
+				return $"{Value}";
+			}
 		}
 		public class CharacterFactor : IFactor
 		{
 			public String Value;
 			public void Accept(IAstVisitor v) => v.Visit(this);
+			public override string ToString()
+			{
+				return $"{Value}";
+			}
 		}
 		public class StringFactor : IFactor
 		{
 			public String Value;
 			public void Accept(IAstVisitor v) => v.Visit(this);
+			public override string ToString()
+			{
+				return $"{Value}";
+			}
 		}
 		public class NilFactor : IFactor
 		{
 			public void Accept(IAstVisitor v) => v.Visit(this);
+			public override string ToString()
+			{
+				return $"NIL";
+			}
 		}
 		public class SetFactor : IFactor
 		{
 			public Set Value;
 			public void Accept(IAstVisitor v) => v.Visit(this);
+			public override string ToString()
+			{
+				return $"{Value}";
+			}
 		}
 		public class ExprFactor : IFactor
 		{
 			public Expr Value;
 			public void Accept(IAstVisitor v) => v.Visit(this);
+			public override string ToString()
+			{
+				return $"{Value}";
+			}
 		}
 		public class NegFactor : IFactor
 		{
 			public IFactor Value;
 			public void Accept(IAstVisitor v) => v.Visit(this);
+			public override string ToString()
+			{
+				return $"{Value}";
+			}
 		}
 	}
 
@@ -502,21 +593,41 @@ namespace CPParser.Ast
             public class RecordDesignatorSpec : IDesignatorSpec {
 				public Ident Value;
 				public void Accept(IAstVisitor v) => v.Visit(this);
+				public override string ToString()
+				{
+					return $"{Value}";
+				}
 			}
 			public class ArrayDesignatorSpec : IDesignatorSpec {
 				public ExprList Value;
 				public void Accept(IAstVisitor v) => v.Visit(this);
+				public override string ToString()
+				{
+					return $"{Value}";
+				}
 			}
 			public class PointerDesignatorSpec : IDesignatorSpec {
 				public void Accept(IAstVisitor v) => v.Visit(this);
+				public override string ToString()
+				{
+					return $"^";
+				}
 			}
 			public class CastDesignatorSpec : IDesignatorSpec {
 				public Qualident Value;
 				public void Accept(IAstVisitor v) => v.Visit(this);
+				public override string ToString()
+				{
+					return $"({Value})";
+				}
 			}
 			public class ProcCallDesignatorSpec : IDesignatorSpec {
 				public ExprList Value;
 				public void Accept(IAstVisitor v) => v.Visit(this);
+				public override string ToString()
+				{
+					return $"({Value})";
+				}
 			}
 		}
 
@@ -524,6 +635,11 @@ namespace CPParser.Ast
 		public bool EndOfLine;
 		public AstList Specs = new AstList();
 		public void Accept(IAstVisitor v) => v.Visit(this);
-	}
+
+        public override string ToString()
+        {
+            return $"{Qualident} {Specs}" + (EndOfLine ? "$" : "");
+        }
+    }
 
 }

@@ -2,7 +2,7 @@ using CPParser;
 
 COMPILER CP
 	public AstBuilder builder = new AstBuilder(); 
-
+	const int _colon = 0;
 	bool FollowedByColon() { 
 	  Token x = la; 
 	  while (x.kind == _ident) 
@@ -27,7 +27,7 @@ TOKENS
 	real = digit {digit} "." {digit} [ "E" ["+" | "-"] digit {digit} ].
 	character  = digit {hexDigit} "X".
 	string  = '"' {noQuote} '"' | "'" {noQuote2} "'".
-	colon  = ':'.
+	
 
 COMMENTS FROM "(*" TO "*)" NESTED
 
@@ -140,7 +140,8 @@ PRODUCTIONS
 
 	StatementSeq<out CPParser.Ast.StatementSeq o>	
 		= (. o = new CPParser.Ast.StatementSeq(); CPParser.Ast.IStatement s; .)
-		Statement<out s> (. o.Statements.Add(s); .) {";" Statement<out s> (. o.Statements.Add(s); .)}.
+		Statement<out s> (. o.Statements.Add(s); .) 
+		{";" Statement<out s> (. o.Statements.Add(s); .)}.
 
 	WithAlt<out CPParser.Ast.IStatement.WithAlternativeStatement o> 
 		= (. o = new CPParser.Ast.IStatement.WithAlternativeStatement(); .)
@@ -226,8 +227,8 @@ PRODUCTIONS
 		= (. o = new CPParser.Ast.Element(); .)	 
 		Expr<out o.Expr1> [".." Expr<out o.Expr2> ].
 
-	Relation<out CPParser.Ast.Relation o> (. o = null; .) 	
-		= (. o = new CPParser.Ast.Relation(); .)
+	Relation<out CPParser.Ast.Relation o> (. o = new CPParser.Ast.Relation(); .)
+		= 
 		"=" (. o.Op = CPParser.Ast.Relation.Relations.Eq ; .)
 		| "#" (. o.Op = CPParser.Ast.Relation.Relations.Neq ; .)
 		| "<" (. o.Op = CPParser.Ast.Relation.Relations.Lss ; .)
@@ -252,14 +253,13 @@ PRODUCTIONS
 		| "&" (. o.Op = CPParser.Ast.MulOp.MulOps.AND; .) .
 
 	Designator<out CPParser.Ast.Designator o>
-		= (. o = new CPParser.Ast.Designator(); .) Qualident<out o.Qualident> 
+		= (. o = new CPParser.Ast.Designator(); .) 
+		Qualident<out o.Qualident> 
 		{ 
 			  "." (. var s = new CPParser.Ast.Designator.IDesignatorSpec.RecordDesignatorSpec(); .) Ident<out s.Value> (. o.Specs.Add(s); .)
 			| "[" (. var s = new CPParser.Ast.Designator.IDesignatorSpec.ArrayDesignatorSpec(); .) ExprList<out s.Value> "]" (. o.Specs.Add(s); .)
 			| "^" (. var s = new CPParser.Ast.Designator.IDesignatorSpec.PointerDesignatorSpec(); .) (. o.Specs.Add(s); .)
-			| "(" (
-					(. var s = new CPParser.Ast.Designator.IDesignatorSpec.CastDesignatorSpec(); .) Qualident<out s.Value> (. o.Specs.Add(s); .)
-					| (. var s = new CPParser.Ast.Designator.IDesignatorSpec.ProcCallDesignatorSpec(); .) [ExprList<out s.Value>] (. o.Specs.Add(s); .) ) ")" 
+			| "(" (. var s = new CPParser.Ast.Designator.IDesignatorSpec.ProcCallDesignatorSpec(); .) [ExprList<out s.Value>] (. o.Specs.Add(s); .)  ")" 
 			} 
 		[ "$" (. o.EndOfLine = true; .) ].
 
