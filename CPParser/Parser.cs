@@ -300,10 +300,10 @@ public AstBuilder builder = new AstBuilder();
 			o = at; 
 		} else if (StartOf(2)) {
 			var at = new CPParser.Ast.IType.RecordType(); 
-			if (la.kind == 23 || la.kind == 25 || la.kind == 32) {
-				if (la.kind == 23) {
+			if (la.kind == 22 || la.kind == 24 || la.kind == 32) {
+				if (la.kind == 22) {
 					Get();
-				} else if (la.kind == 25) {
+				} else if (la.kind == 24) {
 					Get();
 				} else {
 					Get();
@@ -392,22 +392,33 @@ public AstBuilder builder = new AstBuilder();
 		o = new CPParser.Ast.MethAttributes(); 
 		if (la.kind == 14) {
 			Get();
-			Expect(22);
-			o.IsNew = true; 
-		}
-		if (la.kind == 14) {
-			Get();
-			if (la.kind == 23) {
-				Get();
-				o.Attr = CPParser.Ast.MethAttributes.MethodAttr.ABSTRACT; 
-			} else if (la.kind == 24) {
-				Get();
-				o.Attr = CPParser.Ast.MethAttributes.MethodAttr.EMPTY; 
-			} else if (la.kind == 25) {
-				Get();
-				o.Attr = CPParser.Ast.MethAttributes.MethodAttr.EXTENSIBLE; 
+			if (la.kind == 25) {
+				NewMethAttr(o);
+				Expect(14);
+				MethAttr(out o.Attr);
+			} else if (la.kind == 22 || la.kind == 23 || la.kind == 24) {
+				MethAttr(out o.Attr);
 			} else SynErr(78);
 		}
+	}
+
+	void MethAttr(out CPParser.Ast.MethAttributes.MethodAttr? o) {
+		o = null; 
+		if (la.kind == 22) {
+			Get();
+			o = CPParser.Ast.MethAttributes.MethodAttr.ABSTRACT; 
+		} else if (la.kind == 23) {
+			Get();
+			o = CPParser.Ast.MethAttributes.MethodAttr.EMPTY; 
+		} else if (la.kind == 24) {
+			Get();
+			o = CPParser.Ast.MethAttributes.MethodAttr.EXTENSIBLE; 
+		} else SynErr(79);
+	}
+
+	void NewMethAttr(CPParser.Ast.MethAttributes o) {
+		Expect(25);
+		o.IsNew = true; 
 	}
 
 	void FPSection(CPParser.Ast.AstList lst) {
@@ -629,7 +640,7 @@ public AstBuilder builder = new AstBuilder();
 						ExprList(out s.Value);
 					}
 					o.Specs.Add(s); 
-				} else SynErr(79);
+				} else SynErr(80);
 				Expect(27);
 			}
 		}
@@ -745,7 +756,7 @@ public AstBuilder builder = new AstBuilder();
 			o.Op = CPParser.Ast.Relation.Relations.Is ; 
 			break;
 		}
-		default: SynErr(80); break;
+		default: SynErr(81); break;
 		}
 	}
 
@@ -771,7 +782,7 @@ public AstBuilder builder = new AstBuilder();
 		} else if (la.kind == 65) {
 			Get();
 			o.Op = CPParser.Ast.AddOp.AddOps.Or; 
-		} else SynErr(81);
+		} else SynErr(82);
 	}
 
 	void Factor(out CPParser.Ast.IFactor f) {
@@ -828,7 +839,7 @@ public AstBuilder builder = new AstBuilder();
 			f = o; 
 			break;
 		}
-		default: SynErr(82); break;
+		default: SynErr(83); break;
 		}
 	}
 
@@ -849,7 +860,7 @@ public AstBuilder builder = new AstBuilder();
 		} else if (la.kind == 70) {
 			Get();
 			o.Op = CPParser.Ast.MulOp.MulOps.AND; 
-		} else SynErr(83);
+		} else SynErr(84);
 	}
 
 	void Set(out CPParser.Ast.Set o) {
@@ -890,7 +901,7 @@ public AstBuilder builder = new AstBuilder();
 	static readonly bool[,] set = {
 		{_T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
 		{_x,_T,_T,_T, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_T,_T,_T, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
-		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _x,_T,_x,_x, _x,_x,_x,_x, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
+		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_x, _T,_x,_x,_x, _x,_x,_x,_x, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
 		{_x,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
 		{_x,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_T,_x,_x, _x,_T,_x,_T, _T,_x,_T,_x, _T,_T,_T,_T, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
 		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _x,_x,_x,_x, _x,_x,_x,_x, _x,_T,_x,_x, _x,_x,_T,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _x,_x,_x,_x},
@@ -932,10 +943,10 @@ public class Errors {
 			case 19: s = "\"=\" expected"; break;
 			case 20: s = "\":\" expected"; break;
 			case 21: s = "\"^\" expected"; break;
-			case 22: s = "\"NEW\" expected"; break;
-			case 23: s = "\"ABSTRACT\" expected"; break;
-			case 24: s = "\"EMPTY\" expected"; break;
-			case 25: s = "\"EXTENSIBLE\" expected"; break;
+			case 22: s = "\"ABSTRACT\" expected"; break;
+			case 23: s = "\"EMPTY\" expected"; break;
+			case 24: s = "\"EXTENSIBLE\" expected"; break;
+			case 25: s = "\"NEW\" expected"; break;
 			case 26: s = "\"(\" expected"; break;
 			case 27: s = "\")\" expected"; break;
 			case 28: s = "\"IN\" expected"; break;
@@ -989,11 +1000,12 @@ public class Errors {
 			case 76: s = "invalid DeclSeq"; break;
 			case 77: s = "invalid Type"; break;
 			case 78: s = "invalid MethAttributes"; break;
-			case 79: s = "invalid Designator"; break;
-			case 80: s = "invalid Relation"; break;
-			case 81: s = "invalid AddOp"; break;
-			case 82: s = "invalid Factor"; break;
-			case 83: s = "invalid MulOp"; break;
+			case 79: s = "invalid MethAttr"; break;
+			case 80: s = "invalid Designator"; break;
+			case 81: s = "invalid Relation"; break;
+			case 82: s = "invalid AddOp"; break;
+			case 83: s = "invalid Factor"; break;
+			case 84: s = "invalid MulOp"; break;
 
 			default: s = "error " + n; break;
 		}

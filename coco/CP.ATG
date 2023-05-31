@@ -77,14 +77,18 @@ PRODUCTIONS
 		= (. var o = new CPParser.Ast.ForwardDecl(); .)	
 		 "^" [Receiver<out o.Receiver>] IdentDef<out o.IdentDef> 
 		[ FormalPars<out o.FormalPars> ] MethAttributes<out o.MethAttributes> (. lst.Add(o); .).
+	
+	MethAttr<out CPParser.Ast.MethAttributes.MethodAttr? o> (. o = null; .)
+	= "ABSTRACT" (. o = CPParser.Ast.MethAttributes.MethodAttr.ABSTRACT; .)
+	| "EMPTY" (. o = CPParser.Ast.MethAttributes.MethodAttr.EMPTY; .)
+	| "EXTENSIBLE" (. o = CPParser.Ast.MethAttributes.MethodAttr.EXTENSIBLE; .).
+
+	NewMethAttr<CPParser.Ast.MethAttributes o>
+	= "NEW" (. o.IsNew = true; .).
 
 	MethAttributes<out CPParser.Ast.MethAttributes o>	
 		= (. o = new CPParser.Ast.MethAttributes(); .)	
-		["," "NEW" (. o.IsNew = true; .)] 
-		["," ("ABSTRACT" (. o.Attr = CPParser.Ast.MethAttributes.MethodAttr.ABSTRACT; .)
-		| "EMPTY" (. o.Attr = CPParser.Ast.MethAttributes.MethodAttr.EMPTY; .)
-		| "EXTENSIBLE" (. o.Attr = CPParser.Ast.MethAttributes.MethodAttr.EXTENSIBLE; .)
-		)].
+		[ "," ((NewMethAttr<o> "," MethAttr<out o.Attr>) | MethAttr<out o.Attr>) ].
 	
 	FormalPars<out CPParser.Ast.FormalPars o> 	
 		= (. o = new CPParser.Ast.FormalPars(); .)	
@@ -227,7 +231,7 @@ PRODUCTIONS
 	Designator<out CPParser.Ast.Designator o>
 		= (. o = new CPParser.Ast.Designator(); .) Qualident<out o.Qualident> 
 		{ 
-			(. var s = new CPParser.Ast.Designator.IDesignatorSpec.RecordDesignatorSpec(); .) "." Ident<out s.Value> (. o.Specs.Add(s); .)
+			  (. var s = new CPParser.Ast.Designator.IDesignatorSpec.RecordDesignatorSpec(); .) "." Ident<out s.Value> (. o.Specs.Add(s); .)
 			| (. var s = new CPParser.Ast.Designator.IDesignatorSpec.ArrayDesignatorSpec(); .) "[" ExprList<out s.Value> "]" (. o.Specs.Add(s); .)
 			| (. var s = new CPParser.Ast.Designator.IDesignatorSpec.PointerDesignatorSpec(); .) "^" (. o.Specs.Add(s); .)
 			|  "(" (
