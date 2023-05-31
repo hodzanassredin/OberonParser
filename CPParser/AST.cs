@@ -321,7 +321,7 @@ namespace CPParser.Ast
 		}
 		public SimpleExprPrefix? Prefix;
 		public Term Term;
-		public AstList SimpleExprElements;
+		public AstList SimpleExprElements = new AstList();
 		public void Accept(IAstVisitor v) => v.Visit(this);
 	}
 
@@ -446,7 +446,7 @@ namespace CPParser.Ast
 		}
 	}
 	
-	public abstract class Number : IAstElement
+	public class Number : IAstElement
 	{
 		public string Value;
 		public void Accept(IAstVisitor v) => v.Visit(this);
@@ -466,12 +466,12 @@ namespace CPParser.Ast
 		}
 		public class CharacterFactor : IFactor
 		{
-			public Char Value;
+			public String Value;
 			public void Accept(IAstVisitor v) => v.Visit(this);
 		}
 		public class StringFactor : IFactor
 		{
-			public string Value;
+			public String Value;
 			public void Accept(IAstVisitor v) => v.Visit(this);
 		}
 		public class NilFactor : IFactor

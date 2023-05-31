@@ -125,11 +125,14 @@ public AstBuilder builder = new AstBuilder();
 		o = new CPParser.Ast.Ident{Name = t.val}; 
 	}
 
-	void number() {
+	void Number(out CPParser.Ast.Number o) {
+		o = null; 
 		if (la.kind == 2) {
 			Get();
+			o = new CPParser.Ast.Number{Value = t.val}; 
 		} else if (la.kind == 3) {
 			Get();
+			o = new CPParser.Ast.Number{Value = t.val}; 
 		} else SynErr(75);
 	}
 
@@ -485,7 +488,7 @@ public AstBuilder builder = new AstBuilder();
 					var o = new CPParser.Ast.IStatement.AssignmentStatement(); o.Designator = d; 
 					Get();
 					Expr(out o.Expr);
-					os = o;
+					os = o; 
 				} else if (StartOf(5)) {
 					var o = new CPParser.Ast.IStatement.ProcCallStatement(); o.Designator = d; 
 					if (la.kind == 26) {
@@ -827,20 +830,20 @@ public AstBuilder builder = new AstBuilder();
 		}
 		case 2: case 3: {
 			var o = new CPParser.Ast.IFactor.NumberFactor(); 
-			number();
+			Number(out o.Value);
 			f = o; 
 			break;
 		}
 		case 4: {
 			var o = new CPParser.Ast.IFactor.CharacterFactor(); 
 			Get();
-			f = o; 
+			o.Value = t.val; f = o; 
 			break;
 		}
 		case 5: {
 			var o = new CPParser.Ast.IFactor.StringFactor(); 
 			Get();
-			f = o; 
+			o.Value = t.val; f = o; 
 			break;
 		}
 		case 55: {
@@ -1028,7 +1031,7 @@ public class Errors {
 			case 72: s = "\"]\" expected"; break;
 			case 73: s = "\"$\" expected"; break;
 			case 74: s = "??? expected"; break;
-			case 75: s = "invalid number"; break;
+			case 75: s = "invalid Number"; break;
 			case 76: s = "invalid DeclSeq"; break;
 			case 77: s = "invalid Type"; break;
 			case 78: s = "invalid MethAttributes"; break;

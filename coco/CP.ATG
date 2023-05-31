@@ -39,7 +39,9 @@ PRODUCTIONS
 	Ident<out CPParser.Ast.Ident o>
 		= ident (. o = new CPParser.Ast.Ident{Name = t.val}; .).
 
-	number = integer | real.
+	Number<out CPParser.Ast.Number o> (. o = null; .)
+		= integer (. o = new CPParser.Ast.Number{Value = t.val}; .)
+		| real (. o = new CPParser.Ast.Number{Value = t.val}; .).
 
 	Module 
 		=	"MODULE" Ident<out builder.Module.Ident> 
@@ -149,9 +151,9 @@ PRODUCTIONS
 		[ (. CPParser.Ast.Designator d; .)
 			Designator<out d>	
 			(	(. var o = new CPParser.Ast.IStatement.AssignmentStatement(); o.Designator = d; .) 
-				 ":=" Expr<out o.Expr> (. os = o;.)
+				 ":=" Expr<out o.Expr> (. os = o; .)
 				| (. var o = new CPParser.Ast.IStatement.ProcCallStatement(); o.Designator = d; .) 
-				["(" [ExprList<out o.ExprList>] ")"] (. os = o;.) )
+					["(" [ExprList<out o.ExprList>] ")"] (. os = o;.) )
 		| (. var o = new CPParser.Ast.IStatement.IfStatement(); .) 
 			"IF" Expr<out o.If.Cond> "THEN" StatementSeq<out o.If.ThenBody>
 				{ (. var elsif = new CPParser.Ast.IStatement.IfStatement.IfThen(); .) "ELSIF" Expr<out elsif.Cond> "THEN" StatementSeq<out elsif.ThenBody> (. o.ELSIFs.Add(elsif); .)}
@@ -208,9 +210,9 @@ PRODUCTIONS
 
 	Factor<out CPParser.Ast.IFactor f> (. f = null;.)	
 		= (. var o = new CPParser.Ast.IFactor.DesignatorFactor(); .) Designator<out o.Value> (. f = o; .)
-		| (. var o = new CPParser.Ast.IFactor.NumberFactor(); .) number (. f = o; .)
-		| (. var o = new CPParser.Ast.IFactor.CharacterFactor(); .) character (. f = o; .)
-		| (. var o = new CPParser.Ast.IFactor.StringFactor(); .) string (. f = o; .)
+		| (. var o = new CPParser.Ast.IFactor.NumberFactor(); .) Number<out o.Value> (. f = o; .)
+		| (. var o = new CPParser.Ast.IFactor.CharacterFactor(); .) character (. o.Value = t.val; f = o; .)
+		| (. var o = new CPParser.Ast.IFactor.StringFactor(); .) string (. o.Value = t.val; f = o; .)
 		| (. var o = new CPParser.Ast.IFactor.NilFactor(); .) "NIL" (. f = o; .)
 		| (. var o = new CPParser.Ast.IFactor.SetFactor(); .) Set<out o.Value> (. f = o; .)
 		| (. var o = new CPParser.Ast.IFactor.ExprFactor(); .) "(" Expr<out o.Value> ")" (. f = o; .)
@@ -273,7 +275,7 @@ PRODUCTIONS
 
 	Qualident<out CPParser.Ast.Qualident o>
 		= (. o = new CPParser.Ast.Qualident(); .)
-		Ident<out o.Ident1> ["." Ident<out o.Ident2>].
+		Ident<out o.Ident1> ["." Ident<out o.Ident2>] .
 
 	IdentDef<out CPParser.Ast.IdentDef o> 	
 		= (. o = new CPParser.Ast.IdentDef (); .)

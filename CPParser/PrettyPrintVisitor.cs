@@ -265,7 +265,7 @@ namespace CPParser
 
         public void Visit(ExprList o)
         {
-            throw new NotImplementedException();
+            VisitList(o.Exprs, () => { }, () => sw.Write(", "));
         }
 
         public void Visit(IdentList o)
@@ -277,7 +277,7 @@ namespace CPParser
             for (int i = 0; i < lst.Value.Count; i++)
             {
                 before();
-                lst.Value[i].Accept(this);
+                lst.Value[i]?.Accept(this);
                 if (i != (lst.Value.Count - 1) || doAfterForLast) after();
             }
         }
@@ -329,12 +329,27 @@ namespace CPParser
 
         public void Visit(SimpleExpr o)
         {
-            throw new NotImplementedException();
+            if (o.Prefix != null) {
+                switch (o.Prefix.Value)
+                {
+                    case SimpleExpr.SimpleExprPrefix.Add:
+                        sw.Write("+");
+                        break;
+                    case SimpleExpr.SimpleExprPrefix.Sub:
+                        sw.Write("-");
+                        break;
+                    default:
+                        break;
+                }
+            }
+            o.Term.Accept(this);
+            VisitList(o.SimpleExprElements, () => { }, () => { });
         }
 
         public void Visit(Term o)
         {
-            throw new NotImplementedException();
+            o.Factor.Accept(this);
+            VisitList(o.TermElements, () => { }, () => { });
         }
 
         public void Visit(Expr o)
@@ -360,7 +375,13 @@ namespace CPParser
 
         public void Visit(IStatement.ProcCallStatement o)
         {
-            throw new NotImplementedException();
+            o.Designator.Accept(this);
+            if (o.ExprList != null)
+            {
+                sw.Write("(");
+                o.ExprList.Accept(this);
+                sw.Write(")");
+            }
         }
 
         public void Visit(IStatement.IfStatement o)
@@ -479,9 +500,9 @@ namespace CPParser
             throw new NotImplementedException();
         }
 
-        public void Visit(IFactor.StringFactor o)
+        public async void Visit(IFactor.StringFactor o)
         {
-            throw new NotImplementedException();
+            sw.Write(o.Value);
         }
 
         public void Visit(Designator o)
@@ -536,17 +557,19 @@ namespace CPParser
             throw new NotImplementedException();
         }
 
-        public void Visit(SimpleElementExpr simpleElementExpr)
+        public void Visit(SimpleElementExpr o)
         {
-            throw new NotImplementedException();
+            o.AddOp.Accept(this);
+            o.Term.Accept(this);
         }
 
-        public void Visit(TermElementExpr termElementExpr)
+        public void Visit(TermElementExpr o)
         {
-            throw new NotImplementedException();
+            o.MulOp.Accept(this);
+            o.Factor.Accept(this);
         }
 
-        public void Visit(IStatement.WithAlternativeStatement withAlternativeStatement)
+        public void Visit(IStatement.WithAlternativeStatement o)
         {
             throw new NotImplementedException();
         }
