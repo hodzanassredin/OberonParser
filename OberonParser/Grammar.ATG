@@ -87,7 +87,7 @@ PRODUCTIONS
 		= "PROCEDURE"															(. var o = new AOParser.Ast.ProcDecl(); .)	
 		ProcHead<out o.ProcHead> ";" 
 		DeclSeq<out o.DeclSeq> 
-		Body<out o.Body> ident													(. lst.Add(o); .).	
+		Body<out o.Body> Ident<out o.Ident>													(. lst.Add(o); .).	
 
 	ProcHead<out AOParser.Ast.ProcHead o>  
 		=																			(. o = new AOParser.Ast.ProcHead(); .)	

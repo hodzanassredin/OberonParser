@@ -249,6 +249,7 @@ namespace AOParser.Ast
 		public ProcHead ProcHead;
 		public DeclSeq DeclSeq;
 		public Body Body;
+		public Ident Ident;
 		public void Accept(IAstVisitor v) => v.Visit(this);
 	}
 
@@ -284,7 +285,7 @@ namespace AOParser.Ast
 	{
 		public enum Prefix
 		{
-			VAR, IN, OUT
+			VAR
 		}
 		public Prefix? FpSectionPrefix;
 		public AstList Idents = new AstList();

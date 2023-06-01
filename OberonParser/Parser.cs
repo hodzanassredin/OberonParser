@@ -268,7 +268,7 @@ public AOParser.Ast.Module module;
 		Expect(7);
 		DeclSeq(out o.DeclSeq);
 		Body(out o.Body);
-		Expect(1);
+		Ident(out o.Ident);
 		lst.Add(o); 
 	}
 
