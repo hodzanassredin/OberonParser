@@ -1,8 +1,8 @@
 {
   "profiles": {
-    "CPParser": {
+    "CParser": {
       "commandName": "Project",
-      "commandLineArgs": "Test.mod"
+      "commandLineArgs": "Test.с"
     }
   }
 }

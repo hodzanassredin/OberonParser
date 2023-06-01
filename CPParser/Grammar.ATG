@@ -1,14 +1,7 @@
 using CPParser;
 
 COMPILER CP
-	public AstBuilder builder = new AstBuilder(); 
-	const int _colon = 0;
-	bool FollowedByColon() { 
-	  Token x = la; 
-	  while (x.kind == _ident) 
-		x = scanner.Peek(); 
-	  return x.kind == _colon; 
-	} 
+	public CPParser.Ast.Module module = new(); 
 
 CHARACTERS
   cr  = '\r'.
@@ -45,11 +38,11 @@ PRODUCTIONS
 
 	Module 
 		=	
-		"MODULE" Ident<out builder.Module.Ident>";" 
-		[ImportList<out builder.Module.ImportList>] 
-		DeclSeq<out builder.Module.DeclSeq> 
-		["BEGIN" StatementSeq<out builder.Module.Begin>] 
-		["CLOSE" StatementSeq<out builder.Module.Close>] 
+		"MODULE" Ident<out module.Ident>";" 
+		[ImportList<out module.ImportList>] 
+		DeclSeq<out module.DeclSeq> 
+		["BEGIN" StatementSeq<out module.Begin>] 
+		["CLOSE" StatementSeq<out module.Close>] 
 		"END" ident ".".
 
 	ImportedModule<CPParser.Ast.AstList i> 

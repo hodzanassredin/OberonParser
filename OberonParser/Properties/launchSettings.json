@@ -2,7 +2,7 @@
   "profiles": {
     "OberonParser": {
       "commandName": "Project",
-      "commandLineArgs": "$(ProjectDir)..\\coco\\AOTest.mod"
+      "commandLineArgs": "Test.mod"
     }
   }
 }

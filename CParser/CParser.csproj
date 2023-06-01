@@ -12,9 +12,13 @@
   </Target>
 
   <ItemGroup>
-    <None Update="Test.mod">
+    <None Remove="Test.с" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Test.с">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
+    </Content>
   </ItemGroup>
 
 </Project>

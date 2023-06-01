@@ -1,12 +1,12 @@
-﻿using CPParser;
+﻿using CParser;
 using System;
 
 
 Console.WriteLine("_________________________________");
-Console.WriteLine("CPParser");
+Console.WriteLine("CParser");
 
 if (args.Length < 1)
-    Console.WriteLine("Syntax : CPParser <cp source file> { <conditional compilation symbol> }");
+    Console.WriteLine("Syntax : CParser <c source file> { <conditional compilation symbol> }");
 else
 {
     Console.WriteLine("   Initializing scanner with source file {0}", args[0]);
@@ -26,9 +26,9 @@ else
     var sw = new StreamWriter(Console.OpenStandardOutput());
     sw.AutoFlush = true;
     Console.SetOut(sw);
-    var ppv = new PrettyPrintVisitor(sw);
-    var str = parser.module.ToString();
-    ppv.Visit(parser.module);
+    //var ppv = new PrettyPrintVisitor(sw);
+    //var str = parser.builder.Module.ToString();
+    //ppv.Visit(parser.builder.Module);
 }
 
 

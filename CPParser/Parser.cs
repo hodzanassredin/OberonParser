@@ -26,14 +26,7 @@ public class Parser {
 	public Token la;   // lookahead token
 	int errDist = minErrDist;
 
-public AstBuilder builder = new AstBuilder(); 
-	const int _colon = 0;
-	bool FollowedByColon() { 
-	  Token x = la; 
-	  while (x.kind == _ident) 
-		x = scanner.Peek(); 
-	  return x.kind == _colon; 
-	} 
+public CPParser.Ast.Module module = new(); 
 
 
 
@@ -100,19 +93,19 @@ public AstBuilder builder = new AstBuilder();
 
 	void Module() {
 		Expect(6);
-		Ident(out builder.Module.Ident);
+		Ident(out module.Ident);
 		Expect(7);
 		if (la.kind == 13) {
-			ImportList(out builder.Module.ImportList);
+			ImportList(out module.ImportList);
 		}
-		DeclSeq(out builder.Module.DeclSeq);
+		DeclSeq(out module.DeclSeq);
 		if (la.kind == 8) {
 			Get();
-			StatementSeq(out builder.Module.Begin);
+			StatementSeq(out module.Begin);
 		}
 		if (la.kind == 9) {
 			Get();
-			StatementSeq(out builder.Module.Close);
+			StatementSeq(out module.Close);
 		}
 		Expect(10);
 		Expect(1);

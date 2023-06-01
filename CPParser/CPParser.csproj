@@ -7,6 +7,11 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 	<Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-		<Exec Command="$(ProjectDir)..\coco\Coco.exe $(ProjectDir)..\coco\CP.ATG -frames $(ProjectDir)..\coco\ -o $(ProjectDir)" />
+		<Exec Command="$(ProjectDir)..\coco\Coco.exe $(ProjectDir)Grammar.ATG -frames $(ProjectDir)..\coco\ -o $(ProjectDir)" />
 	</Target>
+	<ItemGroup>
+	  <None Update="Test.mod">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
+	</ItemGroup>
 </Project>

@@ -3,24 +3,17 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.2.32422.2
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OberonParser", "OberonParser\OberonParser.csproj", "{312412AD-80CF-4F86-9B33-13A0614D8EFF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OberonParser", "OberonParser\OberonParser.csproj", "{312412AD-80CF-4F86-9B33-13A0614D8EFF}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{4905890A-E9F9-487F-A49D-CED6859724E2}"
-	ProjectSection(SolutionItems) = preProject
-		coco\AO.ATG = coco\AO.ATG
-		coco\Ast.ATG = coco\Ast.ATG
-		coco\AOTest.mod = coco\AOTest.mod
-		coco\CP.ATG = coco\CP.ATG
-		coco\CPTest.mod = coco\CPTest.mod
-	EndProjectSection
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CPParser", "CPParser\CPParser.csproj", "{B0FFED75-2372-44E1-84A8-0C31B4233564}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CPParser", "CPParser\CPParser.csproj", "{B0FFED75-2372-44E1-84A8-0C31B4233564}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs", "Docs", "{249EFF22-04FB-414C-A746-BE170ED867CC}"
 	ProjectSection(SolutionItems) = preProject
 		coco\Ast.ATG = coco\Ast.ATG
 		coco\Oberon2.ATG = coco\Oberon2.ATG
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CParser", "CParser\CParser.csproj", "{05F31B4E-F970-46A8-B3D2-58B4521087FF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -36,6 +29,10 @@ Global
 		{B0FFED75-2372-44E1-84A8-0C31B4233564}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B0FFED75-2372-44E1-84A8-0C31B4233564}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B0FFED75-2372-44E1-84A8-0C31B4233564}.Release|Any CPU.Build.0 = Release|Any CPU
+		{05F31B4E-F970-46A8-B3D2-58B4521087FF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{05F31B4E-F970-46A8-B3D2-58B4521087FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{05F31B4E-F970-46A8-B3D2-58B4521087FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{05F31B4E-F970-46A8-B3D2-58B4521087FF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

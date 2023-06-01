@@ -1,0 +1,92 @@
+﻿COMPILER ActiveOberon 	(* A grammar for Active Oberon *)
+
+IMPORT Strings;
+VAR alternatives:ARRAY 1024 OF CHAR;
+
+CHARACTERS
+  cr  = '\r'.
+  lf  = '\n'.
+  tab = '\t'.
+  eol      = '\n' .
+  letter   = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz" .
+  digit    = "0123456789" .
+  hexDigit = digit + "ABCDEF" .
+  noQuote  = ANY - '"' - eol  .
+
+TOKENS
+  ident   =  letter { letter | digit } .
+  integer  =  digit { digit } | digit { hexDigit } "H" .
+  real  =  digit { digit } "." { digit }
+           [ ("E" | "D") [ "+" | "-" ] digit { digit } ] .
+  CharConstant = digit { hexDigit } "X" .
+  string  =  '"' { noQuote } '"' .
+
+COMMENTS
+  FROM "(*" TO "*)" NESTED
+
+IGNORE  tab + cr + lf
+
+PRODUCTIONS
+ActiveOberon           =  Module .
+Module 	= 	"MODULE" ident ";" [ImportList] {Definition} {DeclSeq} Body ident ".".
+ImportList 	= 	"IMPORT" ident [":=" ident] {"," ident [":=" ident ]} ";".
+Definition 	= 	"DEFINITION" ident ["REFINES" Qualident] {"PROCEDURE" ident
+[FormalPars] ";"} "END" ident.
+DeclSeq 	= 	"CONST" {ConstDecl ";"} | "TYPE" {TypeDecl ";"} | "VAR" {VarDecl
+";"} | {ProcDecl ";"}.
+ConstDecl 	= 	IdentDef "=" ConstExpr.
+TypeDecl 	= 	IdentDef "=" Type.
+VarDecl 	= 	IdentList ":" Type.
+ProcDecl 	= 	"PROCEDURE" ProcHead ";" {DeclSeq} Body ident.
+ProcHead 	= 	[SysFlag] ["*" | "&"] IdentDef [FormalPars].
+SysFlag 	= 	"[" ident "]".
+FormalPars 	= 	"(" [FPSection {";" FPSection}] ")" [":" Qualident].
+FPSection 	= 	["VAR"] ident {"," ident} ":" Type.
+Type 	= 	Qualident
+  	| 	"ARRAY" [SysFlag] [ConstExpr {"," ConstExpr}] "OF" Type
+  	| 	"RECORD" [SysFlag] ["(" Qualident ")"] [FieldList] "END"
+  	| 	"POINTER" [SysFlag] "TO" Type
+  	| 	"OBJECT" [[SysFlag] ["(" Qualident ")"] ["IMPLEMENTS" Qualident] {DeclSeq}
+Body]
+  	| 	"PROCEDURE" [SysFlag] [FormalPars].
+FieldDecl 	= 	[IdentList ":" Type].
+FieldList 	= 	FieldDecl {";" FieldDecl}.
+Body 	= 	StatBlock | "END".
+StatBlock 	= 	"BEGIN" ["{"IdentList"}"] [StatSeq] "END".
+StatSeq 	= 	Statement {";" Statement}.
+Statement 	= 	[Designator ":=" Expr
+  	| 	Designator ["(" ExprList")"]
+  	| 	"IF" Expr "THEN" StatSeq {"ELSIF" Expr "THEN" StatSeq}["ELSE" StatSeq]
+"END"
+  	| 	"CASE" Expr "THEN" Case {"|" Case} ["ELSE" StatSeq] "END"
+  	| 	"WHILE" Expr "DO" StatSeq "END"
+  	| 	"REPEAT" StatSeq "UNTIL" Expr
+  	| 	"FOR" ident ":=" Expr "TO" Expr ["BY" ConstExpr] "DO" StatSeq "END"
+  	| 	"LOOP" StatSeq "END"
+  	| 	"WITH" Qualident ":" Qualident "DO" StatSeq "END"
+  	| 	"EXIT"
+  	| 	"RETURN" [Expr]
+  	| 	"AWAIT" "(" Expr ")"
+  	| 	StatBlock
+  	  	].
+Case 	= 	[CaseLabels { "," CaseLabels } ":" StatSeq].
+CaseLabels 	= 	ConstExpr [".." ConstExpr].
+ConstExpr 	= 	Expr.
+Expr 	= 	SimpleExpr [Relation SimpleExpr].
+SimpleExpr 	= 	Term {MulOp Term}.
+Term 	= 	["+"|"-"] Factor {AddOp Factor}.
+Factor 	= 	Designator["(" ExprList")"] | number | CharConstant | string
+  	| 	"NIL" | Set | "(" Expr ")" | "~" Factor.
+Set 	= 	"{" [Element {"," Element}] "}".
+Element 	= 	Expr [".." Expr].
+Relation 	= 	"=" | "#" | "<" | "<=" | ">" | ">=" | "IN" | "IS".
+MulOp 	= 	"*" | "DIV" | "MOD" | "/" | "&" .
+AddOp 	= 	"+" | "-" | "OR" .
+Designator 	= 	Qualident { "." ident | "["ExprList"]" | "(" Qualident ")"
+}.
+ExprList 	= 	Expr {"," Expr}.
+IdentList 	= 	IdentDef {"," IdentDef}.
+Qualident 	= 	[ident "."] ident.
+IdentDef 	= 	ident ["*"|"-"].
+number	=	real | integer .
+END ActiveOberon.
