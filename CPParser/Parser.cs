@@ -26,7 +26,7 @@ public class Parser {
 	public Token la;   // lookahead token
 	int errDist = minErrDist;
 
-public CPParser.Ast.Module module = new(); 
+public CPParser.Ast.Module module; 
 
 
 
@@ -88,24 +88,25 @@ public CPParser.Ast.Module module = new();
 
 	
 	void CP() {
-		Module();
+		Module(out module);
 	}
 
-	void Module() {
+	void Module(out CPParser.Ast.Module o) {
+		o = new CPParser.Ast.Module(); 
 		Expect(6);
-		Ident(out module.Ident);
+		Ident(out o.Ident);
 		Expect(7);
 		if (la.kind == 13) {
-			ImportList(out module.ImportList);
+			ImportList(out o.ImportList);
 		}
-		DeclSeq(out module.DeclSeq);
+		DeclSeq(out o.DeclSeq);
 		if (la.kind == 8) {
 			Get();
-			StatementSeq(out module.Begin);
+			StatementSeq(out o.Begin);
 		}
 		if (la.kind == 9) {
 			Get();
-			StatementSeq(out module.Close);
+			StatementSeq(out o.Close);
 		}
 		Expect(10);
 		Expect(1);

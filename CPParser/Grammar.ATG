@@ -1,7 +1,7 @@
 using CPParser;
 
 COMPILER CP
-	public CPParser.Ast.Module module = new(); 
+	public CPParser.Ast.Module module; 
 
 CHARACTERS
   cr  = '\r'.
@@ -27,7 +27,7 @@ COMMENTS FROM "(*" TO "*)" NESTED
 IGNORE  tab + cr + lf
 
 PRODUCTIONS
-	CP           =  Module . 
+	CP           =  Module<out module> . 
 
 	Ident<out CPParser.Ast.Ident o>
 		= ident																	(. o = new CPParser.Ast.Ident{Name = t.val}; .).
@@ -36,13 +36,13 @@ PRODUCTIONS
 		= integer																(. o = new CPParser.Ast.Number{Value = t.val}; .)
 		| real																	(. o = new CPParser.Ast.Number{Value = t.val}; .).
 
-	Module 
-		=	
-		"MODULE" Ident<out module.Ident>";" 
-		[ImportList<out module.ImportList>] 
-		DeclSeq<out module.DeclSeq> 
-		["BEGIN" StatementSeq<out module.Begin>] 
-		["CLOSE" StatementSeq<out module.Close>] 
+	Module<out CPParser.Ast.Module o> 
+		=																		(. o = new CPParser.Ast.Module(); .)
+		"MODULE" Ident<out o.Ident>";" 
+		[ImportList<out o.ImportList>] 
+		DeclSeq<out o.DeclSeq> 
+		["BEGIN" StatementSeq<out o.Begin>] 
+		["CLOSE" StatementSeq<out o.Close>] 
 		"END" ident ".".
 
 	ImportedModule<CPParser.Ast.AstList i> 
@@ -114,7 +114,8 @@ PRODUCTIONS
 		| "OUT"																		(. o.FpSectionPrefix = CPParser.Ast.FPSection.Prefix.OUT; .) ] 
 																					(. CPParser.Ast.Ident i; .)
 		Ident<out i>																(. o.Idents.Add(i); .) 
-		{"," Ident<out i> (. o.Idents.Add(i); .) } ":" Type<out o.Type_>		(. lst.Add(o); .).
+		{"," Ident<out i>															(. o.Idents.Add(i); .) 
+		} ":" Type<out o.Type_>														(. lst.Add(o); .).
 
 	Receiver<out CPParser.Ast.Receiver o>	
 		=																		(. o = new CPParser.Ast.Receiver(); .)

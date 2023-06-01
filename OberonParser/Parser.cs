@@ -23,10 +23,7 @@ public class Parser {
 	public Token la;   // lookahead token
 	int errDist = minErrDist;
 
-(* A grammar for Active Oberon *)
 
-IMPORT Strings;
-VAR alternatives:ARRAY 1024 OF CHAR;
 
 
 
