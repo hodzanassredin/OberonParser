@@ -35,224 +35,303 @@ PRODUCTIONS
 		= integer																(. o = new AOParser.Ast.Number{Value = t.val}; .)
 		| real																	(. o = new AOParser.Ast.Number{Value = t.val}; .).
 
-	Module<out CPParser.Ast.Module o> 
-		=																		(. o = new CPParser.Ast.Module(); .)
+	Module<out AOParser.Ast.Module o> 
+		=																		(. o = new AOParser.Ast.Module(); .)
 		"MODULE" Ident<out o.Ident>";" 
 		[ImportList<out o.ImportList>] 
 		{Definition<out o.Definition>}
-		{DeclSeq<out o.DeclSeq>} 
+		DeclSeq<out o.DeclSeq> 
 		Body<out o.Body>
 		ident ".".
 
-	ImportedModule<CPParser.Ast.AstList i> 
-		=																		(. var o = new CPParser.Ast.Import(); .)
+	ImportedModule<AOParser.Ast.AstList i> 
+		=																		(. var o = new AOParser.Ast.Import(); .)
 		Ident<out o.Name> [ ":=" Ident<out o.OriginalName> ]					(. i.Add(o); .).
 
-	ImportList<out CPParser.Ast.AstList o> 
-		=																		(. o = new CPParser.Ast.AstList(); .)
+	ImportList<out AOParser.Ast.AstList o> 
+		=																		(. o = new AOParser.Ast.AstList(); .)
 		"IMPORT" ImportedModule<o> {"," ImportedModule<o>} ";".
 
-	Definition<out CPParser.Ast.Definition o> 	
-		= 																		(. o = new CPParser.Ast.Definition(); .)	
+	Definition<out AOParser.Ast.Definition o> 	
+		= 																		(. o = new AOParser.Ast.Definition(); .)	
 		"DEFINITION" Ident<out o.Ident> ["REFINES" Qualident<out o.Qualident>] 
 		{"PROCEDURE" Ident<out o.ProcIdent> [FormalPars<out o.ProcFormalPars>] ";"} 
 		"END" ident.
 
-	DeclSeq<out CPParser.Ast.DeclSeq o> 
-		=																		(. o = new CPParser.Ast.DeclSeq(); .)
-		"CONST"																	(. var lst = new CPParser.Ast.IConstTypeVarListDecl.ConstDeclList(); .) 
+	DeclSeq<out AOParser.Ast.DeclSeq o> 
+		=																		(. o = new AOParser.Ast.DeclSeq(); .)
+		{ "CONST"																	(. var lst = new AOParser.Ast.IConstTypeVarListDecl.ConstDeclList(); .) 
 				{ConstDecl<lst> ";" }											(. o.ConstTypeVarDecls.Add(lst); .)
-			| "TYPE"															(. var lst = new CPParser.Ast.IConstTypeVarListDecl.TypeDeclList(); .) 
+			| "TYPE"															(. var lst = new AOParser.Ast.IConstTypeVarListDecl.TypeDeclList(); .) 
 				{TypeDecl<lst> ";"}												(. o.ConstTypeVarDecls.Add(lst); .)
-			| "VAR"																(. var lst = new CPParser.Ast.IConstTypeVarListDecl.VarDeclList(); .) 
-				{VarDecl<lst> ";"}												(. o.ConstTypeVarDecls.Add(lst); .)} 
-			{ ProcDecl<o.ProcDecl> ";"} .
+			| "VAR"																(. var lst = new AOParser.Ast.IConstTypeVarListDecl.VarDeclList(); .) 
+				{VarDecl<lst> ";"}												(. o.ConstTypeVarDecls.Add(lst); .) 
+			{ ProcDecl<o.ProcDecl> ";"} }.
 
 
-	ConstDecl<CPParser.Ast.AstList lst> 
-		=																		(. var o = new CPParser.Ast.ConstDecl(); .)	
+	ConstDecl<AOParser.Ast.AstList lst> 
+		=																		(. var o = new AOParser.Ast.ConstDecl(); .)	
 		IdentDef<out o.IdentDef> "=" ConstExpr<out o.ConstExpr>					(. lst.Add(o); .) .
 
-    TypeDecl<CPParser.Ast.AstList lst> 
-		=																		(. var o = new CPParser.Ast.TypeDecl(); .)	
+    TypeDecl<AOParser.Ast.AstList lst> 
+		=																		(. var o = new AOParser.Ast.TypeDecl(); .)	
 		IdentDef<out o.IdentDef> "=" Type<out o.Type_>							(. lst.Add(o); .).
 
-	VarDecl<CPParser.Ast.AstList lst> 
-		=																		(. var o = new CPParser.Ast.VarDecl(); .)	
+	VarDecl<AOParser.Ast.AstList lst> 
+		=																		(. var o = new AOParser.Ast.VarDecl(); .)	
 		IdentList<out o.IdentList> ":" Type<out o.Type_>						(. lst.Add(o); .).
 
-ProcDecl 	= 	"PROCEDURE" ProcHead ";" {DeclSeq} Body ident.
-ProcHead 	= 	[SysFlag] ["*" | "&"] IdentDef [FormalPars].
+	ProcDecl<out AOParser.Ast.AstList lst> 
+		= "PROCEDURE"															(. var o = new AOParser.Ast.ProcDecl(); .)	
+		ProcHead<out o.ProcHead> ";" 
+		DeclSeq<out o.DeclSeq> 
+		Body<out o.Body> ident													(. lst.Add(o); .).	
 
-	SysFlag<out CPParser.Ast.SysFlag o> 
-	=																			(. o = new CPParser.Ast.SysFlag(); .)	
-	"[" Ident<out o.Ident> "]".
+	ProcHead<out AOParser.Ast.ProcHead o>  
+		=																			(. var o = new AOParser.Ast.ProcHead(); .)	
+		[SysFlag<out o.SysFlag>] 
+		["*"																		(. o.Tag = AOParser.Ast.ProcHead.Tags.Export; .) 
+		| "&"																		(. o.Tag = AOParser.Ast.ProcHead.Tags.Initializer; .)
+		] IdentDef<o.IdentDef> [FormalPars<o.FormalPars>].
 
-	FormalPars<out CPParser.Ast.FormalPars o> 	
-		=																		(. o = new CPParser.Ast.FormalPars(); .)	
+	SysFlag<out AOParser.Ast.SysFlag o> 
+		=																			(. o = new AOParser.Ast.SysFlag(); .)	
+		"[" Ident<out o.Ident> "]".
+
+	FormalPars<out AOParser.Ast.FormalPars o> 	
+		=																		(. o = new AOParser.Ast.FormalPars(); .)	
 		"(" [FPSection<o.FPSections> {";" FPSection<o.FPSections>}] ")" 
 		[":" Qualident<out o.Qualident>].
 
-	FPSection<CPParser.Ast.AstList lst> 	
-		=																		(. var o = new CPParser.Ast.FPSection(); .)
-		["VAR"																		(. o.FpSectionPrefix = CPParser.Ast.FPSection.Prefix.VAR; .)] 
-																					(. CPParser.Ast.Ident i; .)
+	FPSection<AOParser.Ast.AstList lst> 	
+		=																		(. var o = new AOParser.Ast.FPSection(); .)
+		["VAR"																		(. o.FpSectionPrefix = AOParser.Ast.FPSection.Prefix.VAR; .)] 
+																					(. AOParser.Ast.Ident i; .)
 		Ident<out i>																(. o.Idents.Add(i); .) 
 		{"," Ident<out i>															(. o.Idents.Add(i); .) 
 		} ":" Type<out o.Type_>														(. lst.Add(o); .).
 
-Type 	= 	Qualident
-  	| 	"ARRAY" [SysFlag] [ConstExpr {"," ConstExpr}] "OF" Type
-  	| 	"RECORD" [SysFlag] ["(" Qualident ")"] [FieldList] "END"
-  	| 	"POINTER" [SysFlag] "TO" Type
-  	| 	"OBJECT" [[SysFlag] ["(" Qualident ")"] ["IMPLEMENTS" Qualident] {DeclSeq} Body]
-  	| 	"PROCEDURE" [SysFlag] [FormalPars].
+	Type<out AOParser.Ast.IType o> 												(. o = null; .) 
+		=																		(. var at = new AOParser.Ast.IType.SynonimType(); .)
+			Qualident<out at.Qualident>												(. o = at; .)
+			|  "ARRAY"															(. var at = new AOParser.Ast.IType.ArrayType(); AOParser.Ast.ConstExpr ce; .)
+				[SysFlag<out at.SysFlag>] [ConstExpr<out ce>						(. at.ConstExprs.Add(ce); .) 
+				{"," ConstExpr<out ce>												(. at.ConstExprs.Add(ce); .)
+				}] "OF" Type<out at.Type_>											(. o = at; .)
 
-FieldDecl 	= 	[IdentList ":" Type].
-FieldList 	= 	FieldDecl {";" FieldDecl}.
-Body 	= 	StatBlock | "END".
-StatBlock 	= 	"BEGIN" ["{"IdentList"}"] [StatementSeq] "END".
+			|																	(. var at = new AOParser.Ast.IType.RecordType(); .)
+				"RECORD" [SysFlag<out at.SysFlag>] 
+					["(" Qualident<out at.Qualident> ")"] 
+					[FieldList<out at.FieldList>]									
+					"END"															(. o = at; .)
 
-	StatementSeq<out CPParser.Ast.StatementSeq o>	
-		=																		(. o = new CPParser.Ast.StatementSeq(); CPParser.Ast.IStatement s; .)
+			|																	(. var at = new AOParser.Ast.IType.PointerType(); .)
+				"POINTER" [SysFlag<out at.SysFlag>] "TO" Type<out at.Type_>			(. o = at; .)
+
+			| 																	(. var at = new AOParser.Ast.IType.ObjectType(); .)
+				"OBJECT" [[SysFlag<out at.SysFlag>] 
+				["(" Qualident<out at.Qualident> ")"] 
+				["IMPLEMENTS" Qualident<out at.ImplementsQualident>] 
+				DeclSeq<out at.DeclSeq> Body<out at.Body>]						(. o = at; .)
+			|																	(. var at = new AOParser.Ast.IType.ProcedureType(); .)
+				"PROCEDURE" [SysFlag<out at.SysFlag>] 
+				[FormalPars<out at.FormalPars>]									(. o = at; .).
+
+	FieldDecl<out AOParser.Ast.FieldDecl o> 	
+	=																			(. o = new AOParser.Ast.FieldDecl(); .)
+	[IdentList<out o.IdentList> ":" Type<out o.Type_>].
+	
+	FieldList<out AOParser.Ast.FieldList o>
+	=																			(. o = new AOParser.Ast.FieldList(); .)
+	FieldDecl<out o.FieldDecl> {";" FieldDecl<out o.FieldDecl>}.
+	
+	Body<out AOParser.Ast.Body o> 	
+	= 																			(. o = new AOParser.Ast.Body(); .)
+	StatBlock<out o.StatBlock> | "END".
+	
+	StatBlock<out AOParser.Ast.StatBlock o> 	
+	= 																			(. o = new AOParser.Ast.StatBlock(); AOParser.Ast.IdentList il; .)
+	"BEGIN" ["{"IdentList<out il>"}"]												(. o.IdentLists.Add(il); .)
+	[StatementSeq<out o.StatementSeq>] "END".
+
+	StatementSeq<out AOParser.Ast.StatementSeq o>	
+		=																		(. o = new AOParser.Ast.StatementSeq(); AOParser.Ast.IStatement s; .)
 		Statement<out s>														(. o.Statements.Add(s); .) 
 		{";" Statement<out s>													(. o.Statements.Add(s); .)}.
 
-Statement 	= 	[Designator ":=" Expr
-  	| 	Designator ["(" ExprList")"]
-  	| 	"IF" Expr "THEN" StatementSeq {"ELSIF" Expr "THEN" StatementSeq}["ELSE" StatementSeq] "END"
-  	| 	"CASE" Expr "THEN" Case {"|" Case} ["ELSE" StatementSeq] "END"
-  	| 	"WHILE" Expr "DO" StatementSeq "END"
-  	| 	"REPEAT" StatementSeq "UNTIL" Expr
-  	| 	"FOR" ident ":=" Expr "TO" Expr ["BY" ConstExpr] "DO" StatementSeq "END"
-  	| 	"LOOP" StatementSeq "END"
-  	| 	"WITH" Qualident ":" Qualident "DO" StatementSeq "END"
-  	| 	"EXIT"
-  	| 	"RETURN" [Expr]
-  	| 	"AWAIT" "(" Expr ")"
-  	| 	StatBlock
-  	  	].
+	Statement<out AOParser.Ast.IStatement os>									(. os=null; .)
+		= 	
+		[																		(. AOParser.Ast.Designator d; .)
+			Designator<out d>	
+			(																	(. var o = new AOParser.Ast.IStatement.AssignmentStatement(); o.Designator = d; .) 
+				 ":=" Expr<out o.Expr>											(. os = o; .)
+				|																(. var o = new AOParser.Ast.IStatement.ProcCallStatement(); o.Designator = d; .) 
+					["(" [ExprList<out o.ExprList>] ")"]						(. os = o;.) )
+		|																		(. var o = new AOParser.Ast.IStatement.IfStatement(); .) 
+			"IF" Expr<out o.If.Cond> "THEN" StatementSeq<out o.If.ThenBody>
+				{																(. var elsif = new AOParser.Ast.IStatement.IfStatement.IfThen(); .) 
+				"ELSIF" Expr<out elsif.Cond> "THEN" 
+					StatementSeq<out elsif.ThenBody>							(. o.ELSIFs.Add(elsif); .)
+				}
+				["ELSE" StatementSeq<out o.ElseBody>] "END"						(. os = o; .)
+		|																		(. var o = new AOParser.Ast.IStatement.CaseStatement(); .) 
+			"CASE" Expr<out o.Expr> "THEN"										(. var c = new AOParser.Ast.Case(); .) 
+			Case<out c>															(. o.Cases.Add(c); .) 
+			{"|" Case<out c>													(. o.Cases.Add(c); .)
+			}
+				["ELSE" StatementSeq<out o.ElseBody>] "END"						(. os = o;.)
+		|																		(. var o = new AOParser.Ast.IStatement.WhileStatement(); .) 
+			"WHILE" Expr<out o.Expr> "DO" 
+				StatementSeq<out o.StatementSeq> 
+			"END"																(. os = o; .)
+		|																		(. var o = new AOParser.Ast.IStatement.RepeatStatement(); .) 
+			"REPEAT" 
+				StatementSeq<out o.StatementSeq> 
+			"UNTIL" Expr<out o.Expr>											(. os = o; .)
+		|																		(. var o = new AOParser.Ast.IStatement.ForStatement(); .) 
+			"FOR" Ident<out o.Ident> ":=" Expr<out o.Expr> 
+				"TO" Expr<out o.ToExpr> ["BY" ConstExpr<out o.ByExpr>]
+				"DO" 
+					StatementSeq<out o.StatementSeq> 
+				"END"															(. os = o;.)
+		|																		(. var o = new AOParser.Ast.IStatement.LoopStatement(); .) 
+			"LOOP" StatementSeq<out o.StatementSeq> "END"						(. os = o;.)
+		|																		(. var o = new AOParser.Ast.IStatement.WithStatement(); .) 
+			"WITH" Qualident<out o.Qualident1> ":" 
+				Qualident<out o.Qualident2>	"DO"										
+				StatementSeq<out o.StatementSeq> "END"							(. os = o;.)
+		|																		(. var o = new AOParser.Ast.IStatement.ExitStatement(); .) 
+			"EXIT"																(. os = o;.)
+		|																		(. var o = new AOParser.Ast.IStatement.ReturnStatement(); .) 
+			"RETURN" [Expr<out o.Expr>]											(. os = o;.)
 
-	Case<out CPParser.Ast.Case o> 	
-		=																		(. o = new CPParser.Ast.Case(); CPParser.Ast.CaseLabels cl; .)
+		| 																		(. var o = new AOParser.Ast.IStatement.AwaitStatement(); .) 
+			"AWAIT" "(" Expr<out o.Expr> ")"									(. os = o;.)
+
+		| 																		(. var o = new AOParser.Ast.IStatement.StatBlockStatement(); .) 
+			StatBlock<out o.StatBlock>											(. os = o;.)
+			].
+
+	Case<out AOParser.Ast.Case o> 	
+		=																		(. o = new AOParser.Ast.Case(); AOParser.Ast.CaseLabels cl; .)
 		[CaseLabels<out cl>														(. o.CaseLabels.Add(cl); .) 
 		{"," CaseLabels<out cl>													(. o.CaseLabels.Add(cl); .)
 		} 
 		":" StatementSeq<out o.StatementSeq>].
 
-	CaseLabels<out CPParser.Ast.CaseLabels o> 	
-		=																		(. o = new CPParser.Ast.CaseLabels(); .)	
+	CaseLabels<out AOParser.Ast.CaseLabels o> 	
+		=																		(. o = new AOParser.Ast.CaseLabels(); .)	
 		ConstExpr<out o.ConstExpr1> [".." ConstExpr<out o.ConstExpr2>].
 
-	ConstExpr<out CPParser.Ast.ConstExpr o>	
-		=																		(. o = new CPParser.Ast.ConstExpr(); .)	
+	ConstExpr<out AOParser.Ast.ConstExpr o>	
+		=																		(. o = new AOParser.Ast.ConstExpr(); .)	
 		Expr<out o.Expr>.
 
-	Expr<out CPParser.Ast.Expr o> 	
-		=																		(. o = new CPParser.Ast.Expr(); .)		
+	Expr<out AOParser.Ast.Expr o> 	
+		=																		(. o = new AOParser.Ast.Expr(); .)		
 		SimpleExpr<out o.SimpleExpr> [Relation<out o.Relation> 
 		SimpleExpr<out o.SimpleExpr2>].
 
-	SimpleExpr<out CPParser.Ast.SimpleExpr o>	
-		=																		(. o = new CPParser.Ast.SimpleExpr(); CPParser.Ast.SimpleElementExpr e; .)		
-		Term<out o.Term> {														(. e = new CPParser.Ast.SimpleElementExpr(); .)  
+	SimpleExpr<out AOParser.Ast.SimpleExpr o>	
+		=																		(. o = new AOParser.Ast.SimpleExpr(); AOParser.Ast.SimpleElementExpr e; .)		
+		Term<out o.Term> {														(. e = new AOParser.Ast.SimpleElementExpr(); .)  
 		MulOp<out e.MulOp> Term<out e.Term>										(. o.SimpleExprElements.Add(e); .)
 		}.
 
-	Term<out CPParser.Ast.Term o> 	
-		=																		(. o = new CPParser.Ast.Term(); CPParser.Ast.TermElementExpr e; .)		
-		["+"																	(. o.Prefix = CPParser.Ast.Term.SimpleExprPrefix.Add; .)
-		| "-"																	(. o.Prefix = CPParser.Ast.Term.SimpleExprPrefix.Sub; .)
-		] Factor<out o.Factor> {												(. e = new CPParser.Ast.TermElementExpr(); .) 
+	Term<out AOParser.Ast.Term o> 	
+		=																		(. o = new AOParser.Ast.Term(); AOParser.Ast.TermElementExpr e; .)		
+		["+"																	(. o.Prefix = AOParser.Ast.Term.SimpleExprPrefix.Add; .)
+		| "-"																	(. o.Prefix = AOParser.Ast.Term.SimpleExprPrefix.Sub; .)
+		] Factor<out o.Factor> {												(. e = new AOParser.Ast.TermElementExpr(); .) 
 		AddOp<out e.AddOp> Factor<out e.Factor>									(. o.TermElements.Add(e); .)
 		}.
 
-	Factor<out CPParser.Ast.IFactor f>											(. f = null;.)	
-		=																		(. var o = new CPParser.Ast.IFactor.DesignatorFactor(); .) 
+	Factor<out AOParser.Ast.IFactor f>											(. f = null;.)	
+		=																		(. var o = new AOParser.Ast.IFactor.DesignatorFactor(); .) 
 		Designator<out o.Value>["(" ExprList<out o.ExprList>")"]				(. f = o; .)
-		|																		(. var o = new CPParser.Ast.IFactor.NumberFactor(); .) 
+		|																		(. var o = new AOParser.Ast.IFactor.NumberFactor(); .) 
 		Number<out o.Value>														(. f = o; .)
-		|																		(. var o = new CPParser.Ast.IFactor.CharacterFactor(); .) 
+		|																		(. var o = new AOParser.Ast.IFactor.CharacterFactor(); .) 
 		character																(. o.Value = t.val; f = o; .)
-		|																		(. var o = new CPParser.Ast.IFactor.StringFactor(); .) 
+		|																		(. var o = new AOParser.Ast.IFactor.StringFactor(); .) 
 		string																	(. o.Value = t.val; f = o; .)
-		|																		(. var o = new CPParser.Ast.IFactor.NilFactor(); .) 
+		|																		(. var o = new AOParser.Ast.IFactor.NilFactor(); .) 
 		"NIL"																	(. f = o; .)
-		|																		(. var o = new CPParser.Ast.IFactor.SetFactor(); .) 
+		|																		(. var o = new AOParser.Ast.IFactor.SetFactor(); .) 
 		Set<out o.Value>														(. f = o; .)
-		|																		(. var o = new CPParser.Ast.IFactor.ExprFactor(); .) 
+		|																		(. var o = new AOParser.Ast.IFactor.ExprFactor(); .) 
 		"(" Expr<out o.Value> ")"												(. f = o; .)
-		|																		(. var o = new CPParser.Ast.IFactor.NegFactor(); .) 
+		|																		(. var o = new AOParser.Ast.IFactor.NegFactor(); .) 
 		"~" Factor<out o.Value>													(. f = o; .) .
 
-	Set<out CPParser.Ast.Set o>	
-		=																		(. o = new CPParser.Ast.Set(); CPParser.Ast.Element e; .)	
+	Set<out AOParser.Ast.Set o>	
+		=																		(. o = new AOParser.Ast.Set(); AOParser.Ast.Element e; .)	
 		"{" [Element<out e>														(. o.Elements.Add(e); .) 
 		{"," Element<out e>														(. o.Elements.Add(e); .) 
 		}] "}".
 
-	Element<out CPParser.Ast.Element o> 	
-		=																		(. o = new CPParser.Ast.Element(); .)	 
+	Element<out AOParser.Ast.Element o> 	
+		=																		(. o = new AOParser.Ast.Element(); .)	 
 		Expr<out o.Expr1> [".." Expr<out o.Expr2> ].
 
-	Relation<out CPParser.Ast.Relation o>										(. o = new CPParser.Ast.Relation(); .)
+	Relation<out AOParser.Ast.Relation o>										(. o = new AOParser.Ast.Relation(); .)
 		= 
-		"="																		(. o.Op = CPParser.Ast.Relation.Relations.Eq ; .)
-		| "#"																	(. o.Op = CPParser.Ast.Relation.Relations.Neq ; .)
-		| "<"																	(. o.Op = CPParser.Ast.Relation.Relations.Lss ; .)
-		| "<="																	(. o.Op = CPParser.Ast.Relation.Relations.Leq ; .)
-		| ">"																	(. o.Op = CPParser.Ast.Relation.Relations.Gtr ; .)
-		| ">="																	(. o.Op = CPParser.Ast.Relation.Relations.Geq ; .)
-		| "IN"																	(. o.Op = CPParser.Ast.Relation.Relations.In ; .)
-		| "IS"																	(. o.Op = CPParser.Ast.Relation.Relations.Is ; .).
+		"="																		(. o.Op = AOParser.Ast.Relation.Relations.Eq ; .)
+		| "#"																	(. o.Op = AOParser.Ast.Relation.Relations.Neq ; .)
+		| "<"																	(. o.Op = AOParser.Ast.Relation.Relations.Lss ; .)
+		| "<="																	(. o.Op = AOParser.Ast.Relation.Relations.Leq ; .)
+		| ">"																	(. o.Op = AOParser.Ast.Relation.Relations.Gtr ; .)
+		| ">="																	(. o.Op = AOParser.Ast.Relation.Relations.Geq ; .)
+		| "IN"																	(. o.Op = AOParser.Ast.Relation.Relations.In ; .)
+		| "IS"																	(. o.Op = AOParser.Ast.Relation.Relations.Is ; .).
 
-	MulOp<out CPParser.Ast.MulOp o>												(. o = new CPParser.Ast.MulOp(); .)	
+	MulOp<out AOParser.Ast.MulOp o>												(. o = new AOParser.Ast.MulOp(); .)	
 		= 
-		"*"																		(. o.Op = CPParser.Ast.MulOp.MulOps.Mul; .)
-		| "/"																	(. o.Op = CPParser.Ast.MulOp.MulOps.Division; .)
-		| "DIV"																	(. o.Op = CPParser.Ast.MulOp.MulOps.DIV; .)
-		| "MOD"																	(. o.Op = CPParser.Ast.MulOp.MulOps.MOD; .)
-		| "&"																	(. o.Op = CPParser.Ast.MulOp.MulOps.AND; .) .
-	AddOp<out CPParser.Ast.AddOp o>												(. o = new CPParser.Ast.AddOp(); .) 	 
+		"*"																		(. o.Op = AOParser.Ast.MulOp.MulOps.Mul; .)
+		| "/"																	(. o.Op = AOParser.Ast.MulOp.MulOps.Division; .)
+		| "DIV"																	(. o.Op = AOParser.Ast.MulOp.MulOps.DIV; .)
+		| "MOD"																	(. o.Op = AOParser.Ast.MulOp.MulOps.MOD; .)
+		| "&"																	(. o.Op = AOParser.Ast.MulOp.MulOps.AND; .) .
+	AddOp<out AOParser.Ast.AddOp o>												(. o = new AOParser.Ast.AddOp(); .) 	 
 		= 
-		"+"																		(. o.Op = CPParser.Ast.AddOp.AddOps.Add; .)
-		| "-"																	(. o.Op = CPParser.Ast.AddOp.AddOps.Sub; .)
-		| "OR"																	(. o.Op = CPParser.Ast.AddOp.AddOps.Or; .).
+		"+"																		(. o.Op = AOParser.Ast.AddOp.AddOps.Add; .)
+		| "-"																	(. o.Op = AOParser.Ast.AddOp.AddOps.Sub; .)
+		| "OR"																	(. o.Op = AOParser.Ast.AddOp.AddOps.Or; .).
 
 
-	Designator<out CPParser.Ast.Designator o>
-		=																		(. o = new CPParser.Ast.Designator(); .) 
+	Designator<out AOParser.Ast.Designator o>
+		=																		(. o = new AOParser.Ast.Designator(); .) 
 		Qualident<out o.Qualident> 
 		{ 
-			  "."																(. var s = new CPParser.Ast.Designator.IDesignatorSpec.RecordDesignatorSpec(); .) 
+			  "."																(. var s = new AOParser.Ast.Designator.IDesignatorSpec.RecordDesignatorSpec(); .) 
 			  Ident<out s.Value>												(. o.Specs.Add(s); .)
-			| "["																(. var s = new CPParser.Ast.Designator.IDesignatorSpec.ArrayDesignatorSpec(); .) 
+			| "["																(. var s = new AOParser.Ast.Designator.IDesignatorSpec.ArrayDesignatorSpec(); .) 
 			ExprList<out s.Value> "]"											(. o.Specs.Add(s); .)
-			| "("																(. var s = new CPParser.Ast.Designator.IDesignatorSpec.ProcCallDesignatorSpec(); .) 
+			| "("																(. var s = new AOParser.Ast.Designator.IDesignatorSpec.ProcCallDesignatorSpec(); .) 
 			[Qualident<out s.Value>]												(. o.Specs.Add(s); .)  
 			")" 
 			}.
 
-	ExprList<out CPParser.Ast.ExprList o>
-		=																		(. o = new CPParser.Ast.ExprList(); CPParser.Ast.Expr e; .)
+	ExprList<out AOParser.Ast.ExprList o>
+		=																		(. o = new AOParser.Ast.ExprList(); AOParser.Ast.Expr e; .)
 		Expr<out e>																(. o.Exprs.Add(e); .) 
 		{"," Expr<out e>														(. o.Exprs.Add(e); .)
 		}.
 
-	IdentList<out CPParser.Ast.IdentList o> 	
-		=																		(. o = new CPParser.Ast.IdentList(); var id = new CPParser.Ast.IdentDef(); .)
+	IdentList<out AOParser.Ast.IdentList o> 	
+		=																		(. o = new AOParser.Ast.IdentList(); AOParser.Ast.IdentDef id; .)
 		IdentDef<out id>														(. o.IdentDefs.Add(id); .)
-		{","																	(. id = new CPParser.Ast.IdentDef(); .)
-		IdentDef<out id>
+		{","																	
+		IdentDef<out id>}														(. o.IdentDefs.Add(id); .).
 
-	Qualident<out CPParser.Ast.Qualident o>
-		=																		(. o = new CPParser.Ast.Qualident(); .)
+	Qualident<out AOParser.Ast.Qualident o>
+		=																		(. o = new AOParser.Ast.Qualident(); .)
 		Ident<out o.Ident1> ["." Ident<out o.Ident2>] .
 
-	IdentDef<out CPParser.Ast.IdentDef o> 	
-		=																		(. o = new CPParser.Ast.IdentDef (); .)
+	IdentDef<out AOParser.Ast.IdentDef o> 	
+		=																		(. o = new AOParser.Ast.IdentDef (); .)
 		Ident<out o.Ident> 
-		["*"																	(. o.Export = CPParser.Ast.IdentDef.IdentExport.Export; .)
-		| "-"																	(. o.Export = CPParser.Ast.IdentDef.IdentExport.ExportReadonly; .)].
+		["*"																	(. o.Export = AOParser.Ast.IdentDef.IdentExport.Export; .)
+		| "-"																	(. o.Export = AOParser.Ast.IdentDef.IdentExport.ExportReadonly; .)].
 
 END ActiveOberon.
