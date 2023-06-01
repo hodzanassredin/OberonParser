@@ -345,7 +345,7 @@ public class Scanner {
 	void CheckLiteral() {
 		switch (t.val) {
 			case "MODULE": t.kind = 6; break;
-			case "IMPORT": t.kind = 9; break;
+			case "IMPORT": t.kind = 10; break;
 			case "DEFINITION": t.kind = 12; break;
 			case "REFINES": t.kind = 13; break;
 			case "PROCEDURE": t.kind = 14; break;
@@ -380,8 +380,8 @@ public class Scanner {
 			case "NIL": t.kind = 57; break;
 			case "IN": t.kind = 64; break;
 			case "IS": t.kind = 65; break;
-			case "DIV": t.kind = 66; break;
-			case "MOD": t.kind = 67; break;
+			case "DIV": t.kind = 67; break;
+			case "MOD": t.kind = 68; break;
 			case "OR": t.kind = 69; break;
 			default: break;
 		}
@@ -456,7 +456,7 @@ public class Scanner {
 			case 12:
 				{t.kind = 7; break;}
 			case 13:
-				{t.kind = 10; break;}
+				{t.kind = 9; break;}
 			case 14:
 				{t.kind = 11; break;}
 			case 15:
@@ -494,7 +494,7 @@ public class Scanner {
 			case 31:
 				{t.kind = 63; break;}
 			case 32:
-				{t.kind = 68; break;}
+				{t.kind = 66; break;}
 			case 33:
 				recEnd = pos; recKind = 8;
 				if (ch == '.') {AddCh(); goto case 25;}

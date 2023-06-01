@@ -145,11 +145,13 @@ public AOParser.Ast.Module module;
 		}
 		while (la.kind == 14) {
 			Get();
-			Ident(out o.ProcIdent);
+			var p = new AOParser.Ast.DefinitionProc(); 
+			Ident(out p.Ident);
 			if (la.kind == 25) {
-				FormalPars(out o.ProcFormalPars);
+				FormalPars(out p.FormalPars);
 			}
 			Expect(7);
+			o.Procs.Add(p); 
 		}
 		Expect(15);
 		Expect(1);
@@ -191,8 +193,8 @@ public AOParser.Ast.Module module;
 	}
 
 	void Body(out AOParser.Ast.Body o) {
+		o = new AOParser.Ast.Body(); 
 		if (la.kind == 34) {
-			o = new AOParser.Ast.Body(); 
 			StatBlock(out o.StatBlock);
 		} else if (la.kind == 15) {
 			Get();
@@ -259,7 +261,7 @@ public AOParser.Ast.Module module;
 		lst.Add(o); 
 	}
 
-	void ProcDecl(out AOParser.Ast.AstList lst) {
+	void ProcDecl(AOParser.Ast.AstList lst) {
 		Expect(14);
 		var o = new AOParser.Ast.ProcDecl(); 
 		ProcHead(out o.ProcHead);
@@ -397,7 +399,7 @@ public AOParser.Ast.Module module;
 	}
 
 	void ProcHead(out AOParser.Ast.ProcHead o) {
-		var o = new AOParser.Ast.ProcHead(); 
+		o = new AOParser.Ast.ProcHead(); 
 		if (la.kind == 23) {
 			SysFlag(out o.SysFlag);
 		}
@@ -410,9 +412,9 @@ public AOParser.Ast.Module module;
 				o.Tag = AOParser.Ast.ProcHead.Tags.Initializer; 
 			}
 		}
-		IdentDef(o.IdentDef);
+		IdentDef(out o.IdentDef);
 		if (la.kind == 25) {
-			FormalPars(o.FormalPars);
+			FormalPars(out o.FormalPars);
 		}
 	}
 

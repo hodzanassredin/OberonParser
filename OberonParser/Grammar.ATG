@@ -55,7 +55,9 @@ PRODUCTIONS
 	Definition<out AOParser.Ast.Definition o> 	
 		= 																		(. o = new AOParser.Ast.Definition(); .)	
 		"DEFINITION" Ident<out o.Ident> ["REFINES" Qualident<out o.Qualident>] 
-		{"PROCEDURE" Ident<out o.ProcIdent> [FormalPars<out o.ProcFormalPars>] ";"} 
+		{"PROCEDURE"															(. var p = new AOParser.Ast.DefinitionProc(); .)
+			Ident<out p.Ident> [FormalPars<out p.FormalPars>] ";"				(. o.Procs.Add(p); .)
+			} 
 		"END" ident.
 
 	DeclSeq<out AOParser.Ast.DeclSeq o> 
@@ -81,18 +83,18 @@ PRODUCTIONS
 		=																		(. var o = new AOParser.Ast.VarDecl(); .)	
 		IdentList<out o.IdentList> ":" Type<out o.Type_>						(. lst.Add(o); .).
 
-	ProcDecl<out AOParser.Ast.AstList lst> 
+	ProcDecl<AOParser.Ast.AstList lst> 
 		= "PROCEDURE"															(. var o = new AOParser.Ast.ProcDecl(); .)	
 		ProcHead<out o.ProcHead> ";" 
 		DeclSeq<out o.DeclSeq> 
 		Body<out o.Body> ident													(. lst.Add(o); .).	
 
 	ProcHead<out AOParser.Ast.ProcHead o>  
-		=																			(. var o = new AOParser.Ast.ProcHead(); .)	
+		=																			(. o = new AOParser.Ast.ProcHead(); .)	
 		[SysFlag<out o.SysFlag>] 
 		["*"																		(. o.Tag = AOParser.Ast.ProcHead.Tags.Export; .) 
 		| "&"																		(. o.Tag = AOParser.Ast.ProcHead.Tags.Initializer; .)
-		] IdentDef<o.IdentDef> [FormalPars<o.FormalPars>].
+		] IdentDef<out o.IdentDef> [FormalPars<out o.FormalPars>].
 
 	SysFlag<out AOParser.Ast.SysFlag o> 
 		=																			(. o = new AOParser.Ast.SysFlag(); .)	
@@ -142,11 +144,11 @@ PRODUCTIONS
 	[IdentList<out o.IdentList> ":" Type<out o.Type_>].
 	
 	FieldList<out AOParser.Ast.FieldList o>
-	=																			(. o = new AOParser.Ast.FieldList(); .)
-	FieldDecl<out o.FieldDecl> {";" FieldDecl<out o.FieldDecl>}.
+	=																			(. o = new AOParser.Ast.FieldList(); AOParser.Ast.FieldDecl fd; .)
+	FieldDecl<out fd> {";" FieldDecl<out fd>}.
 	
-	Body<out AOParser.Ast.Body o> 	
-	= 																			(. o = new AOParser.Ast.Body(); .)
+	Body<out AOParser.Ast.Body o> 												(. o = new AOParser.Ast.Body(); .)
+	= 																			
 	StatBlock<out o.StatBlock> | "END".
 	
 	StatBlock<out AOParser.Ast.StatBlock o> 	
