@@ -160,44 +160,6 @@ namespace AOParser
             o.Ident.Accept(this);
         }
 
-        public void Visit(MethAttributes o)
-        {
-            if (o.IsNew) {
-                sw.Write(", NEW");
-            }
-            if (o.Attr != null) {
-                switch (o.Attr.Value)
-                {
-                    case MethAttributes.MethodAttr.ABSTRACT:
-                        sw.Write(", ABSTRACT");
-                        break;
-                    case MethAttributes.MethodAttr.EMPTY:
-                        sw.Write(", EMPTY");
-                        break;
-                    case MethAttributes.MethodAttr.EXTENSIBLE:
-                        sw.Write(", EXTENSIBLE");
-                        break;
-                    default:
-                        break;
-                }
-            }
-        }
-
-        public void Visit(ForwardDecl o)
-        {
-            sw.Write("^ ");
-            if (o.Receiver != null)
-            {
-                o.Receiver?.Accept(this);
-                sw.Write(" ");
-            }
-
-            o.IdentDef.Accept(this);
-            sw.Write(" ");
-            o.FormalPars?.Accept(this);
-            o.MethAttributes.Accept(this);
-        }
-
         public void Visit(FormalPars o)
         {
             sw.Write("(");
@@ -227,28 +189,6 @@ namespace AOParser
             VisitList(o.Idents, () => { }, () => sw.Write(", "));
             sw.Write(" : ");
             o.Type_.Accept(this);
-        }
-
-        public void Visit(Receiver o)
-        {
-            sw.Write("(");
-            if (o.ReceiverPrefix != null) {
-                switch (o.ReceiverPrefix.Value)
-                {
-                    case Receiver.Prefix.VAR:
-                        sw.Write("VAR ");
-                        break;
-                    case Receiver.Prefix.IN:
-                        sw.Write("IN ");
-                        break;
-                    default:
-                        break;
-                }
-            }
-            o.SelfIdent.Accept(this);
-            sw.Write(": ");
-            o.TypeIdent.Accept(this);
-            sw.Write(")");
         }
 
         public void Visit(ExprList o)
@@ -832,7 +772,7 @@ namespace AOParser
 
         public void Visit(IType.ObjectType o)
         {
-            sw.Write("OBJECT");
+            sw.WriteLine("OBJECT");
             if (o.SysFlag != null) { 
                 o.SysFlag.Accept(this); 
             }

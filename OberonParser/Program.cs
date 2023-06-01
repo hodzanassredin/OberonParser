@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AOParser;
+using System;
 
 
 Console.WriteLine("_________________________________");
@@ -20,10 +21,14 @@ else
     }
     Console.WriteLine("   Parsing source file {0}", args[0]);
     parser.Parse();
-    if (parser.errors.count == 1)
-        Console.WriteLine("-- 1 error dectected");
-    else
-        Console.WriteLine("-- {0} errors dectected", parser.errors.count);
+
+    Console.WriteLine("-- {0} errors dectected", parser.errors.count);
+    var sw = new StreamWriter(Console.OpenStandardOutput());
+    sw.AutoFlush = true;
+    Console.SetOut(sw);
+    var ppv = new PrettyPrintVisitor(sw);
+    var str = parser.module.ToString();
+    ppv.Visit(parser.module);
 }
 
 

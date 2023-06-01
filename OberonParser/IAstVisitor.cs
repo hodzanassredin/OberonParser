@@ -21,11 +21,8 @@ namespace AOParser
 		void Visit(TypeDecl o);
 		void Visit(VarDecl o);
 		void Visit(ProcDecl o);
-		void Visit(MethAttributes o);
-		void Visit(ForwardDecl o);
 		void Visit(FormalPars o);
 		void Visit(FPSection o);
-		void Visit(Receiver o);
 		void Visit(ExprList o);
 		void Visit(IdentList o);
 		void Visit(FieldList o);

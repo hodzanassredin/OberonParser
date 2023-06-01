@@ -143,7 +143,6 @@ namespace AOParser.Ast
 		public void Accept(IAstVisitor v) => v.Visit(this);
 		public override string ToString()
 		{
-			
 			return StatBlock == null ? "END" : StatBlock.ToString();
 		}
 	}
@@ -197,7 +196,12 @@ namespace AOParser.Ast
 		public Ident Ident;
 		public IdentExport Export;
 		public void Accept(IAstVisitor v) => v.Visit(this);
-	}
+
+        public override string ToString()
+        {
+            return $"{Ident} {Export}";
+        }
+    }
 	public interface IConstTypeVarListDecl : IAstElement {
 		public class ConstDeclList : AstList, IAstElement, IConstTypeVarListDecl
 		{
@@ -223,7 +227,12 @@ namespace AOParser.Ast
 		public AstList ProcForwardDecls = new ();
 		public AstList ProcDecl = new();
 		public void Accept(IAstVisitor v) => v.Visit(this);
-	}
+
+        public override string ToString()
+        {
+            return $"{ConstTypeVarDecls} {ProcForwardDecls} {ProcDecl}";
+        }
+    }
 
 
 	public class ConstDecl : IAstElement
@@ -231,18 +240,33 @@ namespace AOParser.Ast
 		public IdentDef IdentDef;
 		public ConstExpr ConstExpr;
 		public void Accept(IAstVisitor v) => v.Visit(this);
-	}
+
+        public override string ToString()
+        {
+            return $"{IdentDef} = {ConstExpr}";
+        }
+    }
 	public class TypeDecl : IAstElement
 	{
 		public IdentDef IdentDef;
 		public IType Type_;
         public void Accept(IAstVisitor v) => v.Visit(this);
-	}
+
+        public override string ToString()
+        {
+            return $"{IdentDef} = {Type_}";
+		}
+    }
 	public class VarDecl : IAstElement
 	{
 		public IdentList IdentList;
 		public IType Type_;
         public void Accept(IAstVisitor v) => v.Visit(this);
+
+		public override string ToString()
+		{
+			return $"{IdentList} = {Type_}";
+		}
 	}
 	public class ProcDecl : IAstElement, IProcForwardDecl
 	{
@@ -253,33 +277,12 @@ namespace AOParser.Ast
 		public void Accept(IAstVisitor v) => v.Visit(this);
 	}
 
-
-	public class MethAttributes : IAstElement
-	{
-		public enum MethodAttr
-		{
-			ABSTRACT, EMPTY, EXTENSIBLE
-		}
-		public bool IsNew;
-		public MethodAttr? Attr;
-		public void Accept(IAstVisitor v) => v.Visit(this);
-	}
-	public class ForwardDecl : IAstElement, IProcForwardDecl
-	{
-		public Receiver Receiver;
-		public IdentDef IdentDef;
-		public FormalPars FormalPars;
-		public MethAttributes MethAttributes;
-		public void Accept(IAstVisitor v) => v.Visit(this);
-	}
 	public class FormalPars : IAstElement
 	{
 		public AstList FPSections = new AstList();
 		public Qualident Qualident;
         public void Accept(IAstVisitor v) => v.Visit(this);
 	}
-
-	
 
 	public class FPSection : IAstElement
 	{
@@ -293,17 +296,6 @@ namespace AOParser.Ast
 		public void Accept(IAstVisitor v) => v.Visit(this);
 	}
 	
-	public class Receiver : IAstElement
-	{
-		public enum Prefix
-		{
-			VAR, IN
-		}
-		public Prefix? ReceiverPrefix;
-		public Ident SelfIdent;
-		public Ident TypeIdent;
-		public void Accept(IAstVisitor v) => v.Visit(this);
-	}
     public interface IType : IAstElement
     {
 		public class SynonimType : IType
