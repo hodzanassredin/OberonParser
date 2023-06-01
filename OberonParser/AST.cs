@@ -128,13 +128,13 @@ namespace AOParser.Ast
 	}
 	public class StatBlock : IAstElement
 	{
-		public AstList IdentList = new AstList();
+		public AstList IdentLists = new AstList();
 		public StatementSeq StatementSeq;
 
 		public void Accept(IAstVisitor v) => v.Visit(this);
 		public override string ToString()
 		{
-			return $"BEGIN {IdentList} {StatementSeq} END";
+			return $"BEGIN {IdentLists} {StatementSeq} END";
 		}
 	}
 	public class Body : IAstElement
@@ -447,7 +447,7 @@ namespace AOParser.Ast
     }
 
 	public class SimpleElementExpr : IAstElement {
-		public AddOp AddOp;
+		public MulOp MulOp;
 		public Term Term;
         public void Accept(IAstVisitor v)
         {
@@ -455,17 +455,13 @@ namespace AOParser.Ast
         }
         public override string ToString()
         {
-            return $"{AddOp} {Term} ";
+            return $"{MulOp} {Term} ";
         }
     }
 
 	public class SimpleExpr : IAstElement
 	{
-		public enum SimpleExprPrefix
-		{
-			Add, Sub
-		}
-		public SimpleExprPrefix? Prefix;
+		
 		public Term Term;
 		public AstList SimpleExprElements = new AstList();
 		public void Accept(IAstVisitor v) => v.Visit(this);
@@ -473,11 +469,7 @@ namespace AOParser.Ast
         public override string ToString()
         {
 			var sb = new StringBuilder();
-			if (Prefix.HasValue)
-			{
-				sb.Append(Prefix.Value.ToString());
-				sb.Append(" ");
-			}
+			
 			
 			sb.Append(Term.ToString());
 			if (SimpleExprElements.Count() > 0)
@@ -491,7 +483,7 @@ namespace AOParser.Ast
 
 	public class TermElementExpr : IAstElement
 	{
-		public MulOp MulOp;
+		public AddOp AddOp;
 		public IFactor Factor;
 		public void Accept(IAstVisitor v)
 		{
@@ -500,13 +492,30 @@ namespace AOParser.Ast
 	}
 	public class Term : IAstElement
 	{
+		public enum TermExprPrefix
+		{
+			Add, Sub
+		}
+		public TermExprPrefix? Prefix;
 		public IFactor Factor;
 		public AstList TermElements = new AstList();
 		public void Accept(IAstVisitor v) => v.Visit(this);
 
 		public override string ToString()
 		{
-			return !TermElements.Any() ? Factor.ToString() : $"{Factor} {TermElements}";
+			var sb = new StringBuilder();
+			if (Prefix.HasValue)
+			{
+				sb.Append(Prefix.Value.ToString());
+				sb.Append(" ");
+			}
+			sb.Append(Factor.ToString());
+			if (TermElements.Count() > 0)
+			{
+				sb.Append(" ");
+				sb.Append(TermElements);
+			}
+			return sb.ToString();
 		}
 	}
 
@@ -614,8 +623,20 @@ namespace AOParser.Ast
 		}
 		public class WithStatement : IStatement
 		{
-			public AstList Alternatives = new AstList();
-			public StatementSeq ElseStatementSeq;
+			public Qualident Qualident1;
+			public Qualident Qualident2;
+			public StatementSeq StatementSeq;
+			public void Accept(IAstVisitor v) => v.Visit(this);
+		}
+		
+		public class StatBlockStatement : IStatement
+		{
+			public StatBlock StatBlock;
+			public void Accept(IAstVisitor v) => v.Visit(this);
+		}
+		public class AwaitStatement : IStatement
+		{
+			public Expr Expr;
 			public void Accept(IAstVisitor v) => v.Visit(this);
 		}
 		public class ExitStatement : IStatement
@@ -644,11 +665,12 @@ namespace AOParser.Ast
 		public class DesignatorFactor : IFactor
 		{
 			public Designator Value;
+			public ExprList ExprList;
 			public void Accept(IAstVisitor v) => v.Visit(this);
 
 			public override string ToString()
 			{
-				return $"{Value}";
+				return $"{Value} {ExprList}";
 			}
 		}
 		public class NumberFactor : IFactor
@@ -751,7 +773,7 @@ namespace AOParser.Ast
 				}
 			}
 			public class ProcCallDesignatorSpec : IDesignatorSpec {
-				public ExprList Value;
+				public Qualident Value;
 				public void Accept(IAstVisitor v) => v.Visit(this);
 				public override string ToString()
 				{

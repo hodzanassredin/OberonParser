@@ -445,11 +445,13 @@ public AOParser.Ast.Module module;
 	}
 
 	void FieldList(out AOParser.Ast.FieldList o) {
-		o = new AOParser.Ast.FieldList(); 
-		FieldDecl(out o.FieldDecl);
+		o = new AOParser.Ast.FieldList(); AOParser.Ast.FieldDecl fd; 
+		FieldDecl(out fd);
+		o.FieldDecl.Add(fd); 
 		while (la.kind == 7) {
 			Get();
-			FieldDecl(out o.FieldDecl);
+			FieldDecl(out fd);
+			o.FieldDecl.Add(fd); 
 		}
 	}
 
@@ -468,9 +470,9 @@ public AOParser.Ast.Module module;
 		if (la.kind == 35) {
 			Get();
 			IdentList(out il);
+			o.IdentLists.Add(il); 
 			Expect(36);
 		}
-		o.IdentLists.Add(il); 
 		if (StartOf(3)) {
 			StatementSeq(out o.StatementSeq);
 		}
@@ -781,10 +783,10 @@ public AOParser.Ast.Module module;
 		if (la.kind == 55 || la.kind == 56) {
 			if (la.kind == 55) {
 				Get();
-				o.Prefix = AOParser.Ast.Term.SimpleExprPrefix.Add; 
+				o.Prefix = AOParser.Ast.Term.TermExprPrefix.Add; 
 			} else {
 				Get();
-				o.Prefix = AOParser.Ast.Term.SimpleExprPrefix.Sub; 
+				o.Prefix = AOParser.Ast.Term.TermExprPrefix.Sub; 
 			}
 		}
 		Factor(out o.Factor);
