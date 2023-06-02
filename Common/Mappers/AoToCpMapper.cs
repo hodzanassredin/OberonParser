@@ -12,6 +12,7 @@ namespace Common.Mappers
 
         public CPParser.Ast.Ident Map(AOParser.Ast.Ident o)
         {
+            if (o == null) return null;
             return new CPParser.Ast.Ident { 
                 Name = o.Name,
             };
@@ -68,14 +69,18 @@ namespace Common.Mappers
             throw new NotImplementedException();
         }
 
-        public CPParser.Ast.IProcForwardDecl Map(AOParser.Ast.IProcForwardDecl o)
-        {
-            throw new NotImplementedException();
-        }
-
         public CPParser.Ast.DeclSeq Map(AOParser.Ast.DeclSeq o)
         {
-            throw new NotImplementedException();
+            var res = new CPParser.Ast.DeclSeq();
+            foreach (var item in o.ConstTypeVarDecls.Cast<AOParser.Ast.IConstTypeVarListDecl>())
+            {
+                res.ConstTypeVarDecls.Add(Map(item));
+            }
+            foreach (var item in o.ProcDecl.Cast<AOParser.Ast.ProcDecl>())
+            {
+                res.ProcForwardDecls.Add(Map(item));
+            }
+            return res;
         }
 
         public CPParser.Ast.IConstTypeVarListDecl.ConstDeclList Map(AOParser.Ast.IConstTypeVarListDecl.ConstDeclList o)

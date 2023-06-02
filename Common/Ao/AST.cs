@@ -216,26 +216,21 @@ namespace AOParser.Ast
         }
     }
 	public abstract class IConstTypeVarListDecl : AstElement {
+		public AstList Values = new AstList();
 		public class ConstDeclList : IConstTypeVarListDecl
 		{
-			public AstList Values = new AstList();
 			public override void Accept(IAstVisitor v) => v.Visit(this);
 		}
 		public class TypeDeclList : IConstTypeVarListDecl
 		{
-			public AstList Values = new AstList();
 			public override void Accept(IAstVisitor v) => v.Visit(this);
 		}
 		public class VarDeclList : IConstTypeVarListDecl
 		{
-			public AstList Values = new AstList();
 			public override void Accept(IAstVisitor v) => v.Visit(this);
 		}
+	}
 
-	}
-	public abstract class IProcForwardDecl : AstElement { 
-	
-	}
 
 	public class DeclSeq : AstElement
 	{
@@ -283,7 +278,8 @@ namespace AOParser.Ast
 			return $"{IdentList} = {Type_}";
 		}
 	}
-	public class ProcDecl : IProcForwardDecl
+
+	public class ProcDecl : AstElement
 	{
 		public ProcHead ProcHead;
 		public DeclSeq DeclSeq;

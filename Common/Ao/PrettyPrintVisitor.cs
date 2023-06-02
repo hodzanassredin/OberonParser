@@ -88,12 +88,6 @@ namespace AOParser
             o.AcceptWithComments(this);
         }
 
-        public void Visit(IProcForwardDecl o)
-        {
-            o.AcceptWithComments(this);
-            sw.WriteLine(";");
-        }
-
         public void Visit(DeclSeq o)
         {
 

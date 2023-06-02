@@ -12,7 +12,6 @@ namespace AOParser
 		void Visit(Import o);
 		void Visit(IdentDef o);
 		void Visit(IConstTypeVarListDecl o);
-		void Visit(IProcForwardDecl o);
 		void Visit(DeclSeq o);
 		void Visit(IConstTypeVarListDecl.ConstDeclList o);
 		void Visit(IConstTypeVarListDecl.TypeDeclList o);
