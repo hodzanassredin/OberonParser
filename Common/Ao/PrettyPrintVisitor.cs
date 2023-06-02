@@ -29,18 +29,18 @@ namespace AOParser
 
         public void Visit(Qualident o)
         {
-            o.Ident1.Accept(this);
+            o.Ident1.AcceptWithComments(this);
             if (o.Ident2 != null) {
                 sw.Write('.');
-                o.Ident2.Accept(this);
+                o.Ident2.AcceptWithComments(this);
             }
         }
 
         public void Visit(Guard o)
         {
-            o.VarQualident.Accept(this);
+            o.VarQualident.AcceptWithComments(this);
             sw.Write(" : ");
-            o.TypeQualident.Accept(this);
+            o.TypeQualident.AcceptWithComments(this);
         }
 
         public void Visit(Module o)
@@ -56,17 +56,17 @@ namespace AOParser
             }
             if (o.Definition != null)
             {
-                o.Definition.Accept(this);
+                o.Definition.AcceptWithComments(this);
             }
-            o.DeclSeq.Accept(this);
+            o.DeclSeq.AcceptWithComments(this);
             ExitScope();
-            o.Body.Accept(this);
+            o.Body.AcceptWithComments(this);
             sw.WriteLine($"{o.Ident.Name}.");
         }
 
         public void Visit(IdentDef o)
         {
-            o.Ident.Accept(this);
+            o.Ident.AcceptWithComments(this);
             if (o.Export != null)
             {
                 switch (o.Export)
@@ -85,12 +85,12 @@ namespace AOParser
 
         public void Visit(IConstTypeVarListDecl o)
         {
-            o.Accept(this);
+            o.AcceptWithComments(this);
         }
 
         public void Visit(IProcForwardDecl o)
         {
-            o.Accept(this);
+            o.AcceptWithComments(this);
             sw.WriteLine(";");
         }
 
@@ -99,13 +99,13 @@ namespace AOParser
 
             foreach (var item in o.ConstTypeVarDecls)
             {
-                item.Accept(this);
+                item.AcceptWithComments(this);
                 sw.WriteLine();
             }
             foreach (var item in o.ProcDecl)
             {
                 WriteTabs();
-                item.Accept(this);
+                item.AcceptWithComments(this);
                 sw.WriteLine(";");
                 sw.WriteLine();
             }
@@ -135,29 +135,29 @@ namespace AOParser
         }
         public void Visit(ConstDecl o)
         {
-            WriteTabs();o.IdentDef.Accept(this);sw.Write(" = ");o.ConstExpr.Accept(this);
+            WriteTabs();o.IdentDef.AcceptWithComments(this);sw.Write(" = ");o.ConstExpr.AcceptWithComments(this);
         }
 
         public void Visit(TypeDecl o)
         {
-            WriteTabs();o.IdentDef.Accept(this);sw.Write(" = ");o.Type_.Accept(this);
+            WriteTabs();o.IdentDef.AcceptWithComments(this);sw.Write(" = ");o.Type_.AcceptWithComments(this);
         }
 
         public void Visit(VarDecl o)
         {
-            WriteTabs();o.IdentList.Accept(this);sw.Write(": ");o.Type_.Accept(this);
+            WriteTabs();o.IdentList.AcceptWithComments(this);sw.Write(": ");o.Type_.AcceptWithComments(this);
         }
 
         public void Visit(ProcDecl o)
         {
             sw.Write("PROCEDURE ");
-            o.ProcHead.Accept(this);
+            o.ProcHead.AcceptWithComments(this);
             sw.WriteLine(";");
             EnterScope();
-            o.DeclSeq.Accept(this);
+            o.DeclSeq.AcceptWithComments(this);
             ExitScope();
-            o.Body.Accept(this);
-            o.Ident.Accept(this);
+            o.Body.AcceptWithComments(this);
+            o.Ident.AcceptWithComments(this);
         }
 
         public void Visit(FormalPars o)
@@ -168,7 +168,7 @@ namespace AOParser
             sw.Write(")");
             if (o.Qualident != null) {
                 sw.Write(": ");
-                o.Qualident.Accept(this);
+                o.Qualident.AcceptWithComments(this);
             }
         }
 
@@ -188,7 +188,7 @@ namespace AOParser
             
             VisitList(o.Idents, () => { }, () => sw.Write(", "));
             sw.Write(" : ");
-            o.Type_.Accept(this);
+            o.Type_.AcceptWithComments(this);
         }
 
         public void Visit(ExprList o)
@@ -207,7 +207,7 @@ namespace AOParser
             for (int i = 0; i < stats.Count; i++)
             {
                 before();
-                stats[i]?.Accept(this);
+                stats[i]?.AcceptWithComments(this);
                 if (i != (stats.Count - 1) || doAfterForLast) after();
             }
         }
@@ -219,15 +219,15 @@ namespace AOParser
 
         public void Visit(ConstExpr o)
         {
-            o.Expr.Accept(this);
+            o.Expr.AcceptWithComments(this);
         }
 
         public void Visit(CaseLabels o)
         {
-            o.ConstExpr1.Accept(this);
+            o.ConstExpr1.AcceptWithComments(this);
             if (o.ConstExpr2 != null) {
                 sw.Write("..");
-                o.ConstExpr2.Accept(this);
+                o.ConstExpr2.AcceptWithComments(this);
             }
         }
 
@@ -246,10 +246,10 @@ namespace AOParser
 
         public void Visit(Element o)
         {
-            o.Expr1.Accept(this);
+            o.Expr1.AcceptWithComments(this);
             if (o.Expr2 != null) {
                 sw.Write("..");
-                o.Expr2.Accept(this);
+                o.Expr2.AcceptWithComments(this);
             }
         }
 
@@ -330,7 +330,7 @@ namespace AOParser
 
         public void Visit(SimpleExpr o)
         {
-            o.Term.Accept(this);
+            o.Term.AcceptWithComments(this);
             VisitList(o.SimpleExprElements, () => { }, () => { });
         }
 
@@ -350,18 +350,18 @@ namespace AOParser
                         break;
                 }
             }
-            o.Factor.Accept(this);
+            o.Factor.AcceptWithComments(this);
             VisitList(o.TermElements, () => { }, () => { });
         }
 
         public void Visit(Expr o)
         {
-            o.SimpleExpr.Accept(this);
+            o.SimpleExpr.AcceptWithComments(this);
             if (o.Relation != null) { 
                 sw.Write(' ');
-                o.Relation.Accept(this);
+                o.Relation.AcceptWithComments(this);
                 sw.Write(' ');
-                o.SimpleExpr2.Accept(this);
+                o.SimpleExpr2.AcceptWithComments(this);
             }
         }
 
@@ -370,36 +370,36 @@ namespace AOParser
             if (o.CaseLabels.Any()) {
                 VisitList(o.CaseLabels, () => { }, () => sw.Write(","));
                 sw.Write(" : ");
-                o.StatementSeq.Accept(this);
+                o.StatementSeq.AcceptWithComments(this);
             }
         }
 
         public void Visit(IStatement.AssignmentStatement o)
         {
-            WriteTabs();o.Designator.Accept(this);
+            WriteTabs();o.Designator.AcceptWithComments(this);
             sw.Write(" := ");
-            o.Expr.Accept(this);
+            o.Expr.AcceptWithComments(this);
         }
 
         public void Visit(IStatement.ProcCallStatement o)
         {
-            WriteTabs();o.Designator.Accept(this);
+            WriteTabs();o.Designator.AcceptWithComments(this);
             if (o.ExprList != null)
             {
                 sw.Write("(");
-                o.ExprList.Accept(this);
+                o.ExprList.AcceptWithComments(this);
                 sw.Write(")");
             }
         }
 
         public void Visit(IStatement.IfStatement o)
         {
-            WriteTabs();sw.Write("IF ");o.If.Accept(this);
+            WriteTabs();sw.Write("IF ");o.If.AcceptWithComments(this);
             VisitList(o.ELSIFs, () => { WriteTabs(); sw.Write("ELSIF"); }, () => { });
             if (o.ElseBody != null) {
                 WriteTabs(); sw.WriteLine("ELSE");
                 EnterScope();
-                o.ElseBody.Accept(this);
+                o.ElseBody.AcceptWithComments(this);
                 ExitScope();
             }
             WriteTabs(); sw.Write("END");
@@ -407,7 +407,7 @@ namespace AOParser
 
         public void Visit(IStatement.CaseStatement o)
         {
-            WriteTabs(); sw.Write("CASE "); o.Expr.Accept(this); sw.WriteLine(" OF");
+            WriteTabs(); sw.Write("CASE "); o.Expr.AcceptWithComments(this); sw.WriteLine(" OF");
             for (int i = 0; i < o.Cases.Value.Count; i++)
             {
                 WriteTabs();
@@ -415,7 +415,7 @@ namespace AOParser
                 {
                     sw.Write("|"); 
                 }
-                sw.Write("\t"); o.Cases.Value[i].Accept(this);
+                sw.Write("\t"); o.Cases.Value[i].AcceptWithComments(this);
             }
             if (o.ElseBody != null) {
                 WriteTabs(); sw.WriteLine("ELSE");
@@ -428,9 +428,9 @@ namespace AOParser
 
         public void Visit(IStatement.WhileStatement o)
         {
-            WriteTabs();sw.Write("WHILE ");o.Expr.Accept(this);sw.WriteLine(" DO");
+            WriteTabs();sw.Write("WHILE ");o.Expr.AcceptWithComments(this);sw.WriteLine(" DO");
             EnterScope();
-            o.StatementSeq.Accept(this);
+            o.StatementSeq.AcceptWithComments(this);
             ExitScope();
             WriteTabs(); sw.Write("END");
         }
@@ -439,7 +439,7 @@ namespace AOParser
         {
             WriteTabs(); sw.WriteLine("LOOP");
             EnterScope();
-            o.StatementSeq.Accept(this);
+            o.StatementSeq.AcceptWithComments(this);
             ExitScope();
             WriteTabs(); sw.Write("END");
         }
@@ -448,18 +448,18 @@ namespace AOParser
         {
             WriteTabs(); sw.WriteLine("REPEAT");
             EnterScope();
-            o.StatementSeq.Accept(this);
+            o.StatementSeq.AcceptWithComments(this);
             ExitScope();
-            WriteTabs(); sw.Write("UNTIL "); o.Expr.Accept(this);
+            WriteTabs(); sw.Write("UNTIL "); o.Expr.AcceptWithComments(this);
         }
 
         public void Visit(IStatement.WithStatement o)
         {
             WriteTabs(); sw.Write("WITH "); 
-            o.Qualident1.Accept(this); sw.Write(" : "); o.Qualident2.Accept(this);
+            o.Qualident1.AcceptWithComments(this); sw.Write(" : "); o.Qualident2.AcceptWithComments(this);
             sw.WriteLine(" DO");
             EnterScope();
-            o.StatementSeq.Accept(this);
+            o.StatementSeq.AcceptWithComments(this);
             ExitScope();
             WriteTabs(); sw.Write("END");
         }
@@ -475,21 +475,21 @@ namespace AOParser
             if (o.Expr != null)
             {
                 sw.Write(" ");
-                o.Expr.Accept(this);
+                o.Expr.AcceptWithComments(this);
             }
             
         }
 
         public void Visit(IStatement.ForStatement o)
         {
-            WriteTabs(); sw.Write("FOR "); o.Ident.Accept(this); 
-                sw.Write(" := "); o.Expr.Accept(this); sw.Write(" TO "); o.ToExpr.Accept(this); 
+            WriteTabs(); sw.Write("FOR "); o.Ident.AcceptWithComments(this); 
+                sw.Write(" := "); o.Expr.AcceptWithComments(this); sw.Write(" TO "); o.ToExpr.AcceptWithComments(this); 
             if (o.ByExpr != null) {
-                sw.Write(" BY "); o.ByExpr.Accept(this);
+                sw.Write(" BY "); o.ByExpr.AcceptWithComments(this);
             }
             sw.WriteLine(" DO");
             EnterScope();
-            o.StatementSeq.Accept(this);
+            o.StatementSeq.AcceptWithComments(this);
             ExitScope();
             WriteTabs(); sw.Write("END");
         }
@@ -503,35 +503,35 @@ namespace AOParser
                 sw.Write(" ");
             }
             sw.Write("OF ");
-            o.Type_.Accept(this);
+            o.Type_.AcceptWithComments(this);
         }
 
         public void Visit(IType.PointerType o)
         {
             sw.Write("POINTER TO ");
-            o.Type_.Accept(this);
+            o.Type_.AcceptWithComments(this);
         }
 
         public void Visit(IType.ProcedureType o)
         {
             sw.Write("PROCEDURE");
-            o.FormalPars?.Accept(this);
+            o.FormalPars?.AcceptWithComments(this);
         }
 
         public void Visit(IType.RecordType o)
         {
             sw.Write("RECORD");
-            o.SysFlag?.Accept(this);
+            o.SysFlag?.AcceptWithComments(this);
             if (o.Qualident != null) {
                 sw.Write("(");
-                o.Qualident.Accept(this);
+                o.Qualident.AcceptWithComments(this);
                 sw.Write(")");
             }
             if (o.FieldList.FieldDecl.Any())
             {
                 sw.WriteLine();
                 EnterScope();
-                o.FieldList.Accept(this);
+                o.FieldList.AcceptWithComments(this);
                 ExitScope();
                 sw.WriteLine();
                 WriteTabs(); sw.Write("END");
@@ -545,7 +545,7 @@ namespace AOParser
 
         public void Visit(IType.SynonimType o)
         {
-            o.Qualident.Accept(this);
+            o.Qualident.AcceptWithComments(this);
         }
 
         public void Visit(Number o)
@@ -560,18 +560,18 @@ namespace AOParser
 
         public void Visit(IFactor.DesignatorFactor o)
         {
-            o.Value.Accept(this);
+            o.Value.AcceptWithComments(this);
         }
 
         public void Visit(IFactor.ExprFactor o)
         {
-            sw.Write("("); o.Value.Accept(this); sw.Write(")");
+            sw.Write("("); o.Value.AcceptWithComments(this); sw.Write(")");
         }
 
         public void Visit(IFactor.NegFactor o)
         {
             sw.Write("~");
-            o.Value.Accept(this);
+            o.Value.AcceptWithComments(this);
         }
 
         public void Visit(IFactor.NilFactor o)
@@ -581,12 +581,12 @@ namespace AOParser
 
         public void Visit(IFactor.NumberFactor o)
         {
-            o.Value.Accept(this);
+            o.Value.AcceptWithComments(this);
         }
 
         public void Visit(IFactor.SetFactor o)
         {
-            o.Value.Accept(this);
+            o.Value.AcceptWithComments(this);
         }
 
         public async void Visit(IFactor.StringFactor o)
@@ -596,7 +596,7 @@ namespace AOParser
 
         public void Visit(Designator o)
         {
-            o.Qualident.Accept(this);
+            o.Qualident.AcceptWithComments(this);
             VisitList(o.Specs, () => { }, () => { });
             if (o.EndOfLine) {
                 sw.Write("$");
@@ -606,13 +606,13 @@ namespace AOParser
         public void Visit(Designator.IDesignatorSpec.RecordDesignatorSpec o)
         {
             sw.Write(".");
-            o.Value.Accept(this);
+            o.Value.AcceptWithComments(this);
         }
 
         public void Visit(Designator.IDesignatorSpec.ArrayDesignatorSpec o)
         {
             sw.Write("[");
-            o.Value.Accept(this);
+            o.Value.AcceptWithComments(this);
             sw.Write("]");
         }
 
@@ -624,7 +624,7 @@ namespace AOParser
         public void Visit(Designator.IDesignatorSpec.ProcCallDesignatorSpec o)
         {
             sw.Write("(");
-            o.Value?.Accept(this);
+            o.Value?.AcceptWithComments(this);
             sw.Write(")");
         }
 
@@ -641,31 +641,31 @@ namespace AOParser
 
         public void Visit(IStatement.IfStatement.IfThen o)
         {
-            o.Cond.Accept(this);
+            o.Cond.AcceptWithComments(this);
             sw.WriteLine(" THEN");
             EnterScope();
-            o.ThenBody.Accept(this);
+            o.ThenBody.AcceptWithComments(this);
             ExitScope();
         }
 
         public void Visit(SimpleElementExpr o)
         {
-            sw.Write(" "); o.MulOp.Accept(this);
-            sw.Write(" "); o.Term.Accept(this);
+            sw.Write(" "); o.MulOp.AcceptWithComments(this);
+            sw.Write(" "); o.Term.AcceptWithComments(this);
         }
 
         public void Visit(TermElementExpr o)
         {
-            sw.Write(" ");o.AddOp.Accept(this);sw.Write(" ");o.Factor.Accept(this);
+            sw.Write(" ");o.AddOp.AcceptWithComments(this);sw.Write(" ");o.Factor.AcceptWithComments(this);
         }
 
         public void Visit(DefinitionProc o)
         {
             sw.Write("PROCEDURE ");
-            o.Ident.Accept(this);
+            o.Ident.AcceptWithComments(this);
             if (o.FormalPars != null) {
                 sw.Write(" ");
-                o.FormalPars.Accept(this);
+                o.FormalPars.AcceptWithComments(this);
             }
             sw.Write(";");
         }
@@ -673,10 +673,10 @@ namespace AOParser
         public void Visit(Definition o)
         {
             WriteTabs();sw.Write("DEFINITION ");
-            o.Ident.Accept(this);
+            o.Ident.AcceptWithComments(this);
             if (o.Qualident != null) {
                 sw.Write("REFINES ");
-                o.Qualident.Accept(this);
+                o.Qualident.AcceptWithComments(this);
             }
             if (o.Procs.Any())
             {
@@ -685,13 +685,13 @@ namespace AOParser
                 WriteTabs();
             }
             
-            sw.Write("END "); o.Ident.Accept(this);
+            sw.Write("END "); o.Ident.AcceptWithComments(this);
         }
 
         public void Visit(SysFlag o)
         {
             sw.Write("[");
-            o.Ident.Accept(this);
+            o.Ident.AcceptWithComments(this);
             sw.Write("]");
         }
 
@@ -699,7 +699,7 @@ namespace AOParser
         {
             if (o.StatBlock != null)
             {
-                o.StatBlock.Accept(this);
+                o.StatBlock.AcceptWithComments(this);
             }
             else {
                 sw.Write("END ");
@@ -709,9 +709,9 @@ namespace AOParser
         public void Visit(FieldDecl o)
         {
             if (o.IdentList!=null) { 
-                o.IdentList.Accept(this);
+                o.IdentList.AcceptWithComments(this);
                 sw.Write(":");
-                o.Type_.Accept(this);
+                o.Type_.AcceptWithComments(this);
             }
         }
 
@@ -727,7 +727,7 @@ namespace AOParser
             if (o.StatementSeq != null)
             {
                 EnterScope();
-                o.StatementSeq.Accept(this);
+                o.StatementSeq.AcceptWithComments(this);
                 ExitScope();
             }
             WriteTabs(); sw.Write("END ");
@@ -737,7 +737,7 @@ namespace AOParser
         {
             if (o.SysFlag != null)
             {
-                o.SysFlag.Accept(this);
+                o.SysFlag.AcceptWithComments(this);
             }
             if (o.Tag.HasValue)
             {
@@ -753,10 +753,10 @@ namespace AOParser
                         break;
                 }
             }
-            o.IdentDef.Accept(this);
+            o.IdentDef.AcceptWithComments(this);
             if (o.FormalPars != null)
             {
-                o.FormalPars.Accept(this);
+                o.FormalPars.AcceptWithComments(this);
             }
         }
 
@@ -764,38 +764,38 @@ namespace AOParser
         {
             sw.WriteLine("OBJECT");
             if (o.SysFlag != null) { 
-                o.SysFlag.Accept(this); 
+                o.SysFlag.AcceptWithComments(this); 
             }
             if (o.Qualident != null)
             {
                 sw.Write("(");
-                o.Qualident.Accept(this);
+                o.Qualident.AcceptWithComments(this);
                 sw.Write(")");
             }
             if (o.ImplementsQualident != null)
             {
                 sw.Write("IMPLEMENTS ");
-                o.ImplementsQualident.Accept(this);
+                o.ImplementsQualident.AcceptWithComments(this);
             }
             EnterScope();
-            o.DeclSeq.Accept(this);
+            o.DeclSeq.AcceptWithComments(this);
             ExitScope();
             WriteTabs();
-            o.Body.Accept(this);
-            o.Ident.Accept(this);
+            o.Body.AcceptWithComments(this);
+            o.Ident.AcceptWithComments(this);
             
         }
 
         public void Visit(IStatement.AwaitStatement o)
         {
             sw.Write("AWAIT (");
-            o.Expr.Accept(this);
+            o.Expr.AcceptWithComments(this);
             sw.Write(")");
         }
 
         public void Visit(IStatement.StatBlockStatement o)
         {
-            o.StatBlock.Accept(this);
+            o.StatBlock.AcceptWithComments(this);
         }
     }
 }
