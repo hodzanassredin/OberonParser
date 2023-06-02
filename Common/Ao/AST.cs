@@ -4,16 +4,30 @@ using System.Text;
 namespace AOParser.Ast
 {
 
-	public interface IAstElement
+	public abstract class AstElement
 	{
-		void Accept(IAstVisitor v);
+		public AstList CommentsBefore = new AstList();
+		public void AcceptWithComments(IAstVisitor v)
+		{
+			foreach (var c in CommentsBefore)
+			{
+				c.Accept(v);
+			}
+			this.Accept(v);
+			foreach (var c in CommentsAfter)
+			{
+				c.Accept(v);
+			}
+		}
+		public abstract void Accept(IAstVisitor v);
+		public AstList CommentsAfter = new AstList();
 	}
 
-	public class AstList : IEnumerable<IAstElement>
+	public class AstList : IEnumerable<AstElement>
 	{
-		public List<IAstElement> Value { get; set; } = new List<IAstElement>();
+		public List<AstElement> Value { get; set; } = new List<AstElement>();
 
-        public void Add(IAstElement obj)
+        public void Add(AstElement obj)
         {
 			if (obj != null)
 			{
@@ -21,12 +35,12 @@ namespace AOParser.Ast
 			}
         }
 		public List<T> Cast<T>()
-			where T : IAstElement
+			where T : AstElement
 		{
 			return Value.Cast<T>().ToList();
 		}
 
-        public IEnumerator<IAstElement> GetEnumerator()
+        public IEnumerator<AstElement> GetEnumerator()
         {
 			return Value.GetEnumerator();
 
@@ -47,43 +61,43 @@ namespace AOParser.Ast
         }
     }
 
-	public class Ident : IAstElement
+	public class Ident : AstElement
 	{
 		public string Name { get; set; }
 
-        public void Accept(IAstVisitor v) => v.Visit(this);
+        public override void Accept(IAstVisitor v) => v.Visit(this);
         public override string ToString()
         {
             return Name;
         }
     }
 
-	public class Qualident : IAstElement
+	public class Qualident : AstElement
 	{
 		public Ident Ident1;
 		public Ident Ident2;
-        public void Accept(IAstVisitor v) => v.Visit(this);
+        public override void Accept(IAstVisitor v) => v.Visit(this);
         public override string ToString()
         {
             return Ident2 != null ? $"{Ident1}.{Ident2}" : Ident1.ToString();
         }
     }
-	public class Guard : IAstElement
+	public class Guard : AstElement
 	{
 		public Qualident VarQualident;
 		public Qualident TypeQualident;
 		
-		public void Accept(IAstVisitor v) => v.Visit(this);
+		public override void Accept(IAstVisitor v) => v.Visit(this);
 		public override string ToString()
 		{
 			return $"{VarQualident}:{TypeQualident}";
 		}
 	}
-	public class DefinitionProc : IAstElement {
+	public class DefinitionProc : AstElement {
 		public Ident Ident;
 		public FormalPars FormalPars;
 
-        public void Accept(IAstVisitor v) => v.Visit(this);
+        public override void Accept(IAstVisitor v) => v.Visit(this);
         public override string ToString()
         {
             return $"PROCEDURE {Ident} {FormalPars}";
@@ -91,17 +105,17 @@ namespace AOParser.Ast
     }
 	
 
-	public class FieldDecl : IAstElement
+	public class FieldDecl : AstElement
 	{
 		public IdentList IdentList;
 		public IType Type_;
-		public void Accept(IAstVisitor v) => v.Visit(this);
+		public override void Accept(IAstVisitor v) => v.Visit(this);
 		public override string ToString()
 		{
 			return $"{IdentList} : {Type_}";
 		}
 	}
-	public class ProcHead : IAstElement
+	public class ProcHead : AstElement
 	{
 		public enum Tags {
 			Export, Initializer
@@ -110,62 +124,62 @@ namespace AOParser.Ast
 		public IdentDef IdentDef;
 		public FormalPars FormalPars;
 		public Tags? Tag;
-		public void Accept(IAstVisitor v) => v.Visit(this);
+		public override void Accept(IAstVisitor v) => v.Visit(this);
 		public override string ToString()
 		{
 			return $"{SysFlag} {Tag} {IdentDef} {FormalPars}";
 		}
 	}
 
-	public class SysFlag : IAstElement
+	public class SysFlag : AstElement
 	{
 		public Ident Ident;
-		public void Accept(IAstVisitor v) => v.Visit(this);
+		public override void Accept(IAstVisitor v) => v.Visit(this);
 		public override string ToString()
 		{
 			return $"[{Ident}]";
 		}
 	}
-	public class StatBlock : IAstElement
+	public class StatBlock : AstElement
 	{
 		public AstList IdentLists = new AstList();
 		public StatementSeq StatementSeq;
 
-		public void Accept(IAstVisitor v) => v.Visit(this);
+		public override void Accept(IAstVisitor v) => v.Visit(this);
 		public override string ToString()
 		{
 			return $"BEGIN {IdentLists} {StatementSeq} END";
 		}
 	}
-	public class Body : IAstElement
+	public class Body : AstElement
 	{
 		public StatBlock StatBlock;
-		public void Accept(IAstVisitor v) => v.Visit(this);
+		public override void Accept(IAstVisitor v) => v.Visit(this);
 		public override string ToString()
 		{
 			return StatBlock == null ? "END" : StatBlock.ToString();
 		}
 	}
 
-	public class Definition : IAstElement
+	public class Definition : AstElement
 	{
 		public Ident Ident;
 		public Qualident Qualident;
 		public AstList Procs = new AstList();
-		public void Accept(IAstVisitor v) => v.Visit(this);
+		public override void Accept(IAstVisitor v) => v.Visit(this);
 		public override string ToString()
 		{
 			return $"DEFINITION {Ident} [REFINES{Qualident}] {Procs}";
 		}
 	}
-	public class Module : IAstElement
+	public class Module : AstElement
 	{
 		public Ident Ident;
 		public AstList ImportList;
 		public Definition Definition;
 		public DeclSeq DeclSeq = new DeclSeq();
 		public Body Body;
-		public void Accept(IAstVisitor v) => v.Visit(this);
+		public override void Accept(IAstVisitor v) => v.Visit(this);
 
 		public override string ToString()
 		{
@@ -173,11 +187,11 @@ namespace AOParser.Ast
 		}
 	}
 
-	public class Import : IAstElement
+	public class Import : AstElement
 	{
 		public Ident Name;
 		public Ident OriginalName;
-		public void Accept(IAstVisitor v) => v.Visit(this);
+		public override void Accept(IAstVisitor v) => v.Visit(this);
 
 		public override string ToString()
 		{
@@ -185,7 +199,7 @@ namespace AOParser.Ast
 		}
 	}
 
-	public class IdentDef : IAstElement
+	public class IdentDef : AstElement
 	{
 		public enum IdentExport
 		{
@@ -194,98 +208,99 @@ namespace AOParser.Ast
 		}
 		public Ident Ident;
 		public IdentExport? Export;
-		public void Accept(IAstVisitor v) => v.Visit(this);
+		public override void Accept(IAstVisitor v) => v.Visit(this);
 
         public override string ToString()
         {
             return $"{Ident} {Export}";
         }
     }
-	public interface IConstTypeVarListDecl : IAstElement {
-		public class ConstDeclList : AstList, IAstElement, IConstTypeVarListDecl
+	public abstract class IConstTypeVarListDecl : AstElement {
+		public class ConstDeclList : IConstTypeVarListDecl
 		{
-			public void Accept(IAstVisitor v) => v.Visit(this);
+			public AstList Values = new AstList();
+			public override void Accept(IAstVisitor v) => v.Visit(this);
 		}
-		public class TypeDeclList : AstList, IAstElement, IConstTypeVarListDecl
+		public class TypeDeclList : IConstTypeVarListDecl
 		{
-			public void Accept(IAstVisitor v) => v.Visit(this);
+			public AstList Values = new AstList();
+			public override void Accept(IAstVisitor v) => v.Visit(this);
 		}
-		public class VarDeclList : AstList, IAstElement, IConstTypeVarListDecl
+		public class VarDeclList : IConstTypeVarListDecl
 		{
-			public void Accept(IAstVisitor v) => v.Visit(this);
+			public AstList Values = new AstList();
+			public override void Accept(IAstVisitor v) => v.Visit(this);
 		}
 
 	}
-	public interface IProcForwardDecl : IAstElement { 
+	public abstract class IProcForwardDecl : AstElement { 
 	
 	}
 
-	public class DeclSeq : IAstElement
+	public class DeclSeq : AstElement
 	{
 		public AstList ConstTypeVarDecls = new ();
 		public AstList ProcDecl = new();
-		public void Accept(IAstVisitor v) => v.Visit(this);
+		public override void Accept(IAstVisitor v) => v.Visit(this);
 
         public override string ToString()
         {
-			
-
 			return $"{String.Join(Environment.NewLine, ConstTypeVarDecls)} {Environment.NewLine}{String.Join(Environment.NewLine, ProcDecl)}";
         }
     }
 
 
-	public class ConstDecl : IAstElement
+	public class ConstDecl : AstElement
 	{
 		public IdentDef IdentDef;
 		public ConstExpr ConstExpr;
-		public void Accept(IAstVisitor v) => v.Visit(this);
+		public override void Accept(IAstVisitor v) => v.Visit(this);
 
         public override string ToString()
         {
             return $"{IdentDef} = {ConstExpr}";
         }
     }
-	public class TypeDecl : IAstElement
+	public class TypeDecl : AstElement
 	{
 		public IdentDef IdentDef;
 		public IType Type_;
-        public void Accept(IAstVisitor v) => v.Visit(this);
+        public override void Accept(IAstVisitor v) => v.Visit(this);
 
         public override string ToString()
         {
             return $"{IdentDef} = {Type_}";
 		}
     }
-	public class VarDecl : IAstElement
+	public class VarDecl : AstElement
 	{
 		public IdentList IdentList;
 		public IType Type_;
-        public void Accept(IAstVisitor v) => v.Visit(this);
+        public override void Accept(IAstVisitor v) => v.Visit(this);
 
 		public override string ToString()
 		{
 			return $"{IdentList} = {Type_}";
 		}
 	}
-	public class ProcDecl : IAstElement, IProcForwardDecl
+	public class ProcDecl : IProcForwardDecl
 	{
 		public ProcHead ProcHead;
 		public DeclSeq DeclSeq;
 		public Body Body;
 		public Ident Ident;
-		public void Accept(IAstVisitor v) => v.Visit(this);
+		public override void Accept(IAstVisitor v) => v.Visit(this);
         public override string ToString()
         {
             return $"PROCEDURE {ProcHead}; {DeclSeq} {Body} {Ident}";
         }
     }
 
-	public class FormalPars : IAstElement
+	public class FormalPars : AstElement
 	{
 		public AstList FPSections = new AstList();
 		public Qualident Qualident;
-        public void Accept(IAstVisitor v) => v.Visit(this);
+        public override void Accept(IAstVisitor v) => v.Visit(this);
 
 		public override string ToString()
 		{
@@ -294,7 +309,7 @@ namespace AOParser.Ast
 		}
 	}
 
-	public class FPSection : IAstElement
+	public class FPSection : AstElement
 	{
 		public enum Prefix
 		{
@@ -303,19 +318,19 @@ namespace AOParser.Ast
 		public Prefix? FpSectionPrefix;
 		public AstList Idents = new AstList();
 		public IType Type_;
-		public void Accept(IAstVisitor v) => v.Visit(this);
+		public override void Accept(IAstVisitor v) => v.Visit(this);
         public override string ToString()
         {
             return $"{FpSectionPrefix} {String.Join(",",Idents)}:{Type_}";
         }
     }
 	
-    public interface IType : IAstElement
+    public abstract class IType : AstElement
     {
 		public class SynonimType : IType
 		{
 			public Qualident? Qualident;
-			public void Accept(IAstVisitor v) => v.Visit(this);
+			public override void Accept(IAstVisitor v) => v.Visit(this);
             public override string ToString()
             {
                 return Qualident?.ToString()??"";
@@ -326,7 +341,7 @@ namespace AOParser.Ast
 			public SysFlag SysFlag;
 			public AstList ConstExprs = new AstList();
 			public IType Type_;
-			public void Accept(IAstVisitor v) => v.Visit(this);
+			public override void Accept(IAstVisitor v) => v.Visit(this);
             public override string ToString()
             {
                 return $"ARRAY {SysFlag} {String.Join(",", ConstExprs)} OF {Type_}";
@@ -338,7 +353,7 @@ namespace AOParser.Ast
 			public SysFlag SysFlag;
 			public Qualident Qualident;
 			public FieldList FieldList;
-			public void Accept(IAstVisitor v) => v.Visit(this);
+			public override void Accept(IAstVisitor v) => v.Visit(this);
 			public override string ToString()
 			{
 				return $"RECORD {SysFlag}({Qualident}) {FieldList} END";
@@ -354,7 +369,7 @@ namespace AOParser.Ast
 			public Body Body;
 
 			public Ident Ident;
-			public void Accept(IAstVisitor v) => v.Visit(this);
+			public override void Accept(IAstVisitor v) => v.Visit(this);
 
             public override string ToString()
             {
@@ -368,7 +383,7 @@ namespace AOParser.Ast
 		{
 			public SysFlag SysFlag;
 			public IType Type_;
-			public void Accept(IAstVisitor v) => v.Visit(this);
+			public override void Accept(IAstVisitor v) => v.Visit(this);
 			public override string ToString()
 			{
 				return $"POINTER {SysFlag} TO {Type_}";
@@ -378,7 +393,7 @@ namespace AOParser.Ast
 		{
 			public SysFlag SysFlag;
 			public FormalPars FormalPars;
-			public void Accept(IAstVisitor v) => v.Visit(this);
+			public override void Accept(IAstVisitor v) => v.Visit(this);
 			public override string ToString()
 			{
 				return $"PROCEDURE {SysFlag} {FormalPars}";
@@ -387,28 +402,28 @@ namespace AOParser.Ast
 	}
     
 
-	public class ExprList : IAstElement {
+	public class ExprList : AstElement {
 		public AstList Exprs = new AstList();
-		public void Accept(IAstVisitor v) => v.Visit(this);
+		public override void Accept(IAstVisitor v) => v.Visit(this);
 
 		public override string ToString()
 		{
 			return String.Join(',', Exprs);
 		}
 	}
-	public class IdentList : IAstElement
+	public class IdentList : AstElement
 	{
 		public AstList IdentDefs = new AstList();
-		public void Accept(IAstVisitor v) => v.Visit(this);
+		public override void Accept(IAstVisitor v) => v.Visit(this);
         public override string ToString()
         {
             return String.Join(",", IdentDefs);
         }
     }
-	public class FieldList : IAstElement
+	public class FieldList : AstElement
 	{
 		public AstList FieldDecl = new AstList();
-		public void Accept(IAstVisitor v) => v.Visit(this);
+		public override void Accept(IAstVisitor v) => v.Visit(this);
 		public override string ToString()
 		{
 			return String.Join(";", FieldDecl);
@@ -416,50 +431,50 @@ namespace AOParser.Ast
 	}
 	
 	
-	public class ConstExpr : IAstElement {
+	public class ConstExpr : AstElement {
 		public Expr Expr;
-		public void Accept(IAstVisitor v) => v.Visit(this);
+		public override void Accept(IAstVisitor v) => v.Visit(this);
         public override string ToString()
         {
             return Expr.ToString();
         }
     }
-	public class CaseLabels : IAstElement
+	public class CaseLabels : AstElement
 	{
 		public ConstExpr ConstExpr1;
 		public ConstExpr ConstExpr2;
-		public void Accept(IAstVisitor v) => v.Visit(this);
+		public override void Accept(IAstVisitor v) => v.Visit(this);
 		public override string ToString()
 		{
 			var str = ConstExpr2 != null ? $"..{ConstExpr2}" : "";
 			return $"{ConstExpr1}{str}";
 		}
 	}
-	public class StatementSeq : IAstElement
+	public class StatementSeq : AstElement
 	{
 		public AstList Statements = new AstList();
-        public void Accept(IAstVisitor v) => v.Visit(this);
+        public override void Accept(IAstVisitor v) => v.Visit(this);
 		public override string ToString()
 		{
 			return String.Join(";" + Environment.NewLine, Statements);
 		}
 	}
-	public class Set : IAstElement {
+	public class Set : AstElement {
 		public AstList Elements = new AstList();
-		public void Accept(IAstVisitor v) => v.Visit(this);
+		public override void Accept(IAstVisitor v) => v.Visit(this);
 		override public string ToString() => $"{{ {String.Join(", ", Elements)} }}";
 	}
-	public class Element : IAstElement {
+	public class Element : AstElement {
 		public Expr Expr1;
 		public Expr Expr2;
-		public void Accept(IAstVisitor v) => v.Visit(this);
+		public override void Accept(IAstVisitor v) => v.Visit(this);
         public override string ToString()
         {
             return Expr2 == null? Expr1.ToString(): $"{Expr1}..{Expr2}";
         }
     }
 	
-	public class AddOp : IAstElement
+	public class AddOp : AstElement
 	{
 		public enum AddOps
 		{
@@ -467,7 +482,7 @@ namespace AOParser.Ast
 		}
 
 		public AddOps Op;
-		public void Accept(IAstVisitor v) => v.Visit(this);
+		public override void Accept(IAstVisitor v) => v.Visit(this);
 
         public override string ToString()
         {
@@ -476,7 +491,7 @@ namespace AOParser.Ast
 
     }
 
-	public class MulOp : IAstElement
+	public class MulOp : AstElement
 	{
 		public enum MulOps
 		{
@@ -484,21 +499,21 @@ namespace AOParser.Ast
 		}
 
 		public MulOps Op;
-		public void Accept(IAstVisitor v) => v.Visit(this);
+		public override void Accept(IAstVisitor v) => v.Visit(this);
 		public override string ToString()
 		{
 			return Op.ToString();
 		}
 	}
 	
-	public class Relation : IAstElement
+	public class Relation : AstElement
 	{
 		public enum Relations
 		{
 			Eq, Neq, Lss, Leq, Gtr, Geq, In, Is
 		}
 		public Relations Op;
-		public void Accept(IAstVisitor v) => v.Visit(this);
+		public override void Accept(IAstVisitor v) => v.Visit(this);
 
         public override string ToString()
         {
@@ -506,10 +521,10 @@ namespace AOParser.Ast
         }
     }
 
-	public class SimpleElementExpr : IAstElement {
+	public class SimpleElementExpr : AstElement {
 		public MulOp MulOp;
 		public Term Term;
-        public void Accept(IAstVisitor v)
+        public override void Accept(IAstVisitor v)
         {
 			v.Visit(this);
         }
@@ -519,12 +534,12 @@ namespace AOParser.Ast
         }
     }
 
-	public class SimpleExpr : IAstElement
+	public class SimpleExpr : AstElement
 	{
 		
 		public Term Term;
 		public AstList SimpleExprElements = new AstList();
-		public void Accept(IAstVisitor v) => v.Visit(this);
+		public override void Accept(IAstVisitor v) => v.Visit(this);
 
         public override string ToString()
         {
@@ -541,16 +556,16 @@ namespace AOParser.Ast
         }
     }
 
-	public class TermElementExpr : IAstElement
+	public class TermElementExpr : AstElement
 	{
 		public AddOp AddOp;
 		public IFactor Factor;
-		public void Accept(IAstVisitor v)
+		public override void Accept(IAstVisitor v)
 		{
 			v.Visit(this);
 		}
 	}
-	public class Term : IAstElement
+	public class Term : AstElement
 	{
 		public enum TermExprPrefix
 		{
@@ -559,7 +574,7 @@ namespace AOParser.Ast
 		public TermExprPrefix? Prefix;
 		public IFactor Factor;
 		public AstList TermElements = new AstList();
-		public void Accept(IAstVisitor v) => v.Visit(this);
+		public override void Accept(IAstVisitor v) => v.Visit(this);
 
 		public override string ToString()
 		{
@@ -579,12 +594,12 @@ namespace AOParser.Ast
 		}
 	}
 
-	public class Expr : IAstElement
+	public class Expr : AstElement
 	{
 		public SimpleExpr SimpleExpr;
 		public Relation Relation;
 		public SimpleExpr SimpleExpr2;
-		public void Accept(IAstVisitor v) => v.Visit(this);
+		public override void Accept(IAstVisitor v) => v.Visit(this);
 
 		public override string ToString()
 		{
@@ -593,25 +608,25 @@ namespace AOParser.Ast
 		}
 	}
 
-	public class Case : IAstElement
+	public class Case : AstElement
 	{
 		public AstList CaseLabels = new AstList();
 		public StatementSeq StatementSeq;
-		public void Accept(IAstVisitor v) => v.Visit(this);
+		public override void Accept(IAstVisitor v) => v.Visit(this);
 		public override string ToString()
 		{
 			return $"{String.Join(",", CaseLabels)}:{StatementSeq}";
         }
 
     }
-	public interface IStatement : IAstElement
+	public abstract class IStatement : AstElement
 	{
 
 		public class AssignmentStatement : IStatement
 		{
 			public Designator Designator;
 			public Expr Expr;
-			public void Accept(IAstVisitor v) => v.Visit(this);
+			public override void Accept(IAstVisitor v) => v.Visit(this);
             public override string ToString()
             {
                 return $"{Designator} := {Expr}";
@@ -622,7 +637,7 @@ namespace AOParser.Ast
 		{
 			public Designator Designator;
 			public ExprList ExprList;
-			public void Accept(IAstVisitor v) => v.Visit(this);
+			public override void Accept(IAstVisitor v) => v.Visit(this);
             public override string ToString()
             {
                 return $"{Designator} ({ExprList})";
@@ -630,12 +645,12 @@ namespace AOParser.Ast
         }
 		public class IfStatement : IStatement
 		{
-			public class IfThen : IAstElement
+			public class IfThen : AstElement
 			{
 				public Expr Cond;
 				public StatementSeq ThenBody;
 
-                public void Accept(IAstVisitor v)
+                public override void Accept(IAstVisitor v)
                 {
 					v.Visit(this);
                 }
@@ -647,7 +662,7 @@ namespace AOParser.Ast
 			public IfThen If = new IfThen();
 			public AstList ELSIFs = new AstList();
 			public StatementSeq ElseBody;
-			public void Accept(IAstVisitor v) => v.Visit(this);
+			public override void Accept(IAstVisitor v) => v.Visit(this);
 			public override string ToString()
 			{
 				var elsifs = String.Join("", ELSIFs?.Select(x => $"ELSIF {x}"));
@@ -659,7 +674,7 @@ namespace AOParser.Ast
 			public Expr Expr;
 			public AstList Cases = new AstList();
 			public StatementSeq ElseBody;
-			public void Accept(IAstVisitor v) => v.Visit(this);
+			public override void Accept(IAstVisitor v) => v.Visit(this);
 			public override string ToString()
 			{
 				return $"CASE {Expr} DO {String.Join(" | ", Cases)} ELSE {ElseBody} END";
@@ -669,7 +684,7 @@ namespace AOParser.Ast
 		{
 			public Expr Expr;
 			public StatementSeq StatementSeq;
-			public void Accept(IAstVisitor v) => v.Visit(this);
+			public override void Accept(IAstVisitor v) => v.Visit(this);
 			public override string ToString()
 			{
 				return $"WHILE {Expr} DO {StatementSeq} END";
@@ -679,7 +694,7 @@ namespace AOParser.Ast
 		{
 			public StatementSeq StatementSeq;
 			public Expr Expr;
-			public void Accept(IAstVisitor v) => v.Visit(this);
+			public override void Accept(IAstVisitor v) => v.Visit(this);
 			public override string ToString()
 			{
 				return $"REPEAT {StatementSeq} UNTIL {Expr}";
@@ -692,7 +707,7 @@ namespace AOParser.Ast
 			public Expr ToExpr;
 			public ConstExpr ByExpr;
 			public StatementSeq StatementSeq;
-			public void Accept(IAstVisitor v) => v.Visit(this);
+			public override void Accept(IAstVisitor v) => v.Visit(this);
 			public override string ToString()
 			{
 				return $"FOR {Ident}:={Expr} TO {ToExpr}[BY {ByExpr}] DO {StatementSeq} END";
@@ -701,7 +716,7 @@ namespace AOParser.Ast
 		public class LoopStatement : IStatement
 		{
 			public StatementSeq StatementSeq;
-			public void Accept(IAstVisitor v) => v.Visit(this);
+			public override void Accept(IAstVisitor v) => v.Visit(this);
 			public override string ToString()
 			{
 				return $"LOOP {StatementSeq} END";
@@ -713,7 +728,7 @@ namespace AOParser.Ast
 			public Qualident Qualident1;
 			public Qualident Qualident2;
 			public StatementSeq StatementSeq;
-			public void Accept(IAstVisitor v) => v.Visit(this);
+			public override void Accept(IAstVisitor v) => v.Visit(this);
 			public override string ToString()
 			{
 				return $"WITH {Qualident1} : {Qualident2} DO {StatementSeq} END";
@@ -723,7 +738,7 @@ namespace AOParser.Ast
 		public class StatBlockStatement : IStatement
 		{
 			public StatBlock StatBlock;
-			public void Accept(IAstVisitor v) => v.Visit(this);
+			public override void Accept(IAstVisitor v) => v.Visit(this);
 			public override string ToString()
 			{
 				return $"{StatBlock}";
@@ -732,7 +747,7 @@ namespace AOParser.Ast
 		public class AwaitStatement : IStatement
 		{
 			public Expr Expr;
-			public void Accept(IAstVisitor v) => v.Visit(this);
+			public override void Accept(IAstVisitor v) => v.Visit(this);
 			public override string ToString()
 			{
 				return $"AWAIT ({Expr})";
@@ -740,7 +755,7 @@ namespace AOParser.Ast
 		}
 		public class ExitStatement : IStatement
 		{
-			public void Accept(IAstVisitor v) => v.Visit(this);
+			public override void Accept(IAstVisitor v) => v.Visit(this);
 			public override string ToString()
 			{
 				return $"EXIT";
@@ -749,7 +764,7 @@ namespace AOParser.Ast
 		public class ReturnStatement : IStatement
 		{
 			public Expr Expr;
-			public void Accept(IAstVisitor v) => v.Visit(this);
+			public override void Accept(IAstVisitor v) => v.Visit(this);
 			public override string ToString()
 			{
 				return $"RETURN {Expr}";
@@ -757,22 +772,22 @@ namespace AOParser.Ast
 		}
 	}
 	
-	public class Number : IAstElement
+	public class Number : AstElement
 	{
 		public string Value;
-		public void Accept(IAstVisitor v) => v.Visit(this);
+		public override void Accept(IAstVisitor v) => v.Visit(this);
         public override string ToString()
         {
             return Value;
         }
     }
 
-	public interface IFactor : IAstElement
+	public abstract class IFactor : AstElement
 	{
 		public class DesignatorFactor : IFactor
 		{
 			public Designator Value;
-			public void Accept(IAstVisitor v) => v.Visit(this);
+			public override void Accept(IAstVisitor v) => v.Visit(this);
 
 			public override string ToString()
 			{
@@ -782,7 +797,7 @@ namespace AOParser.Ast
 		public class NumberFactor : IFactor
 		{
 			public Number Value;
-			public void Accept(IAstVisitor v) => v.Visit(this);
+			public override void Accept(IAstVisitor v) => v.Visit(this);
 			public override string ToString()
 			{
 				return $"{Value}";
@@ -791,7 +806,7 @@ namespace AOParser.Ast
 		public class CharacterFactor : IFactor
 		{
 			public String Value;
-			public void Accept(IAstVisitor v) => v.Visit(this);
+			public override void Accept(IAstVisitor v) => v.Visit(this);
 			public override string ToString()
 			{
 				return $"{Value}";
@@ -800,7 +815,7 @@ namespace AOParser.Ast
 		public class StringFactor : IFactor
 		{
 			public String Value;
-			public void Accept(IAstVisitor v) => v.Visit(this);
+			public override void Accept(IAstVisitor v) => v.Visit(this);
 			public override string ToString()
 			{
 				return $"{Value}";
@@ -808,7 +823,7 @@ namespace AOParser.Ast
 		}
 		public class NilFactor : IFactor
 		{
-			public void Accept(IAstVisitor v) => v.Visit(this);
+			public override void Accept(IAstVisitor v) => v.Visit(this);
 			public override string ToString()
 			{
 				return $"NIL";
@@ -817,7 +832,7 @@ namespace AOParser.Ast
 		public class SetFactor : IFactor
 		{
 			public Set Value;
-			public void Accept(IAstVisitor v) => v.Visit(this);
+			public override void Accept(IAstVisitor v) => v.Visit(this);
 			public override string ToString()
 			{
 				return $"{Value}";
@@ -826,7 +841,7 @@ namespace AOParser.Ast
 		public class ExprFactor : IFactor
 		{
 			public Expr Value;
-			public void Accept(IAstVisitor v) => v.Visit(this);
+			public override void Accept(IAstVisitor v) => v.Visit(this);
 			public override string ToString()
 			{
 				return $"{Value}";
@@ -835,7 +850,7 @@ namespace AOParser.Ast
 		public class NegFactor : IFactor
 		{
 			public IFactor Value;
-			public void Accept(IAstVisitor v) => v.Visit(this);
+			public override void Accept(IAstVisitor v) => v.Visit(this);
 			public override string ToString()
 			{
 				return $"~{Value}";
@@ -843,13 +858,13 @@ namespace AOParser.Ast
 		}
 	}
 
-	public class Designator : IAstElement
+	public class Designator : AstElement
 	{
-		public interface IDesignatorSpec : IAstElement
+		public abstract class IDesignatorSpec : AstElement
 		{
             public class RecordDesignatorSpec : IDesignatorSpec {
 				public Ident Value;
-				public void Accept(IAstVisitor v) => v.Visit(this);
+				public override void Accept(IAstVisitor v) => v.Visit(this);
 				public override string ToString()
 				{
 					return $".{Value}";
@@ -857,7 +872,7 @@ namespace AOParser.Ast
 			}
 			public class ArrayDesignatorSpec : IDesignatorSpec {
 				public ExprList Value;
-				public void Accept(IAstVisitor v) => v.Visit(this);
+				public override void Accept(IAstVisitor v) => v.Visit(this);
 				public override string ToString()
 				{
 					return $"[{Value}]";
@@ -865,7 +880,7 @@ namespace AOParser.Ast
 			}
 			public class CastDesignatorSpec : IDesignatorSpec {
 				public Qualident Value;
-				public void Accept(IAstVisitor v) => v.Visit(this);
+				public override void Accept(IAstVisitor v) => v.Visit(this);
 				public override string ToString()
 				{
 					return $"({Value})";
@@ -873,7 +888,7 @@ namespace AOParser.Ast
 			}
 			public class ProcCallDesignatorSpec : IDesignatorSpec {
 				public ExprList Value;
-				public void Accept(IAstVisitor v) => v.Visit(this);
+				public override void Accept(IAstVisitor v) => v.Visit(this);
 				public override string ToString()
 				{
 					return $"({Value})";
@@ -884,7 +899,7 @@ namespace AOParser.Ast
 		public Qualident Qualident;
 		public bool EndOfLine;
 		public AstList Specs = new AstList();
-		public void Accept(IAstVisitor v) => v.Visit(this);
+		public override void Accept(IAstVisitor v) => v.Visit(this);
 
         public override string ToString()
         {

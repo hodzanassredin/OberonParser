@@ -12,7 +12,9 @@ namespace Common.Mappers
 
         public CPParser.Ast.Ident Map(AOParser.Ast.Ident o)
         {
-            throw new NotImplementedException();
+            return new CPParser.Ast.Ident { 
+                Name = o.Name,
+            };
         }
 
         public CPParser.Ast.Qualident Map(AOParser.Ast.Qualident o)
@@ -27,12 +29,33 @@ namespace Common.Mappers
 
         public CPParser.Ast.Module Map(AOParser.Ast.Module o)
         {
-            throw new NotImplementedException();
+            var res = new CPParser.Ast.Module();
+            res.Ident = Map(o.Ident);
+            if (o.ImportList != null)
+            {
+                res.ImportList = new CPParser.Ast.AstList();
+                foreach (var item in o.ImportList.Cast<AOParser.Ast.Import>())
+                {
+                    res.ImportList.Add(Map(item));
+                }
+            }
+            
+            res.DeclSeq = Map(o.DeclSeq);
+            if (o.Definition != null)
+            {
+                res.DeclSeq.CommentsBefore.Add(Map(o.Definition));
+            }
+            res.Begin = Map(o.Body.StatBlock.StatementSeq);
+            return res;
+            
         }
 
         public CPParser.Ast.Import Map(AOParser.Ast.Import o)
         {
-            throw new NotImplementedException();
+            return new CPParser.Ast.Import { 
+                Name = Map(o.Name),
+                OriginalName = Map(o.OriginalName),
+            };
         }
 
         public CPParser.Ast.IdentDef Map(AOParser.Ast.IdentDef o)

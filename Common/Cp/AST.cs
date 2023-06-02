@@ -6,9 +6,20 @@ namespace CPParser.Ast
 
 	public abstract class AstElement
 	{
-		public AstList CommentsBefore;
+		public AstList CommentsBefore = new AstList();
+		public void AcceptWithComments(IAstVisitor v) {
+            foreach (var c in CommentsBefore)
+            {
+				c.Accept(v);
+            }
+			this.Accept(v);
+			foreach (var c in CommentsAfter)
+			{
+				c.Accept(v);
+			}
+		}
 		public abstract void Accept(IAstVisitor v);
-		public AstList CommentsAfter;
+		public AstList CommentsAfter = new AstList();
 	}
 
 

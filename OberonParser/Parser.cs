@@ -164,7 +164,7 @@ public AOParser.Ast.Module module;
 				Get();
 				var lst = new AOParser.Ast.IConstTypeVarListDecl.ConstDeclList(); 
 				while (la.kind == 1) {
-					ConstDecl(lst);
+					ConstDecl(lst.Values);
 					Expect(7);
 				}
 				o.ConstTypeVarDecls.Add(lst); 
@@ -172,7 +172,7 @@ public AOParser.Ast.Module module;
 				Get();
 				var lst = new AOParser.Ast.IConstTypeVarListDecl.TypeDeclList(); 
 				while (la.kind == 1) {
-					TypeDecl(lst);
+					TypeDecl(lst.Values);
 					Expect(7);
 				}
 				o.ConstTypeVarDecls.Add(lst); 
@@ -180,7 +180,7 @@ public AOParser.Ast.Module module;
 				Get();
 				var lst = new AOParser.Ast.IConstTypeVarListDecl.VarDeclList(); 
 				while (la.kind == 1) {
-					VarDecl(lst);
+					VarDecl(lst.Values);
 					Expect(7);
 				}
 				o.ConstTypeVarDecls.Add(lst); 

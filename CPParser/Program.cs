@@ -21,14 +21,13 @@ else
     }
     Console.WriteLine("   Parsing source file {0}", args[0]);
     parser.Parse();
-
     Console.WriteLine("-- {0} errors dectected", parser.errors.count);
     var sw = new StreamWriter(Console.OpenStandardOutput());
     sw.AutoFlush = true;
     Console.SetOut(sw);
     var ppv = new PrettyPrintVisitor(sw);
     var str = parser.module.ToString();
-    ppv.Visit(parser.module);
+    parser.module.AcceptWithComments(ppv);
 }
 
 

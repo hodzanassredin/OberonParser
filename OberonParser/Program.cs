@@ -24,12 +24,13 @@ else
     var sw = new StreamWriter(Console.OpenStandardOutput());
     sw.AutoFlush = true;
     Console.SetOut(sw);
-
+    var aoppv = new AOParser.PrettyPrintVisitor(sw);
+    parser.module.AcceptWithComments(aoppv);
     var mapper = new AoToCpMapper();
-    var cpModule = mapper.Map(parser.module);
-    var ppv = new CPParser.PrettyPrintVisitor(sw);
-    var str = parser.module.ToString();
-    ppv.Visit(cpModule);
+    //var cpModule = mapper.Map(parser.module);
+    //var ppv = new CPParser.PrettyPrintVisitor(sw);
+    //var str = parser.module.ToString();
+    //cpModule.AcceptWithComments(ppv);
 }
 
 

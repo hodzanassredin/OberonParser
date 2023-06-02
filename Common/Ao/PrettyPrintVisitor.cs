@@ -114,7 +114,7 @@ namespace AOParser
         {
             WriteTabs();sw.WriteLine("CONST");
             EnterScope();
-            this.VisitList(o, () => { }, () => { sw.WriteLine(";"); }, true);
+            this.VisitList(o.Values, () => { }, () => { sw.WriteLine(";"); }, true);
             ExitScope();
         }
 
@@ -122,7 +122,7 @@ namespace AOParser
         {
             WriteTabs();sw.WriteLine("TYPE");
             EnterScope();
-            this.VisitList(o, () => { }, () => { sw.WriteLine(";"); }, true);
+            this.VisitList(o.Values, () => { }, () => { sw.WriteLine(";"); }, true);
             ExitScope();
         }
 
@@ -130,7 +130,7 @@ namespace AOParser
         {
             WriteTabs();sw.WriteLine("VAR");
             EnterScope();
-            this.VisitList(o, () => { }, () => { sw.WriteLine(";"); }, true);
+            this.VisitList(o.Values, () => { }, () => { sw.WriteLine(";"); }, true);
             ExitScope();
         }
         public void Visit(ConstDecl o)

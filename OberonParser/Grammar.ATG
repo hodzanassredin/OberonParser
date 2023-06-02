@@ -64,11 +64,11 @@ PRODUCTIONS
 	DeclSeq<out AOParser.Ast.DeclSeq o> 
 		=																		(. o = new AOParser.Ast.DeclSeq(); .)
 		{ "CONST"																	(. var lst = new AOParser.Ast.IConstTypeVarListDecl.ConstDeclList(); .) 
-				{ConstDecl<lst> ";" }											(. o.ConstTypeVarDecls.Add(lst); .)
+				{ConstDecl<lst.Values> ";" }											(. o.ConstTypeVarDecls.Add(lst); .)
 			| "TYPE"															(. var lst = new AOParser.Ast.IConstTypeVarListDecl.TypeDeclList(); .) 
-				{TypeDecl<lst> ";"}												(. o.ConstTypeVarDecls.Add(lst); .)
+				{TypeDecl<lst.Values> ";"}												(. o.ConstTypeVarDecls.Add(lst); .)
 			| "VAR"																(. var lst = new AOParser.Ast.IConstTypeVarListDecl.VarDeclList(); .) 
-				{VarDecl<lst> ";"}												(. o.ConstTypeVarDecls.Add(lst); .) 
+				{VarDecl<lst.Values> ";"}												(. o.ConstTypeVarDecls.Add(lst); .) 
 			{ ProcDecl<o.ProcDecl> ";"} }.
 
 
