@@ -352,13 +352,15 @@ namespace AOParser.Ast
 			public Qualident ImplementsQualident;
 			public DeclSeq DeclSeq;
 			public Body Body;
+
+			public Ident Ident;
 			public void Accept(IAstVisitor v) => v.Visit(this);
 
             public override string ToString()
             {
 				var impl = ImplementsQualident != null? $"IMPLEMENTS {ImplementsQualident}" : "";
 
-				return $"OBJECT {SysFlag}({Qualident}) {impl} {DeclSeq} {Body}";
+				return $"OBJECT {SysFlag}({Qualident}) {impl} {DeclSeq} {Body} {Ident}";
             }
 
         }

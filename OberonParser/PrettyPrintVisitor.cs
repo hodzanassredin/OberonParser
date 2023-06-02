@@ -717,10 +717,13 @@ namespace AOParser
 
         public void Visit(StatBlock o)
         {
-            WriteTabs(); sw.WriteLine("BEGIN");
+            WriteTabs(); sw.Write("BEGIN");
             if (o.IdentLists.Any()) {
+                sw.Write(" {");
                 VisitList(o.IdentLists, () => { }, () => { });
+                sw.Write("}");
             }
+            sw.WriteLine();
             if (o.StatementSeq != null)
             {
                 EnterScope();
@@ -776,8 +779,11 @@ namespace AOParser
             }
             EnterScope();
             o.DeclSeq.Accept(this);
-            o.Body.Accept(this);
             ExitScope();
+            WriteTabs();
+            o.Body.Accept(this);
+            o.Ident.Accept(this);
+            
         }
 
         public void Visit(IStatement.AwaitStatement o)

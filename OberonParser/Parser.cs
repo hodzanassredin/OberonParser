@@ -367,6 +367,7 @@ public AOParser.Ast.Module module;
 				}
 				DeclSeq(out at.DeclSeq);
 				Body(out at.Body);
+				Ident(out at.Ident);
 			}
 			o = at; 
 			break;

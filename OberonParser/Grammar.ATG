@@ -134,7 +134,7 @@ PRODUCTIONS
 				"OBJECT" [[SysFlag<out at.SysFlag>] 
 				["(" Qualident<out at.Qualident> ")"] 
 				["IMPLEMENTS" Qualident<out at.ImplementsQualident>] 
-				DeclSeq<out at.DeclSeq> Body<out at.Body>]						(. o = at; .)
+				DeclSeq<out at.DeclSeq> Body<out at.Body> Ident<out at.Ident>]	(. o = at; .)
 			|																	(. var at = new AOParser.Ast.IType.ProcedureType(); .)
 				"PROCEDURE" [SysFlag<out at.SysFlag>] 
 				[FormalPars<out at.FormalPars>]									(. o = at; .).

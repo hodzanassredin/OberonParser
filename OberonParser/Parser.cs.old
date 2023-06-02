@@ -367,6 +367,7 @@ public AOParser.Ast.Module module;
 				}
 				DeclSeq(out at.DeclSeq);
 				Body(out at.Body);
+				Ident(out at.Ident);
 			}
 			o = at; 
 			break;
@@ -668,7 +669,7 @@ public AOParser.Ast.Module module;
 				Get();
 				var s = new AOParser.Ast.Designator.IDesignatorSpec.ProcCallDesignatorSpec(); 
 				if (StartOf(1)) {
-					ExprList(out o.Value);
+					ExprList(out s.Value);
 				}
 				o.Specs.Add(s); 
 				Expect(26);

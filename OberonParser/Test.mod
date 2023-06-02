@@ -151,7 +151,7 @@ TYPE
 		END Exp;
 
 		PROCEDURE Gaussian*(): FLOAT32; (*generates a normal distribution with mean 0, variance 1 using the Box-Muller Transform*)
-		BEGIN{EXCLUSIVE}
+		BEGIN {EXCLUSIVE}
 			RETURN r.Gaussian();
 		END Gaussian;
 
