@@ -180,7 +180,7 @@ PRODUCTIONS
 				}
 				["ELSE" StatementSeq<out o.ElseBody>] "END"						(. os = o; .)
 		|																		(. var o = new AOParser.Ast.IStatement.CaseStatement(); .) 
-			"CASE" Expr<out o.Expr> "THEN"										(. var c = new AOParser.Ast.Case(); .) 
+			"CASE" Expr<out o.Expr> "DO"										(. var c = new AOParser.Ast.Case(); .) 
 			Case<out c>															(. o.Cases.Add(c); .) 
 			{"|" Case<out c>													(. o.Cases.Add(c); .)
 			}
@@ -327,7 +327,8 @@ PRODUCTIONS
 		=																		(. o = new AOParser.Ast.IdentList(); AOParser.Ast.IdentDef id; .)
 		IdentDef<out id>														(. o.IdentDefs.Add(id); .)
 		{","																	
-		IdentDef<out id>}														(. o.IdentDefs.Add(id); .).
+		IdentDef<out id>														(. o.IdentDefs.Add(id); .)
+		}.
 
 	Qualident<out AOParser.Ast.Qualident o>
 		=																		(. o = new AOParser.Ast.Qualident(); .)

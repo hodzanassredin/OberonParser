@@ -224,13 +224,14 @@ namespace AOParser.Ast
 	public class DeclSeq : IAstElement
 	{
 		public AstList ConstTypeVarDecls = new ();
-		public AstList ProcForwardDecls = new ();
 		public AstList ProcDecl = new();
 		public void Accept(IAstVisitor v) => v.Visit(this);
 
         public override string ToString()
         {
-            return $"{ConstTypeVarDecls} {ProcForwardDecls} {ProcDecl}";
+			
+
+			return $"{String.Join(Environment.NewLine, ConstTypeVarDecls)} {Environment.NewLine}{String.Join(Environment.NewLine, ProcDecl)}";
         }
     }
 
@@ -275,13 +276,23 @@ namespace AOParser.Ast
 		public Body Body;
 		public Ident Ident;
 		public void Accept(IAstVisitor v) => v.Visit(this);
-	}
+        public override string ToString()
+        {
+            return $"PROCEDURE {ProcHead}; {DeclSeq} {Body} {Ident}";
+        }
+    }
 
 	public class FormalPars : IAstElement
 	{
 		public AstList FPSections = new AstList();
 		public Qualident Qualident;
         public void Accept(IAstVisitor v) => v.Visit(this);
+
+		public override string ToString()
+		{
+			var str = Qualident != null ? $":{Qualident}" :"";
+			return $"({String.Join(";", FPSections)} ){str}";
+		}
 	}
 
 	public class FPSection : IAstElement
@@ -294,22 +305,34 @@ namespace AOParser.Ast
 		public AstList Idents = new AstList();
 		public IType Type_;
 		public void Accept(IAstVisitor v) => v.Visit(this);
-	}
+        public override string ToString()
+        {
+            return $"{FpSectionPrefix} {String.Join(",",Idents)}:{Type_}";
+        }
+    }
 	
     public interface IType : IAstElement
     {
 		public class SynonimType : IType
 		{
-			public Qualident Qualident;
+			public Qualident? Qualident;
 			public void Accept(IAstVisitor v) => v.Visit(this);
-		}
+            public override string ToString()
+            {
+                return Qualident?.ToString()??"";
+            }
+        }
 		public class ArrayType : IType
 		{
 			public SysFlag SysFlag;
 			public AstList ConstExprs = new AstList();
 			public IType Type_;
 			public void Accept(IAstVisitor v) => v.Visit(this);
-		}
+            public override string ToString()
+            {
+                return $"ARRAY {SysFlag} {String.Join(",", ConstExprs)} OF {Type_}";
+            }
+        }
 
 		public class RecordType : IType
 		{
@@ -317,7 +340,10 @@ namespace AOParser.Ast
 			public Qualident Qualident;
 			public FieldList FieldList;
 			public void Accept(IAstVisitor v) => v.Visit(this);
-
+			public override string ToString()
+			{
+				return $"RECORD {SysFlag}({Qualident}) {FieldList} END";
+			}
 		}
 
 		public class ObjectType : IType
@@ -329,18 +355,33 @@ namespace AOParser.Ast
 			public Body Body;
 			public void Accept(IAstVisitor v) => v.Visit(this);
 
-		}
+            public override string ToString()
+            {
+				var impl = ImplementsQualident != null? $"IMPLEMENTS {ImplementsQualident}" : "";
+
+				return $"OBJECT {SysFlag}({Qualident}) {impl} {DeclSeq} {Body}";
+            }
+
+        }
 		public class PointerType : IType
 		{
 			public SysFlag SysFlag;
 			public IType Type_;
 			public void Accept(IAstVisitor v) => v.Visit(this);
+			public override string ToString()
+			{
+				return $"POINTER {SysFlag} TO {Type_}";
+			}
 		}
 		public class ProcedureType : IType
 		{
 			public SysFlag SysFlag;
 			public FormalPars FormalPars;
 			public void Accept(IAstVisitor v) => v.Visit(this);
+			public override string ToString()
+			{
+				return $"PROCEDURE {SysFlag} {FormalPars}";
+			}
 		}
 	}
     
@@ -358,29 +399,50 @@ namespace AOParser.Ast
 	{
 		public AstList IdentDefs = new AstList();
 		public void Accept(IAstVisitor v) => v.Visit(this);
-	}
+        public override string ToString()
+        {
+            return String.Join(",", IdentDefs);
+        }
+    }
 	public class FieldList : IAstElement
 	{
 		public AstList FieldDecl = new AstList();
 		public void Accept(IAstVisitor v) => v.Visit(this);
+		public override string ToString()
+		{
+			return String.Join(";", FieldDecl);
+		}
 	}
 	
 	
 	public class ConstExpr : IAstElement {
 		public Expr Expr;
 		public void Accept(IAstVisitor v) => v.Visit(this);
-	}
+        public override string ToString()
+        {
+            return Expr.ToString();
+        }
+    }
 	public class CaseLabels : IAstElement
 	{
 		public ConstExpr ConstExpr1;
 		public ConstExpr ConstExpr2;
 		public void Accept(IAstVisitor v) => v.Visit(this);
+		public override string ToString()
+		{
+			var str = ConstExpr2 != null ? $"..{ConstExpr2}" : "";
+			return $"{ConstExpr1}{str}";
+		}
 	}
 	public class StatementSeq : IAstElement
 	{
 		public AstList Statements = new AstList();
         public void Accept(IAstVisitor v) => v.Visit(this);
-    }
+		public override string ToString()
+		{
+			return String.Join(";" + Environment.NewLine, Statements);
+		}
+	}
 	public class Set : IAstElement {
 		public AstList Elements = new AstList();
 		public void Accept(IAstVisitor v) => v.Visit(this);
@@ -422,6 +484,10 @@ namespace AOParser.Ast
 
 		public MulOps Op;
 		public void Accept(IAstVisitor v) => v.Visit(this);
+		public override string ToString()
+		{
+			return Op.ToString();
+		}
 	}
 	
 	public class Relation : IAstElement
@@ -531,8 +597,12 @@ namespace AOParser.Ast
 		public AstList CaseLabels = new AstList();
 		public StatementSeq StatementSeq;
 		public void Accept(IAstVisitor v) => v.Visit(this);
+		public override string ToString()
+		{
+			return $"{String.Join(",", CaseLabels)}:{StatementSeq}";
+        }
 
-	}
+    }
 	public interface IStatement : IAstElement
 	{
 
@@ -554,7 +624,7 @@ namespace AOParser.Ast
 			public void Accept(IAstVisitor v) => v.Visit(this);
             public override string ToString()
             {
-                return $"{Designator}";
+                return $"{Designator} ({ExprList})";
             }
         }
 		public class IfStatement : IStatement
@@ -568,11 +638,20 @@ namespace AOParser.Ast
                 {
 					v.Visit(this);
                 }
-            }
+				public override string ToString()
+				{
+					return $"{Cond} THEN {ThenBody}";
+				}
+			}
 			public IfThen If = new IfThen();
 			public AstList ELSIFs = new AstList();
 			public StatementSeq ElseBody;
 			public void Accept(IAstVisitor v) => v.Visit(this);
+			public override string ToString()
+			{
+				var elsifs = String.Join("", ELSIFs?.Select(x => $"ELSIF {x}"));
+				return $"IF {If} {elsifs} " + (ElseBody!=null ? $"ELSE {ElseBody}":"") + " END";
+			}
 		}
 		public class CaseStatement : IStatement
 		{
@@ -580,18 +659,30 @@ namespace AOParser.Ast
 			public AstList Cases = new AstList();
 			public StatementSeq ElseBody;
 			public void Accept(IAstVisitor v) => v.Visit(this);
+			public override string ToString()
+			{
+				return $"CASE {Expr} DO {String.Join(" | ", Cases)} ELSE {ElseBody} END";
+			}
 		}
 		public class WhileStatement : IStatement
 		{
 			public Expr Expr;
 			public StatementSeq StatementSeq;
 			public void Accept(IAstVisitor v) => v.Visit(this);
+			public override string ToString()
+			{
+				return $"WHILE {Expr} DO {StatementSeq} END";
+			}
 		}
 		public class RepeatStatement : IStatement
 		{
 			public StatementSeq StatementSeq;
 			public Expr Expr;
 			public void Accept(IAstVisitor v) => v.Visit(this);
+			public override string ToString()
+			{
+				return $"REPEAT {StatementSeq} UNTIL {Expr}";
+			}
 		}
 		public class ForStatement : IStatement
 		{
@@ -601,45 +692,67 @@ namespace AOParser.Ast
 			public ConstExpr ByExpr;
 			public StatementSeq StatementSeq;
 			public void Accept(IAstVisitor v) => v.Visit(this);
+			public override string ToString()
+			{
+				return $"FOR {Ident}:={Expr} TO {ToExpr}[BY {ByExpr}] DO {StatementSeq} END";
+			}
 		}
 		public class LoopStatement : IStatement
 		{
 			public StatementSeq StatementSeq;
 			public void Accept(IAstVisitor v) => v.Visit(this);
+			public override string ToString()
+			{
+				return $"LOOP {StatementSeq} END";
+			}
 		}
 
-		public class WithAlternativeStatement : IStatement
-		{
-			public Guard Guard;
-			public StatementSeq StatementSeq;
-			public void Accept(IAstVisitor v) => v.Visit(this);
-		}
 		public class WithStatement : IStatement
 		{
 			public Qualident Qualident1;
 			public Qualident Qualident2;
 			public StatementSeq StatementSeq;
 			public void Accept(IAstVisitor v) => v.Visit(this);
+			public override string ToString()
+			{
+				return $"WITH {Qualident1} : {Qualident2} DO {StatementSeq} END";
+			}
 		}
 		
 		public class StatBlockStatement : IStatement
 		{
 			public StatBlock StatBlock;
 			public void Accept(IAstVisitor v) => v.Visit(this);
+			public override string ToString()
+			{
+				return $"{StatBlock}";
+			}
 		}
 		public class AwaitStatement : IStatement
 		{
 			public Expr Expr;
 			public void Accept(IAstVisitor v) => v.Visit(this);
+			public override string ToString()
+			{
+				return $"AWAIT ({Expr})";
+			}
 		}
 		public class ExitStatement : IStatement
 		{
 			public void Accept(IAstVisitor v) => v.Visit(this);
+			public override string ToString()
+			{
+				return $"EXIT";
+			}
 		}
 		public class ReturnStatement : IStatement
 		{
 			public Expr Expr;
 			public void Accept(IAstVisitor v) => v.Visit(this);
+			public override string ToString()
+			{
+				return $"RETURN {Expr}";
+			}
 		}
 	}
 	

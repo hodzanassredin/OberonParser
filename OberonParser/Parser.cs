@@ -394,8 +394,8 @@ public AOParser.Ast.Module module;
 		while (la.kind == 11) {
 			Get();
 			IdentDef(out id);
+			o.IdentDefs.Add(id); 
 		}
-		o.IdentDefs.Add(id); 
 	}
 
 	void ProcHead(out AOParser.Ast.ProcHead o) {
@@ -541,11 +541,11 @@ public AOParser.Ast.Module module;
 				var o = new AOParser.Ast.IStatement.CaseStatement(); 
 				Get();
 				Expr(out o.Expr);
-				Expect(38);
+				Expect(42);
 				var c = new AOParser.Ast.Case(); 
 				Case(out c);
 				o.Cases.Add(c); 
-				while (la.kind == 42) {
+				while (la.kind == 43) {
 					Get();
 					Case(out c);
 					o.Cases.Add(c); 
@@ -558,11 +558,11 @@ public AOParser.Ast.Module module;
 				os = o;
 				break;
 			}
-			case 43: {
+			case 44: {
 				var o = new AOParser.Ast.IStatement.WhileStatement(); 
 				Get();
 				Expr(out o.Expr);
-				Expect(44);
+				Expect(42);
 				StatementSeq(out o.StatementSeq);
 				Expect(15);
 				os = o; 
@@ -589,7 +589,7 @@ public AOParser.Ast.Module module;
 					Get();
 					ConstExpr(out o.ByExpr);
 				}
-				Expect(44);
+				Expect(42);
 				StatementSeq(out o.StatementSeq);
 				Expect(15);
 				os = o;
@@ -609,7 +609,7 @@ public AOParser.Ast.Module module;
 				Qualident(out o.Qualident1);
 				Expect(20);
 				Qualident(out o.Qualident2);
-				Expect(44);
+				Expect(42);
 				StatementSeq(out o.StatementSeq);
 				Expect(15);
 				os = o;
@@ -934,9 +934,9 @@ public AOParser.Ast.Module module;
 		{_T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
 		{_x,_T,_T,_T, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _T,_T,_T,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
 		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _T,_T,_T,_x, _x,_x,_x,_T, _x,_T,_x,_x, _x,_x,_x,_x, _x,_T,_T,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
-		{_x,_T,_x,_x, _x,_x,_x,_T, _x,_x,_x,_x, _x,_x,_x,_T, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_x, _x,_T,_x,_x, _x,_T,_x,_T, _x,_T,_x,_T, _x,_T,_T,_T, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
-		{_x,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_x, _x,_T,_x,_x, _x,_T,_x,_T, _x,_T,_x,_T, _x,_T,_T,_T, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
-		{_x,_x,_x,_x, _x,_x,_x,_T, _x,_x,_x,_x, _x,_x,_x,_T, _x,_x,_x,_x, _x,_x,_x,_x, _x,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _T,_x,_T,_x, _x,_x,_T,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
+		{_x,_T,_x,_x, _x,_x,_x,_T, _x,_x,_x,_x, _x,_x,_x,_T, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_x, _x,_T,_x,_x, _x,_T,_x,_x, _T,_T,_x,_T, _x,_T,_T,_T, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
+		{_x,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_x, _x,_T,_x,_x, _x,_T,_x,_x, _T,_T,_x,_T, _x,_T,_T,_T, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
+		{_x,_x,_x,_x, _x,_x,_x,_T, _x,_x,_x,_x, _x,_x,_x,_T, _x,_x,_x,_x, _x,_x,_x,_x, _x,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _T,_x,_x,_T, _x,_x,_T,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
 		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _T,_T,_T,_T, _T,_T,_x,_x, _x,_x,_x,_x},
 		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_T,_T,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_T, _T,_x,_x,_x}
 
@@ -994,9 +994,9 @@ public class Errors {
 			case 39: s = "\"ELSIF\" expected"; break;
 			case 40: s = "\"ELSE\" expected"; break;
 			case 41: s = "\"CASE\" expected"; break;
-			case 42: s = "\"|\" expected"; break;
-			case 43: s = "\"WHILE\" expected"; break;
-			case 44: s = "\"DO\" expected"; break;
+			case 42: s = "\"DO\" expected"; break;
+			case 43: s = "\"|\" expected"; break;
+			case 44: s = "\"WHILE\" expected"; break;
 			case 45: s = "\"REPEAT\" expected"; break;
 			case 46: s = "\"UNTIL\" expected"; break;
 			case 47: s = "\"FOR\" expected"; break;

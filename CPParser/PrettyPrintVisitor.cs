@@ -354,13 +354,13 @@ namespace CPParser
             switch (o.Op)
             {
                 case AddOp.AddOps.Add:
-                    sw.Write(" + ");
+                    sw.Write("+");
                     break;
                 case AddOp.AddOps.Sub:
-                    sw.Write(" - ");
+                    sw.Write("-");
                     break;
                 case AddOp.AddOps.Or:
-                    sw.Write(" OR ");
+                    sw.Write("OR");
                     break;
                 default:
                     break;
@@ -777,8 +777,8 @@ namespace CPParser
 
         public void Visit(SimpleElementExpr o)
         {
-            o.AddOp.Accept(this);
-            o.Term.Accept(this);
+            sw.Write(" "); o.AddOp.Accept(this);
+            sw.Write(" "); o.Term.Accept(this);
         }
 
         public void Visit(TermElementExpr o)

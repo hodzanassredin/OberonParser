@@ -78,7 +78,6 @@ namespace AOParser
 		void Visit(Designator.IDesignatorSpec.ProcCallDesignatorSpec o);
         void Visit(SimpleElementExpr simpleElementExpr);
         void Visit(TermElementExpr termElementExpr);
-        void Visit(IStatement.WithAlternativeStatement withAlternativeStatement);
         void Visit(IType.ObjectType objectType);
         void Visit(IStatement.AwaitStatement awaitStatement);
         void Visit(IStatement.StatBlockStatement statBlockStatement);

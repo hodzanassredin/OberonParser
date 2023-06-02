@@ -102,9 +102,9 @@ namespace AOParser
                 item.Accept(this);
                 sw.WriteLine();
             }
-            foreach (var item in o.ProcForwardDecls)
+            foreach (var item in o.ProcDecl)
             {
-                WriteTabs();sw.Write("PROCEDURE ");
+                WriteTabs();
                 item.Accept(this);
                 sw.WriteLine(";");
                 sw.WriteLine();
@@ -258,13 +258,13 @@ namespace AOParser
             switch (o.Op)
             {
                 case AddOp.AddOps.Add:
-                    sw.Write(" + ");
+                    sw.Write("+");
                     break;
                 case AddOp.AddOps.Sub:
-                    sw.Write(" - ");
+                    sw.Write("-");
                     break;
                 case AddOp.AddOps.Or:
-                    sw.Write(" OR ");
+                    sw.Write("OR");
                     break;
                 default:
                     break;
@@ -655,21 +655,13 @@ namespace AOParser
 
         public void Visit(SimpleElementExpr o)
         {
-            o.MulOp.Accept(this);
-            o.Term.Accept(this);
+            sw.Write(" "); o.MulOp.Accept(this);
+            sw.Write(" "); o.Term.Accept(this);
         }
 
         public void Visit(TermElementExpr o)
         {
             sw.Write(" ");o.AddOp.Accept(this);sw.Write(" ");o.Factor.Accept(this);
-        }
-
-        public void Visit(IStatement.WithAlternativeStatement o)
-        {
-            if (o.Guard != null) {
-                o.Guard.Accept(this); sw.WriteLine(" DO");
-                o.StatementSeq.Accept(this);
-            }
         }
 
         public void Visit(DefinitionProc o)
@@ -715,7 +707,7 @@ namespace AOParser
                 o.StatBlock.Accept(this);
             }
             else {
-                sw.Write("END");
+                sw.Write("END ");
             }
         }
 
@@ -730,7 +722,7 @@ namespace AOParser
 
         public void Visit(StatBlock o)
         {
-            WriteTabs(); sw.Write("BEGIN");
+            WriteTabs(); sw.WriteLine("BEGIN");
             if (o.IdentLists.Any()) {
                 VisitList(o.IdentLists, () => { }, () => { });
             }
@@ -740,7 +732,7 @@ namespace AOParser
                 o.StatementSeq.Accept(this);
                 ExitScope();
             }
-            WriteTabs(); sw.Write("END");
+            WriteTabs(); sw.Write("END ");
         }
 
         public void Visit(ProcHead o)
