@@ -2,7 +2,7 @@
 
 COMPILER ActiveOberon 
 	public AOParser.Ast.Module module; 
-
+	//todo up to https://gitlab.inf.ethz.ch/felixf/oberon/-/blob/main/docu/OberonLanguageReport.pdf
 CHARACTERS
   cr  = '\r'.
   lf  = '\n'.
@@ -11,12 +11,13 @@ CHARACTERS
   letter   = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz" .
   digit    = "0123456789" .
   hexDigit = digit + "ABCDEF" .
+  binaryDigit = "01" .
   noQuote  = ANY - '"' - eol  .
 
 TOKENS
-    ident =  letter { letter | digit } .
-    integer = digit {digit} | digit {hexDigit} "H" .
-    real =  digit { digit } "." { digit } [ ("E" | "D") [ "+" | "-" ] digit { digit } ] .
+    ident =  letter { letter | digit | "_" } .
+    integer = digit {["'"]digit} | digit {hexDigit} "H" | "0x" {["'"]hexDigit} | "0b" {["'"]binaryDigit}. 
+    real =  digit { ["'"]digit } "." { digit } [ ("E" | "D") [ "+" | "-" ] digit { digit } ] .
     character = digit { hexDigit } "X" .
     string =  '"' { noQuote } '"' .
 

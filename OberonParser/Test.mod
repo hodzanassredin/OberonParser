@@ -15,6 +15,16 @@ CONST
 
 	allbitsInv = 1 / FLOAT32(allbits);
 
+	a = 42 ;
+	b = 0ABH ;
+	c = 13H ;
+	d = 0xAFFE ;
+	e = 0b100 ;
+	f = 0b1000'0010'1000 ; 
+	g = 3. ;
+	h = 3.82 ;
+	i = 3.82E+20 ;
+
 TYPE
 		(** A pseudo-random number generator.  This object is not reentrant. *)
 	Generator* = OBJECT

@@ -27,7 +27,7 @@ public class Parser {
 	int errDist = minErrDist;
 
 public AOParser.Ast.Module module; 
-
+	//todo up to https://gitlab.inf.ethz.ch/felixf/oberon/-/blob/main/docu/OberonLanguageReport.pdf
 
 
 	public Parser(Scanner scanner) {
