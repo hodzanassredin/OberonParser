@@ -125,7 +125,7 @@ namespace CPParser
         {
             WriteTabs();sw.WriteLine("CONST");
             EnterScope();
-            this.VisitList(o, () => { }, () => { sw.WriteLine(";"); }, true);
+            this.VisitList(o.Values, () => { }, () => { sw.WriteLine(";"); }, true);
             ExitScope();
         }
 
@@ -133,7 +133,7 @@ namespace CPParser
         {
             WriteTabs();sw.WriteLine("TYPE");
             EnterScope();
-            this.VisitList(o, () => { }, () => { sw.WriteLine(";"); }, true);
+            this.VisitList(o.Values, () => { }, () => { sw.WriteLine(";"); }, true);
             ExitScope();
         }
 
@@ -141,7 +141,7 @@ namespace CPParser
         {
             WriteTabs();sw.WriteLine("VAR");
             EnterScope();
-            this.VisitList(o, () => { }, () => { sw.WriteLine(";"); }, true);
+            this.VisitList(o.Values, () => { }, () => { sw.WriteLine(";"); }, true);
             ExitScope();
         }
         public void Visit(ConstDecl o)
@@ -171,10 +171,16 @@ namespace CPParser
             sw.Write(" ");
             o.FormalPars?.Accept(this);
             o.MethAttributes.Accept(this);
+            if (o.DeclSeq == null && o.StatementSeq == null) {
+                return;
+            }
             sw.WriteLine(";");
-            EnterScope();
-            o.DeclSeq.Accept(this);
-            ExitScope();
+            if (o.DeclSeq != null)
+            {
+                EnterScope();
+                o.DeclSeq.Accept(this);
+                ExitScope();
+            }
             if (o.StatementSeq != null) {
                 WriteTabs(); sw.WriteLine("BEGIN");
                 EnterScope();
@@ -792,6 +798,11 @@ namespace CPParser
                 o.Guard.Accept(this); sw.WriteLine(" DO");
                 o.StatementSeq.Accept(this);
             }
+        }
+
+        public void Visit(Comment comment)
+        {
+            sw.Write($"(*{comment.Content}*)");
         }
     }
 }

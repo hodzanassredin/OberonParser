@@ -10,6 +10,9 @@
 		<Exec Command="$(ProjectDir)..\coco\Coco.exe $(ProjectDir)Grammar.ATG -frames $(ProjectDir)..\coco\ -o $(ProjectDir)" />
 	</Target>
 	<ItemGroup>
+	  <ProjectReference Include="..\Common\Common.csproj" />
+	</ItemGroup>
+	<ItemGroup>
 	  <None Update="Test.mod">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>

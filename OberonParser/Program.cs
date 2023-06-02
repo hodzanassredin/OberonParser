@@ -1,6 +1,4 @@
-﻿using AOParser;
-using System;
-
+﻿using Common.Mappers;
 
 Console.WriteLine("_________________________________");
 Console.WriteLine("OberonParser");
@@ -26,9 +24,12 @@ else
     var sw = new StreamWriter(Console.OpenStandardOutput());
     sw.AutoFlush = true;
     Console.SetOut(sw);
-    var ppv = new PrettyPrintVisitor(sw);
+
+    var mapper = new AoToCpMapper();
+    var cpModule = mapper.Map(parser.module);
+    var ppv = new CPParser.PrettyPrintVisitor(sw);
     var str = parser.module.ToString();
-    ppv.Visit(parser.module);
+    ppv.Visit(cpModule);
 }
 
 

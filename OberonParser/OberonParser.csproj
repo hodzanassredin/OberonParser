@@ -12,6 +12,10 @@
   </Target>
 
   <ItemGroup>
+    <ProjectReference Include="..\Common\Common.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Update="Test.mod">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

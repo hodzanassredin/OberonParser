@@ -418,7 +418,7 @@ public class Scanner {
 			case 2:
 				recEnd = pos; recKind = 2;
 				if (ch >= '0' && ch <= '9' || ch >= 'A' && ch <= 'F') {AddCh(); goto case 2;}
-				else if (ch == 8217) {AddCh(); goto case 3;}
+				else if (ch == 39) {AddCh(); goto case 3;}
 				else {t.kind = 2; break;}
 			case 3:
 				if (ch >= '0' && ch <= '9' || ch >= 'A' && ch <= 'F') {AddCh(); goto case 2;}
@@ -426,7 +426,7 @@ public class Scanner {
 			case 4:
 				recEnd = pos; recKind = 2;
 				if (ch >= '0' && ch <= '1') {AddCh(); goto case 4;}
-				else if (ch == 8217) {AddCh(); goto case 5;}
+				else if (ch == 39) {AddCh(); goto case 5;}
 				else {t.kind = 2; break;}
 			case 5:
 				if (ch >= '0' && ch <= '1') {AddCh(); goto case 4;}
@@ -461,7 +461,7 @@ public class Scanner {
 				recEnd = pos; recKind = 2;
 				if (ch >= '0' && ch <= '9') {AddCh(); goto case 14;}
 				else if (ch >= 'A' && ch <= 'F') {AddCh(); goto case 16;}
-				else if (ch == 8217) {AddCh(); goto case 17;}
+				else if (ch == 39) {AddCh(); goto case 17;}
 				else if (ch == 'H') {AddCh(); goto case 6;}
 				else if (ch == '.') {AddCh(); goto case 7;}
 				else if (ch == 'X') {AddCh(); goto case 11;}
@@ -470,7 +470,7 @@ public class Scanner {
 				recEnd = pos; recKind = 2;
 				if (ch >= '0' && ch <= '9') {AddCh(); goto case 14;}
 				else if (ch >= 'A' && ch <= 'F') {AddCh(); goto case 16;}
-				else if (ch == 8217) {AddCh(); goto case 17;}
+				else if (ch == 39) {AddCh(); goto case 17;}
 				else if (ch == 'H') {AddCh(); goto case 6;}
 				else if (ch == 'x') {AddCh(); goto case 2;}
 				else if (ch == 'b') {AddCh(); goto case 4;}
@@ -488,7 +488,7 @@ public class Scanner {
 			case 18:
 				recEnd = pos; recKind = 2;
 				if (ch >= '0' && ch <= '9') {AddCh(); goto case 18;}
-				else if (ch == 8217) {AddCh(); goto case 17;}
+				else if (ch == 39) {AddCh(); goto case 17;}
 				else if (ch == '.') {AddCh(); goto case 7;}
 				else {t.kind = 2; break;}
 			case 19:

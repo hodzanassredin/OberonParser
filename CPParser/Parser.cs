@@ -27,7 +27,9 @@ public class Parser {
 	int errDist = minErrDist;
 
 public CPParser.Ast.Module module; 
-
+	bool IsEmptyProc(){
+		return t.val == "ABSTRACT" || t.val == "EMPTY";
+	}
 
 
 	public Parser(Scanner scanner) {
@@ -147,7 +149,7 @@ public CPParser.Ast.Module module;
 				Get();
 				var lst = new CPParser.Ast.IConstTypeVarListDecl.ConstDeclList(); 
 				while (la.kind == 1) {
-					ConstDecl(lst);
+					ConstDecl(lst.Values);
 					Expect(7);
 				}
 				o.ConstTypeVarDecls.Add(lst); 
@@ -155,7 +157,7 @@ public CPParser.Ast.Module module;
 				Get();
 				var lst = new CPParser.Ast.IConstTypeVarListDecl.TypeDeclList(); 
 				while (la.kind == 1) {
-					TypeDecl(lst);
+					TypeDecl(lst.Values);
 					Expect(7);
 				}
 				o.ConstTypeVarDecls.Add(lst); 
@@ -163,7 +165,7 @@ public CPParser.Ast.Module module;
 				Get();
 				var lst = new CPParser.Ast.IConstTypeVarListDecl.VarDeclList(); 
 				while (la.kind == 1) {
-					VarDecl(lst);
+					VarDecl(lst.Values);
 					Expect(7);
 				}
 				o.ConstTypeVarDecls.Add(lst); 
@@ -235,8 +237,8 @@ public CPParser.Ast.Module module;
 			FormalPars(out o.FormalPars);
 		}
 		MethAttributes(out o.MethAttributes);
-		if (la.kind == 7) {
-			Get();
+		if (!IsEmptyProc()) {
+			Expect(7);
 			DeclSeq(out o.DeclSeq);
 			if (la.kind == 8) {
 				Get();

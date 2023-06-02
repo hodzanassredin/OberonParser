@@ -36,7 +36,8 @@ namespace CPParser
 		void Visit(Element o);
 		void Visit(AddOp o);
 		void Visit(MulOp o);
-		void Visit(Relation o);
+        void Visit(Comment comment);
+        void Visit(Relation o);
 		void Visit(SimpleExpr o);
 		void Visit(Term o);
 		void Visit(Expr o);

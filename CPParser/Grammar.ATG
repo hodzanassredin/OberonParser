@@ -2,7 +2,9 @@ using CPParser;
 
 COMPILER CP
 	public CPParser.Ast.Module module; 
-
+	bool IsEmptyProc(){
+		return t.val == "ABSTRACT" || t.val == "EMPTY";
+	}
 CHARACTERS
   cr  = '\r'.
   lf  = '\n'.
@@ -56,11 +58,11 @@ PRODUCTIONS
 	DeclSeq<out CPParser.Ast.DeclSeq o> 
 		=																		(. o = new CPParser.Ast.DeclSeq(); .)
 		{	"CONST"																(. var lst = new CPParser.Ast.IConstTypeVarListDecl.ConstDeclList(); .) 
-				{ConstDecl<lst> ";" }											(. o.ConstTypeVarDecls.Add(lst); .)
+				{ConstDecl<lst.Values> ";" }											(. o.ConstTypeVarDecls.Add(lst); .)
 			| "TYPE"															(. var lst = new CPParser.Ast.IConstTypeVarListDecl.TypeDeclList(); .) 
-				{TypeDecl<lst> ";"}												(. o.ConstTypeVarDecls.Add(lst); .)
+				{TypeDecl<lst.Values> ";"}												(. o.ConstTypeVarDecls.Add(lst); .)
 			| "VAR"																(. var lst = new CPParser.Ast.IConstTypeVarListDecl.VarDeclList(); .) 
-				{VarDecl<lst> ";"}												(. o.ConstTypeVarDecls.Add(lst); .)} 
+				{VarDecl<lst.Values> ";"}												(. o.ConstTypeVarDecls.Add(lst); .)} 
 			{"PROCEDURE" (ProcDecl<o.ProcForwardDecls> 
 			| ForwardDecl<o.ProcForwardDecls> ) ";" 
 		}.
@@ -80,7 +82,7 @@ PRODUCTIONS
 	ProcDecl<CPParser.Ast.AstList lst> 
 		=																		(. var o = new CPParser.Ast.ProcDecl(); .)	
 		[Receiver<out o.Receiver>] IdentDef<out o.IdentDef> 
-		[FormalPars<out o.FormalPars>] MethAttributes<out o.MethAttributes>	[";" 
+		[FormalPars<out o.FormalPars>] MethAttributes<out o.MethAttributes>	[IF(!IsEmptyProc()) ";" 
 		DeclSeq<out o.DeclSeq> 
 		["BEGIN" StatementSeq<out o.StatementSeq>] 
 		"END" ident]															(. lst.Add(o); .).
