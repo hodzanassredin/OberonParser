@@ -667,8 +667,8 @@ public AOParser.Ast.Module module;
 			} else {
 				Get();
 				var s = new AOParser.Ast.Designator.IDesignatorSpec.ProcCallDesignatorSpec(); 
-				if (la.kind == 1) {
-					Qualident(out s.Value);
+				if (StartOf(1)) {
+					ExprList(out o.Value);
 				}
 				o.Specs.Add(s); 
 				Expect(26);
@@ -824,11 +824,6 @@ public AOParser.Ast.Module module;
 		case 1: {
 			var o = new AOParser.Ast.IFactor.DesignatorFactor(); 
 			Designator(out o.Value);
-			if (la.kind == 25) {
-				Get();
-				ExprList(out o.ExprList);
-				Expect(26);
-			}
 			f = o; 
 			break;
 		}

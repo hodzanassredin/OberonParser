@@ -74,7 +74,6 @@ namespace AOParser
 		void Visit(Designator.IDesignatorSpec.RecordDesignatorSpec o);
 		void Visit(Designator.IDesignatorSpec.ArrayDesignatorSpec o);
 		void Visit(Designator.IDesignatorSpec.CastDesignatorSpec o);
-		void Visit(Designator.IDesignatorSpec.PointerDesignatorSpec o);
 		void Visit(Designator.IDesignatorSpec.ProcCallDesignatorSpec o);
         void Visit(SimpleElementExpr simpleElementExpr);
         void Visit(TermElementExpr termElementExpr);

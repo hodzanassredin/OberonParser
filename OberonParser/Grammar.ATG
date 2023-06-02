@@ -107,8 +107,8 @@ PRODUCTIONS
 
 	FPSection<AOParser.Ast.AstList lst> 	
 		=																		(. var o = new AOParser.Ast.FPSection(); .)
-		["VAR"																		(. o.FpSectionPrefix = AOParser.Ast.FPSection.Prefix.VAR; .)] 
-																					(. AOParser.Ast.Ident i; .)
+		["VAR"																		(. o.FpSectionPrefix = AOParser.Ast.FPSection.Prefix.VAR; .) 
+		]																			(. AOParser.Ast.Ident i; .)
 		Ident<out i>																(. o.Idents.Add(i); .) 
 		{"," Ident<out i>															(. o.Idents.Add(i); .) 
 		} ":" Type<out o.Type_>														(. lst.Add(o); .).
@@ -253,7 +253,7 @@ PRODUCTIONS
 
 	Factor<out AOParser.Ast.IFactor f>											(. f = null;.)	
 		=																		(. var o = new AOParser.Ast.IFactor.DesignatorFactor(); .) 
-		Designator<out o.Value>["(" ExprList<out o.ExprList>")"]				(. f = o; .)
+		Designator<out o.Value>													(. f = o; .)
 		|																		(. var o = new AOParser.Ast.IFactor.NumberFactor(); .) 
 		Number<out o.Value>														(. f = o; .)
 		|																		(. var o = new AOParser.Ast.IFactor.CharacterFactor(); .) 
@@ -313,7 +313,7 @@ PRODUCTIONS
 			| "["																(. var s = new AOParser.Ast.Designator.IDesignatorSpec.ArrayDesignatorSpec(); .) 
 			ExprList<out s.Value> "]"											(. o.Specs.Add(s); .)
 			| "("																(. var s = new AOParser.Ast.Designator.IDesignatorSpec.ProcCallDesignatorSpec(); .) 
-			[Qualident<out s.Value>]												(. o.Specs.Add(s); .)  
+			[ExprList<out s.Value>]												(. o.Specs.Add(s); .)  
 			")" 
 			}.
 

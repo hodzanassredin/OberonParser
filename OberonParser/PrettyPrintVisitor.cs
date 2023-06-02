@@ -67,19 +67,19 @@ namespace AOParser
         public void Visit(IdentDef o)
         {
             o.Ident.Accept(this);
-
-            switch (o.Export)
+            if (o.Export != null)
             {
-                case IdentDef.IdentExport.Private:
-                    break;
-                case IdentDef.IdentExport.ExportReadonly:
-                    sw.Write("-");
-                    break;
-                case IdentDef.IdentExport.Export:
-                    sw.Write("*");
-                    break;
-                default:
-                    break;
+                switch (o.Export)
+                {
+                    case IdentDef.IdentExport.ExportReadonly:
+                        sw.Write("-");
+                        break;
+                    case IdentDef.IdentExport.Export:
+                        sw.Write("*");
+                        break;
+                    default:
+                        break;
+                }
             }
         }
 
@@ -621,11 +621,6 @@ namespace AOParser
             throw new NotImplementedException();
         }
 
-        public void Visit(Designator.IDesignatorSpec.PointerDesignatorSpec o)
-        {
-            sw.Write("^");
-        }
-
         public void Visit(Designator.IDesignatorSpec.ProcCallDesignatorSpec o)
         {
             sw.Write("(");
@@ -779,9 +774,10 @@ namespace AOParser
                 sw.Write("IMPLEMENTS ");
                 o.ImplementsQualident.Accept(this);
             }
-
+            EnterScope();
             o.DeclSeq.Accept(this);
             o.Body.Accept(this);
+            ExitScope();
         }
 
         public void Visit(IStatement.AwaitStatement o)

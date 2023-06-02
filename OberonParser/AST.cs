@@ -189,12 +189,11 @@ namespace AOParser.Ast
 	{
 		public enum IdentExport
 		{
-			Private,
 			ExportReadonly,
 			Export
 		}
 		public Ident Ident;
-		public IdentExport Export;
+		public IdentExport? Export;
 		public void Accept(IAstVisitor v) => v.Visit(this);
 
         public override string ToString()
@@ -771,12 +770,11 @@ namespace AOParser.Ast
 		public class DesignatorFactor : IFactor
 		{
 			public Designator Value;
-			public ExprList ExprList;
 			public void Accept(IAstVisitor v) => v.Visit(this);
 
 			public override string ToString()
 			{
-				return $"{Value} {ExprList}";
+				return $"{Value}";
 			}
 		}
 		public class NumberFactor : IFactor
@@ -860,14 +858,7 @@ namespace AOParser.Ast
 				public void Accept(IAstVisitor v) => v.Visit(this);
 				public override string ToString()
 				{
-					return $"{Value}";
-				}
-			}
-			public class PointerDesignatorSpec : IDesignatorSpec {
-				public void Accept(IAstVisitor v) => v.Visit(this);
-				public override string ToString()
-				{
-					return $"^";
+					return $"[{Value}]";
 				}
 			}
 			public class CastDesignatorSpec : IDesignatorSpec {
@@ -879,7 +870,7 @@ namespace AOParser.Ast
 				}
 			}
 			public class ProcCallDesignatorSpec : IDesignatorSpec {
-				public Qualident Value;
+				public ExprList Value;
 				public void Accept(IAstVisitor v) => v.Visit(this);
 				public override string ToString()
 				{
