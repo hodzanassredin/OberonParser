@@ -183,19 +183,31 @@ namespace Common.SymTable
 		{
 			noObj = new Obj(ObjCLass.VAR, "???", TypeDesc.None, "");
 		}
-		public void InsertMany(ObjCLass objClass, string[] names, TypeDesc type, String value = "")
+		public void Insert(IEnumerable<Obj> objs)
 		{
-            foreach (var name in names)
+            foreach (var obj in objs)
             {
-				Insert(objClass, name, type, value);
+				Insert(obj);
 			}
 		}
+		//public void InsertMany(ObjCLass objClass, string[] names, TypeDesc type, String value = "")
+		//{
+		//	foreach (var name in names)
+		//	{
+		//		Insert(objClass, name, type, value);
+		//	}
+		//}
 		public Obj Insert(ObjCLass objClass, string name, TypeDesc type, String value = "")
 		{
 			Obj obj = new Obj(objClass, name, type, value);
+			return Insert(obj);
+		}
+
+		public Obj Insert(Obj obj)
+		{
 			foreach (Obj x in curScope.locals)
 			{
-				if (x.name.Equals(name)) Error("-- " + name + " declared twice");
+				if (x.name.Equals(obj.name)) Error("-- " + obj.name + " declared twice");
 			}
 			curScope.locals.Add(obj);
 			return obj;

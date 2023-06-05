@@ -212,7 +212,7 @@ public Common.SymTable.SymTab symTab = new ();
 		Expect(19);
 		ConstExpr(out o.ConstExpr);
 		lst.Add(o); 
-		symTab.Insert(Common.SymTable.ObjCLass.CONST, o.IdentDef.Ident.Name, o.ConstExpr.TypeDescr, o.ConstExpr.ToString()); 
+		symTab.Insert(o.GetObj());  
 	}
 
 	void TypeDecl(CPParser.Ast.AstList lst) {
@@ -221,7 +221,7 @@ public Common.SymTable.SymTab symTab = new ();
 		Expect(19);
 		Type(out o.Type_);
 		lst.Add(o); 
-		symTab.Insert(Common.SymTable.ObjCLass.TYPE, o.IdentDef.Ident.Name, o.Type_.TypeDescr, null); 
+		symTab.Insert(o.GetObj()); 
 	}
 
 	void VarDecl(CPParser.Ast.AstList lst) {
@@ -230,7 +230,7 @@ public Common.SymTable.SymTab symTab = new ();
 		Expect(20);
 		Type(out o.Type_);
 		lst.Add(o); 
-		symTab.InsertMany(Common.SymTable.ObjCLass.VAR, o.IdentList.GetNames(), o.Type_.TypeDescr, null); 
+		symTab.Insert(o.GetObjects());  
 	}
 
 	void ProcDecl(CPParser.Ast.AstList lst) {
@@ -255,6 +255,7 @@ public Common.SymTable.SymTab symTab = new ();
 			Expect(1);
 		}
 		symTab.CloseScope();lst.Add(o); 
+		symTab.Insert(o.GetObj()); 
 	}
 
 	void ForwardDecl(CPParser.Ast.AstList lst) {

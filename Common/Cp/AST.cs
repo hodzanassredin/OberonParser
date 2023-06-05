@@ -192,18 +192,30 @@ namespace CPParser.Ast
 		public IdentDef IdentDef;
 		public ConstExpr ConstExpr;
 		public override void Accept(IAstVisitor v) => v.Visit(this);
+
+		public Obj GetObj() {
+			return new Obj(ObjCLass.CONST, IdentDef.Ident.Name, ConstExpr.TypeDescr, ConstExpr.ToString());
+		}
 	}
 	public class TypeDecl : AstElement
 	{
 		public IdentDef IdentDef;
 		public IType Type_;
         public override void Accept(IAstVisitor v) => v.Visit(this);
+		public Obj GetObj()
+		{
+			return new Obj(ObjCLass.TYPE, IdentDef.Ident.Name, Type_.TypeDescr, null);
+		}
 	}
 	public class VarDecl : AstElement
 	{
 		public IdentList IdentList;
 		public IType Type_;
         public override void Accept(IAstVisitor v) => v.Visit(this);
+		public IEnumerable<Obj> GetObjects()
+		{
+			return IdentList.GetNames().Select(name=> new Obj(ObjCLass.VAR, name, Type_.TypeDescr, null));
+		}
 	}
 	public class ProcDecl : IProcForwardDecl
 	{
@@ -214,6 +226,10 @@ namespace CPParser.Ast
 		public DeclSeq DeclSeq;
         public StatementSeq StatementSeq;
 		public override void Accept(IAstVisitor v) => v.Visit(this);
+		public Obj GetObj()
+		{
+			return new Obj(ObjCLass.FUNC, IdentDef.Ident.Name, FormalPars?.TypeDescr??TypeDesc.Function(TypeDesc.None, Array.Empty<Obj>()), "");
+		}
 	}
 
 
@@ -243,7 +259,7 @@ namespace CPParser.Ast
 
 		public TypeDesc TypeDescr { get {
 				var pars = FPSections.Cast<FPSection>().SelectMany(x => x.Objects()).ToArray();
-				return TypeDesc.Function(Type_.TypeDescr, pars);
+				return TypeDesc.Function(Type_?.TypeDescr?? TypeDesc.None, pars);
 			} }
 	}
 

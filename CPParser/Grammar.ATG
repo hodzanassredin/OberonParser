@@ -72,17 +72,17 @@ PRODUCTIONS
 	ConstDecl<CPParser.Ast.AstList lst> 
 		=																		(. var o = new CPParser.Ast.ConstDecl(); .)	
 		IdentDef<out o.IdentDef> "=" ConstExpr<out o.ConstExpr>					(. lst.Add(o); .)
-			(. symTab.Insert(Common.SymTable.ObjCLass.CONST, o.IdentDef.Ident.Name, o.ConstExpr.TypeDescr, o.ConstExpr.ToString()); .) .
+			(. symTab.Insert(o.GetObj());  .) .
 
 	TypeDecl<CPParser.Ast.AstList lst> 
 		=																		(. var o = new CPParser.Ast.TypeDecl(); .)	
 		IdentDef<out o.IdentDef> "=" Type<out o.Type_>							(. lst.Add(o); .)
-			(. symTab.Insert(Common.SymTable.ObjCLass.TYPE, o.IdentDef.Ident.Name, o.Type_.TypeDescr, null); .).
+			(. symTab.Insert(o.GetObj()); .).
 
 	VarDecl<CPParser.Ast.AstList lst> 
 		=																		(. var o = new CPParser.Ast.VarDecl(); .)	
 		IdentList<out o.IdentList> ":" Type<out o.Type_>						(. lst.Add(o); .)
-		(. symTab.InsertMany(Common.SymTable.ObjCLass.VAR, o.IdentList.GetNames(), o.Type_.TypeDescr, null); .).
+		(. symTab.Insert(o.GetObjects());  .).
 
 	ProcDecl<CPParser.Ast.AstList lst> 
 		=																		(. var o = new CPParser.Ast.ProcDecl(); .)	
@@ -90,7 +90,9 @@ PRODUCTIONS
 		[FormalPars<out o.FormalPars>] MethAttributes<out o.MethAttributes>	[IF(!IsEmptyProc()) ";" 
 		DeclSeq<out o.DeclSeq> 
 		["BEGIN" StatementSeq<out o.StatementSeq>] 
-		"END" ident]															(. symTab.CloseScope();lst.Add(o); .).
+		"END" ident]															(. symTab.CloseScope();lst.Add(o); .)
+			(. symTab.Insert(o.GetObj()); .)
+		.
 
 	ForwardDecl<CPParser.Ast.AstList lst> 
 		=																		(. var o = new CPParser.Ast.ForwardDecl(); .)	
