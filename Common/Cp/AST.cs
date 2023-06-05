@@ -1,3 +1,4 @@
+using Common.SymTable;
 using System.Collections;
 using System.Text;
 
@@ -84,9 +85,22 @@ namespace CPParser.Ast
 
 	public class Qualident : AstElement
 	{
+        public Qualident(Common.SymTable.SymTab tab)
+        {
+            this.tab = tab;
+        }
+		//module ident
 		public Ident Ident1;
 		public Ident Ident2;
-        public override void Accept(IAstVisitor v) => v.Visit(this);
+        private readonly SymTab tab;
+
+        public TypeDesc FindType()
+		{
+			if (Ident2 != null) return TypeDesc.Predefined($"{Ident1.Name}.{Ident2.Name}");
+			var obj = tab.Find(Ident1.Name);
+			return obj != null ? obj.type : TypeDesc.Predefined(Ident1.Name);
+		}
+		public override void Accept(IAstVisitor v) => v.Visit(this);
         public override string ToString()
         {
             return Ident2 != null ? $"{Ident1}.{Ident2}" : Ident1.ToString();
@@ -226,6 +240,11 @@ namespace CPParser.Ast
 		public AstList FPSections = new AstList();
 		public IType Type_;
         public override void Accept(IAstVisitor v) => v.Visit(this);
+
+		public TypeDesc TypeDescr { get {
+				var pars = FPSections.Cast<FPSection>().SelectMany(x => x.Objects()).ToArray();
+				return TypeDesc.Function(Type_.TypeDescr, pars);
+			} }
 	}
 
 	
@@ -240,6 +259,14 @@ namespace CPParser.Ast
 		public AstList Idents = new AstList();
 		public IType Type_;
 		public override void Accept(IAstVisitor v) => v.Visit(this);
+
+		public IEnumerable<Obj> Objects() { 
+
+            foreach (var id in Idents.Cast<Ident>())
+            {
+				yield return new Obj(ObjCLass.PARAM, id.Name, Type_.TypeDescr, "");
+            }
+		}
 	}
 	
 	public class Receiver : AstElement
@@ -255,16 +282,29 @@ namespace CPParser.Ast
 	}
     public abstract class IType : AstElement
     {
+		public abstract Common.SymTable.TypeDesc TypeDescr { get; }
 		public class SynonimType : IType
 		{
 			public Qualident Qualident;
-			public override void Accept(IAstVisitor v) => v.Visit(this);
+			public override TypeDesc TypeDescr => Qualident.FindType();
+
+            public override void Accept(IAstVisitor v) => v.Visit(this);
 		}
 		public class ArrayType : IType
 		{
 			public AstList ConstExprs = new AstList();
 			public IType Type_;
-			public override void Accept(IAstVisitor v) => v.Visit(this);
+
+            public override TypeDesc TypeDescr
+			{
+				get
+				{
+					var sizes = ConstExprs.Cast<ConstExpr>().Select(x => Int32.Parse(x.ToString())).ToArray();
+					return TypeDesc.Array(Type_.TypeDescr, sizes);
+				}
+			}
+
+            public override void Accept(IAstVisitor v) => v.Visit(this);
 		}
 
 		public class RecordType : IType
@@ -274,20 +314,34 @@ namespace CPParser.Ast
 				ABSTRACT, EXTENSIBLE, LIMITED
 			}
 			public Meta? RecordMeta;
+			//base record
 			public Qualident Qualident;
 			public AstList FieldList = new AstList();
-			public override void Accept(IAstVisitor v) => v.Visit(this);
+
+			public override TypeDesc TypeDescr { get {
+					var fields = FieldList.Cast<FieldList>().SelectMany(x=>x.Fields).ToArray();
+					return Common.SymTable.TypeDesc.Struct(Qualident?.FindType(), fields);
+
+				} }
+
+            public override void Accept(IAstVisitor v) => v.Visit(this);
 
 		}
 		public class PointerType : IType
 		{
 			public IType Type_;
-			public override void Accept(IAstVisitor v) => v.Visit(this);
+
+            public override TypeDesc TypeDescr => TypeDesc.Pointer(Type_.TypeDescr);
+
+            public override void Accept(IAstVisitor v) => v.Visit(this);
 		}
 		public class ProcedureType : IType
 		{
 			public FormalPars FormalPars;
-			public override void Accept(IAstVisitor v) => v.Visit(this);
+
+            public override TypeDesc TypeDescr => FormalPars.TypeDescr;
+
+            public override void Accept(IAstVisitor v) => v.Visit(this);
 		}
 	}
     
@@ -304,10 +358,14 @@ namespace CPParser.Ast
 	public class IdentList : AstElement
 	{
 		public AstList IdentDefs = new AstList();
+		public string[] GetNames() {
+			return IdentDefs.Cast<IdentDef>().Select(x => x.Ident.Name).ToArray();
+		}
 		public override void Accept(IAstVisitor v) => v.Visit(this);
 	}
 	public class FieldList : AstElement
 	{
+		public Common.SymTable.Obj[] Fields => IdentList.GetNames().Select(name=> new Obj(ObjCLass.FIELD, name, Type_.TypeDescr, "")).ToArray();
 		public IdentList IdentList;
 		public IType Type_;
 		public override void Accept(IAstVisitor v) => v.Visit(this);
@@ -315,9 +373,14 @@ namespace CPParser.Ast
 	
 	
 	public class ConstExpr : AstElement {
+		public Common.SymTable.TypeDesc TypeDescr => Expr.TypeDescr;
 		public Expr Expr;
 		public override void Accept(IAstVisitor v) => v.Visit(this);
-	}
+        public override string ToString()
+        {
+            return Expr?.ToString();
+        }
+    }
 	public class CaseLabels : AstElement
 	{
 		public ConstExpr ConstExpr1;
@@ -370,7 +433,12 @@ namespace CPParser.Ast
 
 		public MulOps Op;
 		public override void Accept(IAstVisitor v) => v.Visit(this);
-	}
+
+        public override string ToString()
+        {
+            return Op.ToString();
+        }
+    }
 	
 	public class Relation : AstElement
 	{
@@ -402,6 +470,7 @@ namespace CPParser.Ast
 
 	public class SimpleExpr : AstElement
 	{
+		public Common.SymTable.TypeDesc TypeDescr => Term.TypeDescr;
 		public enum SimpleExprPrefix
 		{
 			Add, Sub
@@ -438,9 +507,14 @@ namespace CPParser.Ast
 		{
 			v.Visit(this);
 		}
-	}
+        public override string ToString()
+        {
+            return $"{MulOp} {Factor}";
+        }
+    }
 	public class Term : AstElement
 	{
+		public Common.SymTable.TypeDesc TypeDescr => Factor.TypeDescr;
 		public IFactor Factor;
 		public AstList TermElements = new AstList();
 		public override void Accept(IAstVisitor v) => v.Visit(this);
@@ -453,6 +527,9 @@ namespace CPParser.Ast
 
 	public class Expr : AstElement
 	{
+		public Common.SymTable.TypeDesc TypeDescr => SimpleExpr.TypeDescr;
+
+
 		public SimpleExpr SimpleExpr;
 		public Relation Relation;
 		public SimpleExpr SimpleExpr2;
@@ -582,9 +659,13 @@ namespace CPParser.Ast
 
 	public abstract class IFactor : AstElement
 	{
+		public abstract Common.SymTable.TypeDesc TypeDescr { get; }
 		public class DesignatorFactor : IFactor
 		{
 			public Designator Value;
+
+            public override TypeDesc TypeDescr => Value.TypeDescr;
+
 			public override void Accept(IAstVisitor v) => v.Visit(this);
 
 			public override string ToString()
@@ -595,7 +676,10 @@ namespace CPParser.Ast
 		public class NumberFactor : IFactor
 		{
 			public Number Value;
-			public override void Accept(IAstVisitor v) => v.Visit(this);
+
+            public override TypeDesc TypeDescr => TypeDesc.Predefined("NUMBER");//todo
+
+            public override void Accept(IAstVisitor v) => v.Visit(this);
 			public override string ToString()
 			{
 				return $"{Value}";
@@ -604,6 +688,9 @@ namespace CPParser.Ast
 		public class CharacterFactor : IFactor
 		{
 			public String Value;
+
+            public override TypeDesc TypeDescr => TypeDesc.Predefined("CHAR");
+
 			public override void Accept(IAstVisitor v) => v.Visit(this);
 			public override string ToString()
 			{
@@ -613,7 +700,10 @@ namespace CPParser.Ast
 		public class StringFactor : IFactor
 		{
 			public String Value;
-			public override void Accept(IAstVisitor v) => v.Visit(this);
+
+            public override TypeDesc TypeDescr => TypeDesc.Array(TypeDesc.Predefined("CHAR"), Array.Empty<int>());
+
+            public override void Accept(IAstVisitor v) => v.Visit(this);
 			public override string ToString()
 			{
 				return $"{Value}";
@@ -621,7 +711,9 @@ namespace CPParser.Ast
 		}
 		public class NilFactor : IFactor
 		{
-			public override void Accept(IAstVisitor v) => v.Visit(this);
+            public override TypeDesc TypeDescr => TypeDesc.None;
+
+            public override void Accept(IAstVisitor v) => v.Visit(this);
 			public override string ToString()
 			{
 				return $"NIL";
@@ -630,6 +722,9 @@ namespace CPParser.Ast
 		public class SetFactor : IFactor
 		{
 			public Set Value;
+
+            public override TypeDesc TypeDescr => TypeDesc.Predefined("SET");
+
 			public override void Accept(IAstVisitor v) => v.Visit(this);
 			public override string ToString()
 			{
@@ -639,7 +734,10 @@ namespace CPParser.Ast
 		public class ExprFactor : IFactor
 		{
 			public Expr Value;
-			public override void Accept(IAstVisitor v) => v.Visit(this);
+
+            public override TypeDesc TypeDescr => Value.TypeDescr;
+
+            public override void Accept(IAstVisitor v) => v.Visit(this);
 			public override string ToString()
 			{
 				return $"{Value}";
@@ -648,7 +746,10 @@ namespace CPParser.Ast
 		public class NegFactor : IFactor
 		{
 			public IFactor Value;
-			public override void Accept(IAstVisitor v) => v.Visit(this);
+
+            public override TypeDesc TypeDescr => Value.TypeDescr;
+
+            public override void Accept(IAstVisitor v) => v.Visit(this);
 			public override string ToString()
 			{
 				return $"~{Value}";
@@ -658,12 +759,24 @@ namespace CPParser.Ast
 
 	public class Designator : AstElement
 	{
+        public Designator(Common.SymTable.SymTab tab)
+        {
+            this.tab = tab;
+        }
 		public abstract class IDesignatorSpec : AstElement
 		{
+			public abstract TypeDesc Specify(TypeDesc parent);
+
             public class RecordDesignatorSpec : IDesignatorSpec {
 				public Ident Value;
 				public override void Accept(IAstVisitor v) => v.Visit(this);
-				public override string ToString()
+
+                public override TypeDesc Specify(TypeDesc parent)
+                {
+					return parent.fieldsOrParams.Single(x => x.name == Value.Name).type;
+                }
+
+                public override string ToString()
 				{
 					return $".{Value}";
 				}
@@ -671,22 +784,47 @@ namespace CPParser.Ast
 			public class ArrayDesignatorSpec : IDesignatorSpec {
 				public ExprList Value;
 				public override void Accept(IAstVisitor v) => v.Visit(this);
-				public override string ToString()
+
+                public override TypeDesc Specify(TypeDesc parent)
+                {
+					return parent.elemType;
+				}
+
+                public override string ToString()
 				{
 					return $"{Value}";
 				}
 			}
 			public class PointerDesignatorSpec : IDesignatorSpec {
 				public override void Accept(IAstVisitor v) => v.Visit(this);
-				public override string ToString()
+
+                public override TypeDesc Specify(TypeDesc parent)
+                {
+					return parent.elemType;
+				}
+
+                public override string ToString()
 				{
 					return $"^";
 				}
 			}
 			public class CastDesignatorSpec : IDesignatorSpec {
+
+                public CastDesignatorSpec(Common.SymTable.SymTab tab)
+				{
+					this.tab = tab;
+				}
 				public Qualident Value;
-				public override void Accept(IAstVisitor v) => v.Visit(this);
-				public override string ToString()
+                private SymTab tab;
+
+                public override void Accept(IAstVisitor v) => v.Visit(this);
+
+                public override TypeDesc Specify(TypeDesc parent)
+                {
+					return tab.Find(this.Value.Ident2.Name)?.type;
+				}
+
+                public override string ToString()
 				{
 					return $"({Value})";
 				}
@@ -694,13 +832,30 @@ namespace CPParser.Ast
 			public class ProcCallDesignatorSpec : IDesignatorSpec {
 				public ExprList Value;
 				public override void Accept(IAstVisitor v) => v.Visit(this);
-				public override string ToString()
+
+                public override TypeDesc Specify(TypeDesc parent)
+                {
+					return parent.elemType;
+				}
+
+                public override string ToString()
 				{
 					return $"({Value})";
 				}
 			}
 		}
-
+		private readonly SymTab tab;
+		public TypeDesc TypeDescr { get {
+				var t = tab.Find(this.Qualident.Ident2.Name)?.type;
+				if (t == null) return t;
+				
+                foreach (var spec in Specs.Cast<IDesignatorSpec>())
+                {
+					t = spec.Specify(t);
+					if (t == null) return t;
+				}
+				return t;
+			} }
 		public Qualident Qualident;
 		public bool EndOfLine;
 		public AstList Specs = new AstList();

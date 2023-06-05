@@ -560,7 +560,12 @@ namespace AOParser.Ast
 		{
 			v.Visit(this);
 		}
-	}
+
+        public override string ToString()
+        {
+            return $"{AddOp} {Factor}";
+        }
+    }
 	public class Term : AstElement
 	{
 		public enum TermExprPrefix

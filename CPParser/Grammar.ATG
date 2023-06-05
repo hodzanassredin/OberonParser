@@ -1,7 +1,9 @@
 using CPParser;
 
 COMPILER CP
+	public Common.SymTable.SymTab symTab = new ();
 	public CPParser.Ast.Module module; 
+
 	bool IsEmptyProc(){
 		return t.val == "ABSTRACT" || t.val == "EMPTY";
 	}
@@ -40,7 +42,7 @@ PRODUCTIONS
 
 	Module<out CPParser.Ast.Module o> 
 		=																		(. o = new CPParser.Ast.Module(); .)
-		"MODULE" Ident<out o.Ident>";" 
+		"MODULE" Ident<out o.Ident>";"											(. symTab.OpenScope(o.Ident.Name); .)
 		[ImportList<out o.ImportList>] 
 		DeclSeq<out o.DeclSeq> 
 		["BEGIN" StatementSeq<out o.Begin>] 
@@ -69,23 +71,26 @@ PRODUCTIONS
 
 	ConstDecl<CPParser.Ast.AstList lst> 
 		=																		(. var o = new CPParser.Ast.ConstDecl(); .)	
-		IdentDef<out o.IdentDef> "=" ConstExpr<out o.ConstExpr>					(. lst.Add(o); .) .
+		IdentDef<out o.IdentDef> "=" ConstExpr<out o.ConstExpr>					(. lst.Add(o); .)
+			(. symTab.Insert(Common.SymTable.ObjCLass.CONST, o.IdentDef.Ident.Name, o.ConstExpr.TypeDescr, o.ConstExpr.ToString()); .) .
 
 	TypeDecl<CPParser.Ast.AstList lst> 
 		=																		(. var o = new CPParser.Ast.TypeDecl(); .)	
-		IdentDef<out o.IdentDef> "=" Type<out o.Type_>							(. lst.Add(o); .).
+		IdentDef<out o.IdentDef> "=" Type<out o.Type_>							(. lst.Add(o); .)
+			(. symTab.Insert(Common.SymTable.ObjCLass.TYPE, o.IdentDef.Ident.Name, o.Type_.TypeDescr, null); .).
 
 	VarDecl<CPParser.Ast.AstList lst> 
 		=																		(. var o = new CPParser.Ast.VarDecl(); .)	
-		IdentList<out o.IdentList> ":" Type<out o.Type_>						(. lst.Add(o); .).
+		IdentList<out o.IdentList> ":" Type<out o.Type_>						(. lst.Add(o); .)
+		(. symTab.InsertMany(Common.SymTable.ObjCLass.VAR, o.IdentList.GetNames(), o.Type_.TypeDescr, null); .).
 
 	ProcDecl<CPParser.Ast.AstList lst> 
 		=																		(. var o = new CPParser.Ast.ProcDecl(); .)	
-		[Receiver<out o.Receiver>] IdentDef<out o.IdentDef> 
+		[Receiver<out o.Receiver>] IdentDef<out o.IdentDef>						(. symTab.OpenScope(o.IdentDef.Ident.Name); .)
 		[FormalPars<out o.FormalPars>] MethAttributes<out o.MethAttributes>	[IF(!IsEmptyProc()) ";" 
 		DeclSeq<out o.DeclSeq> 
 		["BEGIN" StatementSeq<out o.StatementSeq>] 
-		"END" ident]															(. lst.Add(o); .).
+		"END" ident]															(. symTab.CloseScope();lst.Add(o); .).
 
 	ForwardDecl<CPParser.Ast.AstList lst> 
 		=																		(. var o = new CPParser.Ast.ForwardDecl(); .)	
@@ -300,7 +305,7 @@ PRODUCTIONS
 		| "&"																	(. o.Op = CPParser.Ast.MulOp.MulOps.AND; .) .
 
 	Designator<out CPParser.Ast.Designator o>
-		=																		(. o = new CPParser.Ast.Designator(); .) 
+		=																		(. o = new CPParser.Ast.Designator(this.symTab); .) 
 		Qualident<out o.Qualident> 
 		{ 
 			  "."																(. var s = new CPParser.Ast.Designator.IDesignatorSpec.RecordDesignatorSpec(); .) 
@@ -329,7 +334,7 @@ PRODUCTIONS
 		IdentDef<out id>														(. o.IdentDefs.Add(id); .)}.
 
 	Qualident<out CPParser.Ast.Qualident o>
-		=																		(. o = new CPParser.Ast.Qualident(); .)
+		=																		(. o = new CPParser.Ast.Qualident(symTab); .)
 		Ident<out o.Ident1> ["." Ident<out o.Ident2>] .
 
 	IdentDef<out CPParser.Ast.IdentDef o> 	

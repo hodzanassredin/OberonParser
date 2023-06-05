@@ -26,7 +26,9 @@ public class Parser {
 	public Token la;   // lookahead token
 	int errDist = minErrDist;
 
-public CPParser.Ast.Module module; 
+public Common.SymTable.SymTab symTab = new ();
+	public CPParser.Ast.Module module; 
+
 	bool IsEmptyProc(){
 		return t.val == "ABSTRACT" || t.val == "EMPTY";
 	}
@@ -98,6 +100,7 @@ public CPParser.Ast.Module module;
 		Expect(6);
 		Ident(out o.Ident);
 		Expect(7);
+		symTab.OpenScope(o.Ident.Name); 
 		if (la.kind == 13) {
 			ImportList(out o.ImportList);
 		}
@@ -209,6 +212,7 @@ public CPParser.Ast.Module module;
 		Expect(19);
 		ConstExpr(out o.ConstExpr);
 		lst.Add(o); 
+		symTab.Insert(Common.SymTable.ObjCLass.CONST, o.IdentDef.Ident.Name, o.ConstExpr.TypeDescr, o.ConstExpr.ToString()); 
 	}
 
 	void TypeDecl(CPParser.Ast.AstList lst) {
@@ -217,6 +221,7 @@ public CPParser.Ast.Module module;
 		Expect(19);
 		Type(out o.Type_);
 		lst.Add(o); 
+		symTab.Insert(Common.SymTable.ObjCLass.TYPE, o.IdentDef.Ident.Name, o.Type_.TypeDescr, null); 
 	}
 
 	void VarDecl(CPParser.Ast.AstList lst) {
@@ -225,6 +230,7 @@ public CPParser.Ast.Module module;
 		Expect(20);
 		Type(out o.Type_);
 		lst.Add(o); 
+		symTab.InsertMany(Common.SymTable.ObjCLass.VAR, o.IdentList.GetNames(), o.Type_.TypeDescr, null); 
 	}
 
 	void ProcDecl(CPParser.Ast.AstList lst) {
@@ -233,6 +239,7 @@ public CPParser.Ast.Module module;
 			Receiver(out o.Receiver);
 		}
 		IdentDef(out o.IdentDef);
+		symTab.OpenScope(o.IdentDef.Ident.Name); 
 		if (la.kind == 26) {
 			FormalPars(out o.FormalPars);
 		}
@@ -247,7 +254,7 @@ public CPParser.Ast.Module module;
 			Expect(10);
 			Expect(1);
 		}
-		lst.Add(o); 
+		symTab.CloseScope();lst.Add(o); 
 	}
 
 	void ForwardDecl(CPParser.Ast.AstList lst) {
@@ -458,7 +465,7 @@ public CPParser.Ast.Module module;
 	}
 
 	void Qualident(out CPParser.Ast.Qualident o) {
-		o = new CPParser.Ast.Qualident(); 
+		o = new CPParser.Ast.Qualident(symTab); 
 		Ident(out o.Ident1);
 		if (la.kind == 11) {
 			Get();
@@ -643,7 +650,7 @@ public CPParser.Ast.Module module;
 	}
 
 	void Designator(out CPParser.Ast.Designator o) {
-		o = new CPParser.Ast.Designator(); 
+		o = new CPParser.Ast.Designator(this.symTab); 
 		Qualident(out o.Qualident);
 		while (StartOf(6)) {
 			if (la.kind == 11) {
