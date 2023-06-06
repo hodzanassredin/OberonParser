@@ -145,14 +145,15 @@ PRODUCTIONS
 			|																	(. symTab.OpenScope(); var at = new AOParser.Ast.IType.RecordType(symTab.curScope); .)
 				"RECORD" [SysFlag<out at.SysFlag>] 
 					["(" Qualident<out at.Qualident> ")"] 
-					[FieldList<out at.FieldList>]									
+					FieldList<out at.FieldList>									
 					"END"															(. o = at; symTab.CloseScope();.)
 
 			|																	(. var at = new AOParser.Ast.IType.PointerType(); .)
 				"POINTER" [SysFlag<out at.SysFlag>] "TO" Type<out at.Type_>			(. o = at; .)
 
 			| 																	(. symTab.OpenScope(); var at = new AOParser.Ast.IType.ObjectType(symTab.curScope); .)
-				"OBJECT" [[SysFlag<out at.SysFlag>] 
+				"OBJECT" [
+				[SysFlag<out at.SysFlag>] 
 				["(" Qualident<out at.Qualident> ")"] 
 				["IMPLEMENTS" Qualident<out at.ImplementsQualident>] 
 				DeclSeq<out at.DeclSeq> Body<out at.Body> Ident<out at.Ident>]	(. o = at; symTab.CloseScope();.)

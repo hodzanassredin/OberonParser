@@ -26,6 +26,8 @@ CONST
 	i = 3.82E+20 ;
 
 TYPE
+	T0 = RECORD x: INTEGER END;
+	T1 = RECORD (T0) y: REAL END;
 		(** A pseudo-random number generator.  This object is not reentrant. *)
 	Generator* = OBJECT
 		VAR

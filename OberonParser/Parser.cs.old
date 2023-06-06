@@ -349,9 +349,7 @@ public Common.SymTable.SymTab symTab = new ();
 				Qualident(out at.Qualident);
 				Expect(26);
 			}
-			if (la.kind == 1 || la.kind == 7 || la.kind == 15) {
-				FieldList(out at.FieldList);
-			}
+			FieldList(out at.FieldList);
 			Expect(15);
 			o = at; symTab.CloseScope();
 			break;
@@ -703,7 +701,7 @@ public Common.SymTable.SymTab symTab = new ();
 					ExprList(out s.Value);
 				}
 				Expect(26);
-				o.Value.Specs.Add(s); 
+				o.Specs.Add(s); 
 			}
 		}
 	}
