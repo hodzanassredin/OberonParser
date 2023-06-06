@@ -119,6 +119,7 @@ namespace AOParser.Ast
 
 	public class FieldDecl : AstElement
 	{
+		public Common.SymTable.Obj[] Fields => IdentList.GetNames().Select(name => new Obj(ObjCLass.VAR, name, Type_.TypeDescr, "")).ToArray();
 		public IdentList IdentList;
 		public IType Type_;
 		public override void Accept(IAstVisitor v) => v.Visit(this);
@@ -205,7 +206,12 @@ namespace AOParser.Ast
 		public Ident OriginalName;
 		public override void Accept(IAstVisitor v) => v.Visit(this);
 
-		public override string ToString()
+        public Obj GetObj()
+        {
+			return new Obj(ObjCLass.MODULE, Name.Name, TypeDesc.None, null);
+		}
+
+        public override string ToString()
 		{
 			return $"{Name} : {OriginalName}";
 		}
@@ -263,6 +269,11 @@ namespace AOParser.Ast
 		public ConstExpr ConstExpr;
 		public override void Accept(IAstVisitor v) => v.Visit(this);
 
+        public Obj GetObj()
+        {
+			return new Obj(ObjCLass.CONST, IdentDef.Ident.Name, ConstExpr.TypeDescr, ConstExpr.ToString());
+		}
+
         public override string ToString()
         {
             return $"{IdentDef} = {ConstExpr}";
@@ -278,7 +289,12 @@ namespace AOParser.Ast
         {
             return $"{IdentDef} = {Type_}";
 		}
-    }
+
+		public Obj GetObj()
+		{
+			return new Obj(ObjCLass.TYPE, IdentDef.Ident.Name, Type_.TypeDescr, null);
+		}
+	}
 	public class VarDecl : AstElement
 	{
 		public IdentList IdentList;
@@ -288,6 +304,11 @@ namespace AOParser.Ast
 		public override string ToString()
 		{
 			return $"{IdentList} = {Type_}";
+		}
+
+		public IEnumerable<Obj> GetObjects()
+		{
+			return IdentList.GetNames().Select(name => new Obj(ObjCLass.VAR, name, Type_.TypeDescr, null));
 		}
 	}
 
@@ -302,7 +323,15 @@ namespace AOParser.Ast
         {
             return $"PROCEDURE {ProcHead}; {DeclSeq} {Body} {Ident}";
         }
-    }
+
+		public Obj GetObj(Scope scope)
+		{
+			return new Obj(ObjCLass.FUNC, ProcHead.IdentDef.Ident.Name, ProcHead.FormalPars?.TypeDescr(scope) ?? TypeDesc.Function(TypeDesc.None, scope), "")
+			{
+				scope = scope,
+			};
+		}
+	}
 
 	public class FormalPars : AstElement
 	{
@@ -314,6 +343,11 @@ namespace AOParser.Ast
 		{
 			var str = Qualident != null ? $":{Qualident}" :"";
 			return $"({String.Join(";", FPSections)} ){str}";
+		}
+
+		public TypeDesc TypeDescr(Scope scope)
+		{
+				return TypeDesc.Function(Qualident?.FindType() ?? TypeDesc.None, scope);
 		}
 	}
 
@@ -331,12 +365,23 @@ namespace AOParser.Ast
         {
             return $"{FpSectionPrefix} {String.Join(",",Idents)}:{Type_}";
         }
-    }
+
+		public IEnumerable<Obj> Objects()
+		{
+
+			foreach (var id in Idents.Cast<Ident>())
+			{
+				yield return new Obj(ObjCLass.PARAM, id.Name, Type_.TypeDescr, "");
+			}
+		}
+	}
 	
     public abstract class IType : AstElement
     {
+		public abstract Common.SymTable.TypeDesc TypeDescr { get; }
 		public class SynonimType : IType
 		{
+			public override TypeDesc TypeDescr => Qualident.FindType();
 			public Qualident? Qualident;
 			public override void Accept(IAstVisitor v) => v.Visit(this);
             public override string ToString()
@@ -346,6 +391,15 @@ namespace AOParser.Ast
         }
 		public class ArrayType : IType
 		{
+			public override TypeDesc TypeDescr
+			{
+				get
+				{
+					var sizes = ConstExprs.Cast<ConstExpr>().Select(x => Int32.Parse(x.ToString())).ToArray();
+					return TypeDesc.Array(Type_.TypeDescr, sizes);
+				}
+			}
+
 			public SysFlag SysFlag;
 			public AstList ConstExprs = new AstList();
 			public IType Type_;
@@ -354,22 +408,41 @@ namespace AOParser.Ast
             {
                 return $"ARRAY {SysFlag} {String.Join(",", ConstExprs)} OF {Type_}";
             }
+
         }
 
 		public class RecordType : IType
 		{
+            public RecordType(Scope scope)
+            {
+                this.scope = scope;
+            }
 			public SysFlag SysFlag;
 			public Qualident Qualident;
 			public FieldList FieldList;
-			public override void Accept(IAstVisitor v) => v.Visit(this);
+            private readonly Scope scope;
+
+            public override void Accept(IAstVisitor v) => v.Visit(this);
 			public override string ToString()
 			{
 				return $"RECORD {SysFlag}({Qualident}) {FieldList} END";
+			}
+
+			public override TypeDesc TypeDescr
+			{
+				get
+				{
+					return TypeDesc.Struct(Qualident?.FindType(), scope);
+				}
 			}
 		}
 
 		public class ObjectType : IType
 		{
+            public ObjectType(Scope scope)
+            {
+                this.scope = scope;
+            }
 			public SysFlag SysFlag;
 			public Qualident Qualident;
 			public Qualident ImplementsQualident;
@@ -377,7 +450,9 @@ namespace AOParser.Ast
 			public Body Body;
 
 			public Ident Ident;
-			public override void Accept(IAstVisitor v) => v.Visit(this);
+            private readonly Scope scope;
+
+            public override void Accept(IAstVisitor v) => v.Visit(this);
 
             public override string ToString()
             {
@@ -386,9 +461,21 @@ namespace AOParser.Ast
 				return $"OBJECT {SysFlag}({Qualident}) {impl} {DeclSeq} {Body} {Ident}";
             }
 
-        }
+			public override TypeDesc TypeDescr
+			{
+				get
+				{
+
+					return TypeDesc.Pointer(TypeDesc.Struct(Qualident?.FindType(), scope));
+
+				}
+			}
+
+		}
 		public class PointerType : IType
 		{
+			public override TypeDesc TypeDescr => TypeDesc.Pointer(Type_.TypeDescr);
+
 			public SysFlag SysFlag;
 			public IType Type_;
 			public override void Accept(IAstVisitor v) => v.Visit(this);
@@ -399,9 +486,16 @@ namespace AOParser.Ast
 		}
 		public class ProcedureType : IType
 		{
+            public ProcedureType(Scope scope)
+			{
+                this.scope = scope;
+            }
+			public override TypeDesc TypeDescr => FormalPars.TypeDescr(scope);
 			public SysFlag SysFlag;
 			public FormalPars FormalPars;
-			public override void Accept(IAstVisitor v) => v.Visit(this);
+            private readonly Scope scope;
+
+            public override void Accept(IAstVisitor v) => v.Visit(this);
 			public override string ToString()
 			{
 				return $"PROCEDURE {SysFlag} {FormalPars}";
@@ -421,6 +515,11 @@ namespace AOParser.Ast
 	}
 	public class IdentList : AstElement
 	{
+		public string[] GetNames()
+		{
+			return IdentDefs.Cast<IdentDef>().Select(x => x.Ident.Name).ToArray();
+		}
+
 		public AstList IdentDefs = new AstList();
 		public override void Accept(IAstVisitor v) => v.Visit(this);
         public override string ToString()
@@ -441,6 +540,7 @@ namespace AOParser.Ast
 	
 	public class ConstExpr : AstElement {
 		public Expr Expr;
+		public Common.SymTable.TypeDesc TypeDescr => Expr.TypeDescr;
 		public override void Accept(IAstVisitor v) => v.Visit(this);
         public override string ToString()
         {
@@ -544,7 +644,7 @@ namespace AOParser.Ast
 
 	public class SimpleExpr : AstElement
 	{
-		
+		public Common.SymTable.TypeDesc TypeDescr => Term.TypeDescr;
 		public Term Term;
 		public AstList SimpleExprElements = new AstList();
 		public override void Accept(IAstVisitor v) => v.Visit(this);
@@ -580,6 +680,7 @@ namespace AOParser.Ast
     }
 	public class Term : AstElement
 	{
+		public Common.SymTable.TypeDesc TypeDescr => Factor.TypeDescr;
 		public enum TermExprPrefix
 		{
 			Add, Sub
@@ -609,6 +710,8 @@ namespace AOParser.Ast
 
 	public class Expr : AstElement
 	{
+		public Common.SymTable.TypeDesc TypeDescr => SimpleExpr.TypeDescr;
+
 		public SimpleExpr SimpleExpr;
 		public Relation Relation;
 		public SimpleExpr SimpleExpr2;
@@ -797,8 +900,10 @@ namespace AOParser.Ast
 
 	public abstract class IFactor : AstElement
 	{
+		public abstract Common.SymTable.TypeDesc TypeDescr { get; }
 		public class DesignatorFactor : IFactor
 		{
+			public override TypeDesc TypeDescr => Value.TypeDescr;
 			public Designator Value;
 			public override void Accept(IAstVisitor v) => v.Visit(this);
 
@@ -809,6 +914,7 @@ namespace AOParser.Ast
 		}
 		public class NumberFactor : IFactor
 		{
+			public override TypeDesc TypeDescr => TypeDesc.Predefined("NUMBER", null);//todo
 			public Number Value;
 			public override void Accept(IAstVisitor v) => v.Visit(this);
 			public override string ToString()
@@ -818,6 +924,7 @@ namespace AOParser.Ast
 		}
 		public class CharacterFactor : IFactor
 		{
+			public override TypeDesc TypeDescr => TypeDesc.Predefined("CHAR", null);
 			public String Value;
 			public override void Accept(IAstVisitor v) => v.Visit(this);
 			public override string ToString()
@@ -827,6 +934,8 @@ namespace AOParser.Ast
 		}
 		public class StringFactor : IFactor
 		{
+			public override TypeDesc TypeDescr => TypeDesc.Array(TypeDesc.Predefined("CHAR", null), Array.Empty<int>());
+
 			public String Value;
 			public override void Accept(IAstVisitor v) => v.Visit(this);
 			public override string ToString()
@@ -836,6 +945,7 @@ namespace AOParser.Ast
 		}
 		public class NilFactor : IFactor
 		{
+			public override TypeDesc TypeDescr => TypeDesc.None;
 			public override void Accept(IAstVisitor v) => v.Visit(this);
 			public override string ToString()
 			{
@@ -844,6 +954,7 @@ namespace AOParser.Ast
 		}
 		public class SetFactor : IFactor
 		{
+			public override TypeDesc TypeDescr => TypeDesc.Predefined("SET", null);
 			public Set Value;
 			public override void Accept(IAstVisitor v) => v.Visit(this);
 			public override string ToString()
@@ -853,6 +964,7 @@ namespace AOParser.Ast
 		}
 		public class ExprFactor : IFactor
 		{
+			public override TypeDesc TypeDescr => Value.TypeDescr;
 			public Expr Value;
 			public override void Accept(IAstVisitor v) => v.Visit(this);
 			public override string ToString()
@@ -862,6 +974,7 @@ namespace AOParser.Ast
 		}
 		public class NegFactor : IFactor
 		{
+			public override TypeDesc TypeDescr => Value.TypeDescr;
 			public IFactor Value;
 			public override void Accept(IAstVisitor v) => v.Visit(this);
 			public override string ToString()
@@ -873,14 +986,23 @@ namespace AOParser.Ast
 
 	public class Designator : AstElement
 	{
+		public Designator(Common.SymTable.SymTab tab)
+		{
+			this.tab = tab;
+		}
 		public abstract class IDesignatorSpec : AstElement
 		{
-            public class RecordDesignatorSpec : IDesignatorSpec {
+			public abstract TypeDesc Specify(TypeDesc parent);
+			public class RecordDesignatorSpec : IDesignatorSpec {
 				public Ident Value;
 				public override void Accept(IAstVisitor v) => v.Visit(this);
 				public override string ToString()
 				{
 					return $".{Value}";
+				}
+				public override TypeDesc Specify(TypeDesc parent)
+				{
+					return parent.scope.Find(Value.Name).type;
 				}
 			}
 			public class ArrayDesignatorSpec : IDesignatorSpec {
@@ -890,13 +1012,26 @@ namespace AOParser.Ast
 				{
 					return $"[{Value}]";
 				}
+				public override TypeDesc Specify(TypeDesc parent)
+				{
+					return parent.elemType;
+				}
 			}
 			public class CastDesignatorSpec : IDesignatorSpec {
+				public CastDesignatorSpec(Common.SymTable.SymTab tab)
+				{
+					this.tab = tab;
+				}
+				private SymTab tab;
 				public Qualident Value;
 				public override void Accept(IAstVisitor v) => v.Visit(this);
 				public override string ToString()
 				{
 					return $"({Value})";
+				}
+				public override TypeDesc Specify(TypeDesc parent)
+				{
+					return tab.Find(this.Value.Ident2.Name)?.type;
 				}
 			}
 			public class ProcCallDesignatorSpec : IDesignatorSpec {
@@ -906,6 +1041,27 @@ namespace AOParser.Ast
 				{
 					return $"({Value})";
 				}
+				public override TypeDesc Specify(TypeDesc parent)
+				{
+					return parent.elemType;
+				}
+			}
+		}
+		private readonly SymTab tab;
+
+		public TypeDesc TypeDescr
+		{
+			get
+			{
+				var t = tab.Find(this.Qualident.Ident2.Name)?.type;
+				if (t == null) return t;
+
+				foreach (var spec in Specs.Cast<IDesignatorSpec>())
+				{
+					t = spec.Specify(t);
+					if (t == null) return t;
+				}
+				return t;
 			}
 		}
 

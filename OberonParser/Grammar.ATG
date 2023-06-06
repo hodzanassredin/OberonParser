@@ -1,8 +1,15 @@
 ﻿using AOParser;
 
 COMPILER ActiveOberon 
+	public Common.SymTable.SymTab symTab = new ();
 	public AOParser.Ast.Module module; 
 	//todo up to https://gitlab.inf.ethz.ch/felixf/oberon/-/blob/main/docu/OberonLanguageReport.pdf
+
+	bool IsModule(){
+		var obj = symTab.Find(t.val);
+		return obj.objClass == Common.SymTable.ObjCLass.MODULE;
+	}
+
 CHARACTERS
   cr  = '\r'.
   lf  = '\n'.
@@ -38,7 +45,7 @@ PRODUCTIONS
 
 	Module<out AOParser.Ast.Module o> 
 		=																		(. o = new AOParser.Ast.Module(); .)
-		"MODULE" Ident<out o.Ident>";" 
+		"MODULE" Ident<out o.Ident>";" (. symTab.OpenScope(); .)
 		[ImportList<out o.ImportList>] 
 		{Definition<out o.Definition>}
 		DeclSeq<out o.DeclSeq> 
@@ -47,7 +54,8 @@ PRODUCTIONS
 
 	ImportedModule<AOParser.Ast.AstList i> 
 		=																		(. var o = new AOParser.Ast.Import(); .)
-		Ident<out o.Name> [ ":=" Ident<out o.OriginalName> ]					(. i.Add(o); .).
+		Ident<out o.Name> [ ":=" Ident<out o.OriginalName> ]					(. i.Add(o); .)
+		(. symTab.Insert(o.GetObj());  .).
 
 	ImportList<out AOParser.Ast.AstList o> 
 		=																		(. o = new AOParser.Ast.AstList(); .)
@@ -74,28 +82,33 @@ PRODUCTIONS
 
 	ConstDecl<AOParser.Ast.AstList lst> 
 		=																		(. var o = new AOParser.Ast.ConstDecl(); .)	
-		IdentDef<out o.IdentDef> "=" ConstExpr<out o.ConstExpr>					(. lst.Add(o); .) .
+		IdentDef<out o.IdentDef> "=" ConstExpr<out o.ConstExpr>					(. lst.Add(o); .) 
+		(. symTab.Insert(o.GetObj());  .).
 
     TypeDecl<AOParser.Ast.AstList lst> 
 		=																		(. var o = new AOParser.Ast.TypeDecl(); .)	
-		IdentDef<out o.IdentDef> "=" Type<out o.Type_>							(. lst.Add(o); .).
+		IdentDef<out o.IdentDef> "=" Type<out o.Type_>							(. lst.Add(o); .)
+		(. symTab.Insert(o.GetObj());  .).
 
 	VarDecl<AOParser.Ast.AstList lst> 
 		=																		(. var o = new AOParser.Ast.VarDecl(); .)	
-		IdentList<out o.IdentList> ":" Type<out o.Type_>						(. lst.Add(o); .).
+		IdentList<out o.IdentList> ":" Type<out o.Type_>						(. lst.Add(o); .)
+		(. symTab.Insert(o.GetObjects());  .).
 
 	ProcDecl<AOParser.Ast.AstList lst> 
 		= "PROCEDURE"															(. var o = new AOParser.Ast.ProcDecl(); .)	
 		ProcHead<out o.ProcHead> ";" 
 		DeclSeq<out o.DeclSeq> 
-		Body<out o.Body> Ident<out o.Ident>													(. lst.Add(o); .).	
+		Body<out o.Body> Ident<out o.Ident>													(. lst.Add(o); .)
+		(. var scope = symTab.curScope; symTab.CloseScope();symTab.Insert(o.GetObj(scope)); .).	
 
 	ProcHead<out AOParser.Ast.ProcHead o>  
 		=																			(. o = new AOParser.Ast.ProcHead(); .)	
 		[SysFlag<out o.SysFlag>] 
 		["*"																		(. o.Tag = AOParser.Ast.ProcHead.Tags.Export; .) 
 		| "&"																		(. o.Tag = AOParser.Ast.ProcHead.Tags.Initializer; .)
-		] IdentDef<out o.IdentDef> [FormalPars<out o.FormalPars>].
+		] IdentDef<out o.IdentDef> (. symTab.OpenScope(); .)
+		[FormalPars<out o.FormalPars>].
 
 	SysFlag<out AOParser.Ast.SysFlag o> 
 		=																			(. o = new AOParser.Ast.SysFlag(); .)	
@@ -306,7 +319,7 @@ PRODUCTIONS
 
 
 	Designator<out AOParser.Ast.Designator o>
-		=																		(. o = new AOParser.Ast.Designator(); .) 
+		=																		(. o = new AOParser.Ast.Designator(this.symTab); .) 
 		Qualident<out o.Qualident> 
 		{ 
 			  "."																(. var s = new AOParser.Ast.Designator.IDesignatorSpec.RecordDesignatorSpec(); .) 
@@ -332,8 +345,8 @@ PRODUCTIONS
 		}.
 
 	Qualident<out AOParser.Ast.Qualident o>
-		=																		(. o = new AOParser.Ast.Qualident(); .)
-		Ident<out o.Ident1> ["." Ident<out o.Ident2>] .
+		=																		(. o = new AOParser.Ast.Qualident(symTab); .)
+		Ident<out o.Ident1> [IF(IsModule()) "." Ident<out o.Ident2>] .
 
 	IdentDef<out AOParser.Ast.IdentDef o> 	
 		=																		(. o = new AOParser.Ast.IdentDef (); .)

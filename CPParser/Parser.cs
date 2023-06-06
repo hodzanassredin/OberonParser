@@ -326,7 +326,7 @@ public Common.SymTable.SymTab symTab = new ();
 			Type(out at.Type_);
 			o = at; 
 		} else if (StartOf(2)) {
-			var at = new CPParser.Ast.IType.RecordType(); 
+			symTab.OpenScope(); var at = new CPParser.Ast.IType.RecordType(symTab.curScope); 
 			if (la.kind == 22 || la.kind == 24 || la.kind == 32) {
 				if (la.kind == 22) {
 					Get();
@@ -354,7 +354,7 @@ public Common.SymTable.SymTab symTab = new ();
 				at.FieldList.Add(fl); 
 			}
 			Expect(10);
-			o = at; 
+			o = at; symTab.CloseScope();
 		} else if (la.kind == 34) {
 			var at = new CPParser.Ast.IType.PointerType(); 
 			Get();
@@ -362,12 +362,12 @@ public Common.SymTable.SymTab symTab = new ();
 			Type(out at.Type_);
 			o = at; 
 		} else if (la.kind == 18) {
-			var at = new CPParser.Ast.IType.ProcedureType(); 
+			symTab.OpenScope(); var at = new CPParser.Ast.IType.ProcedureType(symTab.curScope); 
 			Get();
 			if (la.kind == 26) {
 				FormalPars(out at.FormalPars);
 			}
-			o = at; 
+			o = at; symTab.CloseScope(); 
 		} else SynErr(77);
 	}
 
@@ -476,6 +476,7 @@ public Common.SymTable.SymTab symTab = new ();
 		Expect(20);
 		Type(out o.Type_);
 		lst.Add(o); 
+		symTab.Insert(o.Objects());  
 	}
 
 	void Qualident(out CPParser.Ast.Qualident o) {
@@ -494,6 +495,7 @@ public Common.SymTable.SymTab symTab = new ();
 			IdentList(out o.IdentList);
 			Expect(20);
 			Type(out o.Type_);
+			symTab.Insert(o.Fields);  
 		}
 	}
 

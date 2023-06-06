@@ -231,7 +231,7 @@ namespace CPParser.Ast
 		public override void Accept(IAstVisitor v) => v.Visit(this);
 		public Obj GetObj(Scope scope)
 		{
-			return new Obj(ObjCLass.FUNC, (Receiver != null ? $"({Receiver}) " : "") + IdentDef.Ident.Name, FormalPars?.TypeDescr ?? TypeDesc.Function(TypeDesc.None, Array.Empty<Obj>()), "") { 
+			return new Obj(ObjCLass.FUNC, (Receiver != null ? $"({Receiver}) " : "") + IdentDef.Ident.Name, FormalPars?.TypeDescr(scope) ?? TypeDesc.Function(TypeDesc.None, scope), "") { 
 				scope = scope,
 			};
 		}
@@ -262,10 +262,9 @@ namespace CPParser.Ast
 		public IType Type_;
         public override void Accept(IAstVisitor v) => v.Visit(this);
 
-		public TypeDesc TypeDescr { get {
-				var pars = FPSections.Cast<FPSection>().SelectMany(x => x.Objects()).ToArray();
-				return TypeDesc.Function(Type_?.TypeDescr?? TypeDesc.None, pars);
-			} }
+		public TypeDesc TypeDescr(Scope scope) {
+				return TypeDesc.Function(Type_?.TypeDescr?? TypeDesc.None, scope);
+		} 
 	}
 
 	
@@ -349,6 +348,10 @@ namespace CPParser.Ast
 
 		public class RecordType : IType
 		{
+            public RecordType(Scope scope)
+            {
+                this.scope = scope;
+            }
 			public enum Meta
 			{
 				ABSTRACT, EXTENSIBLE, LIMITED
@@ -357,10 +360,10 @@ namespace CPParser.Ast
 			//base record
 			public Qualident Qualident;
 			public AstList FieldList = new AstList();
+            private readonly Scope scope;
 
-			public override TypeDesc TypeDescr { get {
-					var fields = FieldList.Cast<FieldList>().SelectMany(x=>x.Fields).ToArray();
-					return Common.SymTable.TypeDesc.Struct(Qualident?.FindType(), fields);
+            public override TypeDesc TypeDescr { get {
+					return TypeDesc.Struct(Qualident?.FindType(), scope);
 
 				} }
 
@@ -375,11 +378,17 @@ namespace CPParser.Ast
 
             public override void Accept(IAstVisitor v) => v.Visit(this);
 		}
+
 		public class ProcedureType : IType
 		{
+            public ProcedureType(Scope scope)
+            {
+                this.scope = scope;
+            }
 			public FormalPars FormalPars;
+            private readonly Scope scope;
 
-            public override TypeDesc TypeDescr => FormalPars.TypeDescr;
+            public override TypeDesc TypeDescr => FormalPars.TypeDescr(scope);
 
             public override void Accept(IAstVisitor v) => v.Visit(this);
 		}
@@ -405,7 +414,7 @@ namespace CPParser.Ast
 	}
 	public class FieldList : AstElement
 	{
-		public Common.SymTable.Obj[] Fields => IdentList.GetNames().Select(name=> new Obj(ObjCLass.FIELD, name, Type_.TypeDescr, "")).ToArray();
+		public Obj[] Fields => IdentList.GetNames().Select(name=> new Obj(ObjCLass.VAR, name, Type_.TypeDescr, "")).ToArray();
 		public IdentList IdentList;
 		public IType Type_;
 		public override void Accept(IAstVisitor v) => v.Visit(this);
@@ -813,7 +822,7 @@ namespace CPParser.Ast
 
                 public override TypeDesc Specify(TypeDesc parent)
                 {
-					return parent.fieldsOrParams.Single(x => x.name == Value.Name).type;
+					return parent.scope.Find(Value.Name).type;
                 }
 
                 public override string ToString()

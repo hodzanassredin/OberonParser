@@ -14,7 +14,6 @@ namespace Common.SymTable
 		TYPE,
 		FUNC,
 		CONST,
-		FIELD,
 		PARAM,
 		MODULE,
 		RECIEVER
@@ -45,8 +44,6 @@ namespace Common.SymTable
                     break;
                 case ObjCLass.CONST:
                     break;
-                case ObjCLass.FIELD:
-                    break;
                 case ObjCLass.PARAM:
                     break;
                 default:
@@ -72,14 +69,15 @@ namespace Common.SymTable
 		{
 			return new TypeDesc(TypeForm.PREDEFINED)
 			{
-				predefinedName = name
+				predefinedName = name,
+				scope = scope
 			};
 		}
-		public static TypeDesc Function(TypeDesc returnType, params Obj[] parameters) {
+		public static TypeDesc Function(TypeDesc returnType, Scope scope) {
 			return new TypeDesc(TypeForm.FUNC)
 			{
 				elemType = returnType,
-				fieldsOrParams = parameters.ToList()
+				scope = scope
 			};
 		}
 
@@ -100,21 +98,21 @@ namespace Common.SymTable
 			};
 		}
 
-		public static TypeDesc Struct(TypeDesc baseType, params Obj[] fields)
+		public static TypeDesc Struct(TypeDesc baseType, Scope scope)
 		{
 			return new TypeDesc(TypeForm.STRUCT)
 			{
-				fieldsOrParams = fields.ToList(),
 				elemType = baseType,
+				scope = scope
 			};
 		}
 
-		public static TypeDesc Enum(TypeDesc baseType, params Obj[] vars)
+		public static TypeDesc Enum(TypeDesc baseType, Scope scope)
 		{
 			return new TypeDesc(TypeForm.ENUM)
 			{
-				fieldsOrParams = vars.ToList(),
 				elemType = baseType,
+				scope = scope
 			};
 		}
 
@@ -125,12 +123,12 @@ namespace Common.SymTable
 								  //public Obj obj;      // to defining object if such an object exists. base type
 		public int[] length = new int[0];//for arrays, can be without size or multidim
 		public TypeDesc elemType; // for ARRAY, PTR, FUNC
-		public List<Obj> fieldsOrParams;   // for STRUCT, UNION, ENUM
-        private string predefinedName;
-		private Scope predefinedScope;
+
+		public string predefinedName;
+		public Scope scope;
 
 		public TypeDesc Resolve() {
-			return predefinedScope.Find(predefinedName)?.type;
+			return scope.Find(predefinedName)?.type;
 		}
 
 		private TypeDesc(TypeForm form) { this.form = form; }
@@ -142,18 +140,18 @@ namespace Common.SymTable
                 case TypeForm.NONE:
 					return "NONE";
 				case TypeForm.STRUCT:
-					return $"RECORD ({elemType}) BEGIN {String.Join(";", this.fieldsOrParams)} END;";
+					return $"RECORD ({elemType}) BEGIN {scope} END;";
                 case TypeForm.UNION:
 					return $"UNION TODO";
 				case TypeForm.ENUM:
-					return $"ENUM ({elemType}) BEGIN {String.Join(";", this.fieldsOrParams)} END;";
+					return $"ENUM ({elemType}) BEGIN {scope} END;";
                 case TypeForm.PTR:
 					return $"POINTER TO {elemType}";
                 case TypeForm.ARRAY:
 					var size = length.Length == 0 ? "" : "[" + String.Join(", ", length.Select(x=>x.ToString())) + "]";
-					return $"ARRAY OF {elemType}";
+					return $"ARRAY {size} OF {elemType}";
 				case TypeForm.FUNC:
-					return $"({String.Join(" ,", this.fieldsOrParams)}) : {elemType}";
+					return $"({scope}) : {elemType}";
                 default:
                     break;
             }
@@ -188,7 +186,11 @@ namespace Common.SymTable
 			// Error("-- " + name + " undeclared");
 			return noObj;
 		}
-	}
+        public override string ToString()
+        {
+			return String.Join(Environment.NewLine, locals);
+        }
+    }
 
 
 	//----------------------------------------------------------------------------------------------

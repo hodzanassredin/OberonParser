@@ -139,7 +139,9 @@ PRODUCTIONS
 																					(. CPParser.Ast.Ident i; .)
 		Ident<out i>																(. o.Idents.Add(i); .) 
 		{"," Ident<out i>															(. o.Idents.Add(i); .) 
-		} ":" Type<out o.Type_>														(. lst.Add(o); .).
+		} ":" Type<out o.Type_>														(. lst.Add(o); .)
+																					(. symTab.Insert(o.Objects());  .)
+		.
 
 	Receiver<out CPParser.Ast.Receiver o>	
 		=																		(. o = new CPParser.Ast.Receiver(symTab); .)
@@ -154,7 +156,7 @@ PRODUCTIONS
 				[ConstExpr<out ce>													(. at.ConstExprs.Add(ce); .) 
 				{"," ConstExpr<out ce>												(. at.ConstExprs.Add(ce); .)
 				}] "OF" Type<out at.Type_>											(. o = at; .)
-			|																	(. var at = new CPParser.Ast.IType.RecordType(); .)
+			|																	(. symTab.OpenScope(); var at = new CPParser.Ast.IType.RecordType(symTab.curScope); .)
 				["ABSTRACT"															(. at.RecordMeta = CPParser.Ast.IType.RecordType.Meta.ABSTRACT; .)
 				| "EXTENSIBLE"														(. at.RecordMeta = CPParser.Ast.IType.RecordType.Meta.EXTENSIBLE; .)
 				| "LIMITED"															(. at.RecordMeta = CPParser.Ast.IType.RecordType.Meta.LIMITED; .)
@@ -163,16 +165,17 @@ PRODUCTIONS
 																					(. var fl = new CPParser.Ast.FieldList(); .)
 					FieldList<out fl>												(. at.FieldList.Add(fl); .) 
 					{";" FieldList<out fl>											(. at.FieldList.Add(fl); .)
-					} "END"															(. o = at; .)
+					} "END"															(. o = at; symTab.CloseScope();.)
 			|																	(. var at = new CPParser.Ast.IType.PointerType(); .)
 				"POINTER" "TO" Type<out at.Type_>									(. o = at; .)
-			|																	(. var at = new CPParser.Ast.IType.ProcedureType(); .)
-				"PROCEDURE" [FormalPars<out at.FormalPars>]							(. o = at; .).
+			|																	(. symTab.OpenScope(); var at = new CPParser.Ast.IType.ProcedureType(symTab.curScope); .)
+				"PROCEDURE" [FormalPars<out at.FormalPars>]							(. o = at; symTab.CloseScope(); .).
 
 	FieldList<out CPParser.Ast.FieldList o> 	
 		=																		(. o = null; .)
 		[																		(. o = new CPParser.Ast.FieldList(); .) 
-		IdentList<out o.IdentList> ":" Type<out o.Type_>].
+		IdentList<out o.IdentList> ":" Type<out o.Type_>						(. symTab.Insert(o.Fields);  .) 
+		].
 
 	StatementSeq<out CPParser.Ast.StatementSeq o>	
 		=																		(. o = new CPParser.Ast.StatementSeq(); CPParser.Ast.IStatement s; .)

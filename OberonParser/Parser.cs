@@ -26,8 +26,15 @@ public class Parser {
 	public Token la;   // lookahead token
 	int errDist = minErrDist;
 
-public AOParser.Ast.Module module; 
+public Common.SymTable.SymTab symTab = new ();
+	public AOParser.Ast.Module module; 
 	//todo up to https://gitlab.inf.ethz.ch/felixf/oberon/-/blob/main/docu/OberonLanguageReport.pdf
+
+	bool IsModule(){
+		var obj = symTab.Find(t.val);
+		return obj.objClass == Common.SymTable.ObjCLass.MODULE;
+	}
+
 
 
 	public Parser(Scanner scanner) {
@@ -96,6 +103,7 @@ public AOParser.Ast.Module module;
 		Expect(6);
 		Ident(out o.Ident);
 		Expect(7);
+		symTab.OpenScope(); 
 		if (la.kind == 10) {
 			ImportList(out o.ImportList);
 		}
@@ -209,13 +217,14 @@ public AOParser.Ast.Module module;
 			Ident(out o.OriginalName);
 		}
 		i.Add(o); 
+		symTab.Insert(o.GetObj());  
 	}
 
 	void Qualident(out AOParser.Ast.Qualident o) {
-		o = new AOParser.Ast.Qualident(); 
+		o = new AOParser.Ast.Qualident(symTab); 
 		Ident(out o.Ident1);
-		if (la.kind == 8) {
-			Get();
+		if (IsModule()) {
+			Expect(8);
 			Ident(out o.Ident2);
 		}
 	}
@@ -243,6 +252,7 @@ public AOParser.Ast.Module module;
 		Expect(19);
 		ConstExpr(out o.ConstExpr);
 		lst.Add(o); 
+		symTab.Insert(o.GetObj());  
 	}
 
 	void TypeDecl(AOParser.Ast.AstList lst) {
@@ -251,6 +261,7 @@ public AOParser.Ast.Module module;
 		Expect(19);
 		Type(out o.Type_);
 		lst.Add(o); 
+		symTab.Insert(o.GetObj());  
 	}
 
 	void VarDecl(AOParser.Ast.AstList lst) {
@@ -259,6 +270,7 @@ public AOParser.Ast.Module module;
 		Expect(20);
 		Type(out o.Type_);
 		lst.Add(o); 
+		symTab.Insert(o.GetObjects());  
 	}
 
 	void ProcDecl(AOParser.Ast.AstList lst) {
@@ -270,6 +282,7 @@ public AOParser.Ast.Module module;
 		Body(out o.Body);
 		Ident(out o.Ident);
 		lst.Add(o); 
+		var scope = symTab.curScope; symTab.CloseScope();symTab.Insert(o.GetObj(scope)); 
 	}
 
 	void IdentDef(out AOParser.Ast.IdentDef o) {
@@ -414,6 +427,7 @@ public AOParser.Ast.Module module;
 			}
 		}
 		IdentDef(out o.IdentDef);
+		symTab.OpenScope(); 
 		if (la.kind == 25) {
 			FormalPars(out o.FormalPars);
 		}
@@ -651,7 +665,7 @@ public AOParser.Ast.Module module;
 	}
 
 	void Designator(out AOParser.Ast.Designator o) {
-		o = new AOParser.Ast.Designator(); 
+		o = new AOParser.Ast.Designator(this.symTab); 
 		Qualident(out o.Qualident);
 		while (la.kind == 8 || la.kind == 23 || la.kind == 25) {
 			if (la.kind == 8) {
