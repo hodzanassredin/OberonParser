@@ -704,7 +704,8 @@ namespace AOParser
 
         public void Visit(FieldDecl o)
         {
-            if (o.IdentList!=null) { 
+            if (o.IdentList!=null) {
+                WriteTabs();
                 o.IdentList.AcceptWithComments(this);
                 sw.Write(":");
                 o.Type_.AcceptWithComments(this);

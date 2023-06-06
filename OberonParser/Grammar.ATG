@@ -180,7 +180,7 @@ PRODUCTIONS
 	= 																			(. o = new AOParser.Ast.StatBlock(); AOParser.Ast.IdentList il; .)
 	"BEGIN" ["{" IdentList<out il>												(. o.IdentLists.Add(il); .)
 			"}"]												
-	[StatementSeq<out o.StatementSeq>] "END".
+	StatementSeq<out o.StatementSeq> "END".
 
 	StatementSeq<out AOParser.Ast.StatementSeq o>	
 		=																		(. o = new AOParser.Ast.StatementSeq(); AOParser.Ast.IStatement s; .)

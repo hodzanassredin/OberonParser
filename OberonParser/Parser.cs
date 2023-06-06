@@ -493,9 +493,7 @@ public Common.SymTable.SymTab symTab = new ();
 			o.IdentLists.Add(il); 
 			Expect(36);
 		}
-		if (StartOf(3)) {
-			StatementSeq(out o.StatementSeq);
-		}
+		StatementSeq(out o.StatementSeq);
 		Expect(15);
 	}
 
@@ -512,7 +510,7 @@ public Common.SymTable.SymTab symTab = new ();
 
 	void Statement(out AOParser.Ast.IStatement os) {
 		os=null; 
-		if (StartOf(4)) {
+		if (StartOf(3)) {
 			switch (la.kind) {
 			case 1: {
 				AOParser.Ast.Designator d; 
@@ -522,7 +520,7 @@ public Common.SymTable.SymTab symTab = new ();
 					Get();
 					Expr(out o.Expr);
 					os = o; 
-				} else if (StartOf(5)) {
+				} else if (StartOf(4)) {
 					var o = new AOParser.Ast.IStatement.ProcCallStatement(); o.Designator = d; 
 					if (la.kind == 25) {
 						Get();
@@ -672,7 +670,7 @@ public Common.SymTable.SymTab symTab = new ();
 	void Designator(out AOParser.Ast.Designator o) {
 		o = new AOParser.Ast.Designator(this.symTab); 
 		Qualident(out o.Qualident);
-		while (StartOf(6)) {
+		while (StartOf(5)) {
 			if (la.kind == 8) {
 				Get();
 				var s = new AOParser.Ast.Designator.IDesignatorSpec.RecordDesignatorSpec(); 
@@ -709,7 +707,7 @@ public Common.SymTable.SymTab symTab = new ();
 	void Expr(out AOParser.Ast.Expr o) {
 		o = new AOParser.Ast.Expr(); 
 		SimpleExpr(out o.SimpleExpr);
-		if (StartOf(7)) {
+		if (StartOf(6)) {
 			Relation(out o.Relation);
 			SimpleExpr(out o.SimpleExpr2);
 		}
@@ -753,7 +751,7 @@ public Common.SymTable.SymTab symTab = new ();
 	void SimpleExpr(out AOParser.Ast.SimpleExpr o) {
 		o = new AOParser.Ast.SimpleExpr(); AOParser.Ast.SimpleElementExpr e; 
 		Term(out o.Term);
-		while (StartOf(8)) {
+		while (StartOf(7)) {
 			e = new AOParser.Ast.SimpleElementExpr(); 
 			MulOp(out e.MulOp);
 			Term(out e.Term);
@@ -959,7 +957,6 @@ public Common.SymTable.SymTab symTab = new ();
 		{_T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x},
 		{_x,_T,_T,_T, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _T,_T,_T,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x},
 		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _T,_T,_T,_x, _x,_x,_x,_T, _x,_T,_x,_x, _x,_x,_x,_x, _x,_T,_T,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x},
-		{_x,_T,_x,_x, _x,_x,_x,_T, _x,_x,_x,_x, _x,_x,_x,_T, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_x, _x,_T,_x,_x, _x,_T,_x,_x, _T,_T,_x,_T, _x,_T,_T,_T, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x},
 		{_x,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_x, _x,_T,_x,_x, _x,_T,_x,_x, _T,_T,_x,_T, _x,_T,_T,_T, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x},
 		{_x,_x,_x,_x, _x,_x,_x,_T, _x,_x,_x,_x, _x,_x,_x,_T, _x,_x,_x,_x, _x,_x,_x,_x, _x,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _T,_x,_x,_T, _x,_x,_T,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x},
 		{_x,_x,_x,_x, _x,_x,_x,_x, _T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _x,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_x, _x},
