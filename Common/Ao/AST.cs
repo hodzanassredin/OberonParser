@@ -1,3 +1,4 @@
+using Common.SymTable;
 using System.Collections;
 using System.Text;
 
@@ -74,6 +75,11 @@ namespace AOParser.Ast
 
 	public class Qualident : AstElement
 	{
+        public Qualident(SymTab tab)
+        {
+			this.tab = tab;
+
+		}
 		public Ident Ident1;
 		public Ident Ident2;
         public override void Accept(IAstVisitor v) => v.Visit(this);
@@ -81,7 +87,13 @@ namespace AOParser.Ast
         {
             return Ident2 != null ? $"{Ident1}.{Ident2}" : Ident1.ToString();
         }
-    }
+		private readonly SymTab tab;
+
+		public TypeDesc FindType()
+		{
+			return TypeDesc.Predefined($"{Ident1.Name}.{Ident2.Name}", tab.curScope);
+		}
+	}
 	public class Guard : AstElement
 	{
 		public Qualident VarQualident;

@@ -53,7 +53,7 @@ PRODUCTIONS
 
 	Module<out CPParser.Ast.Module o> 
 		=																		(. o = new CPParser.Ast.Module(); .)
-		"MODULE" Ident<out o.Ident>";"											(. symTab.OpenScope(o.Ident.Name); .)
+		"MODULE" Ident<out o.Ident>";"											(. symTab.OpenScope(); .)
 		[ImportList<out o.ImportList>] 
 		DeclSeq<out o.DeclSeq> 
 		["BEGIN" StatementSeq<out o.Begin>] 
@@ -98,12 +98,15 @@ PRODUCTIONS
 
 	ProcDecl<CPParser.Ast.AstList lst> 
 		=																		(. var o = new CPParser.Ast.ProcDecl(); .)	
-		[Receiver<out o.Receiver>] IdentDef<out o.IdentDef>						(. symTab.OpenScope(o.IdentDef.Ident.Name); .)
-		[FormalPars<out o.FormalPars>] MethAttributes<out o.MethAttributes>	[IF(!IsEmptyProc()) ";" 
+		[Receiver<out o.Receiver> 
+		] IdentDef<out o.IdentDef>												(. symTab.OpenScope(); .)
+																				(. if (o.Receiver != null) symTab.Insert(o.Receiver.GetObj()); .)
+		[FormalPars<out o.FormalPars>] MethAttributes<out o.MethAttributes>	
+		[IF(!IsEmptyProc()) ";" 
 		DeclSeq<out o.DeclSeq> 
 		["BEGIN" StatementSeq<out o.StatementSeq>] 
-		"END" ident]															(. symTab.CloseScope();lst.Add(o); .)
-			(. symTab.Insert(o.GetObj()); .)
+		"END" ident]															(. var scope = symTab.curScope; symTab.CloseScope();lst.Add(o); .)
+																				(. symTab.Insert(o.GetObj(scope)); .)
 		.
 
 	ForwardDecl<CPParser.Ast.AstList lst> 
@@ -139,7 +142,7 @@ PRODUCTIONS
 		} ":" Type<out o.Type_>														(. lst.Add(o); .).
 
 	Receiver<out CPParser.Ast.Receiver o>	
-		=																		(. o = new CPParser.Ast.Receiver(); .)
+		=																		(. o = new CPParser.Ast.Receiver(symTab); .)
 		"(" ["VAR"																(. o.ReceiverPrefix = CPParser.Ast.Receiver.Prefix.VAR; .)
 		| "IN"																	(. o.ReceiverPrefix = CPParser.Ast.Receiver.Prefix.IN; .)
 		] Ident<out o.SelfIdent> ":" Ident<out o.TypeIdent> ")".

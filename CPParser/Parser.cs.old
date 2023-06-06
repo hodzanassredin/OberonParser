@@ -111,7 +111,7 @@ public Common.SymTable.SymTab symTab = new ();
 		Expect(6);
 		Ident(out o.Ident);
 		Expect(7);
-		symTab.OpenScope(o.Ident.Name); 
+		symTab.OpenScope(); 
 		if (la.kind == 13) {
 			ImportList(out o.ImportList);
 		}
@@ -251,7 +251,8 @@ public Common.SymTable.SymTab symTab = new ();
 			Receiver(out o.Receiver);
 		}
 		IdentDef(out o.IdentDef);
-		symTab.OpenScope(o.IdentDef.Ident.Name); 
+		symTab.OpenScope(); 
+		if (o.Receiver != null) symTab.Insert(o.Receiver.GetObj()); 
 		if (la.kind == 26) {
 			FormalPars(out o.FormalPars);
 		}
@@ -266,8 +267,8 @@ public Common.SymTable.SymTab symTab = new ();
 			Expect(10);
 			Expect(1);
 		}
-		symTab.CloseScope();lst.Add(o); 
-		symTab.Insert(o.GetObj()); 
+		var scope = symTab.curScope; symTab.CloseScope();lst.Add(o); 
+		symTab.Insert(o.GetObj(scope)); 
 	}
 
 	void ForwardDecl(CPParser.Ast.AstList lst) {
@@ -383,7 +384,7 @@ public Common.SymTable.SymTab symTab = new ();
 	}
 
 	void Receiver(out CPParser.Ast.Receiver o) {
-		o = new CPParser.Ast.Receiver(); 
+		o = new CPParser.Ast.Receiver(symTab); 
 		Expect(26);
 		if (la.kind == 17 || la.kind == 28) {
 			if (la.kind == 17) {

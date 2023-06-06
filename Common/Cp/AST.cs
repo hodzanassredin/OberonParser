@@ -94,11 +94,9 @@ namespace CPParser.Ast
 		public Ident Ident2;
         private readonly SymTab tab;
 
-        public TypeDesc FindType()
+		public TypeDesc FindType()
 		{
-			if (Ident2 != null) return TypeDesc.Predefined($"{Ident1.Name}.{Ident2.Name}");
-			var obj = tab.Find(Ident1.Name);
-			return obj != null ? obj.type : TypeDesc.Predefined(Ident1.Name);
+			return TypeDesc.Predefined(ToString(), tab.curScope);
 		}
 		public override void Accept(IAstVisitor v) => v.Visit(this);
         public override string ToString()
@@ -231,9 +229,11 @@ namespace CPParser.Ast
 		public DeclSeq DeclSeq;
         public StatementSeq StatementSeq;
 		public override void Accept(IAstVisitor v) => v.Visit(this);
-		public Obj GetObj()
+		public Obj GetObj(Scope scope)
 		{
-			return new Obj(ObjCLass.FUNC, IdentDef.Ident.Name, FormalPars?.TypeDescr??TypeDesc.Function(TypeDesc.None, Array.Empty<Obj>()), "");
+			return new Obj(ObjCLass.FUNC, (Receiver != null ? $"({Receiver}) " : "") + IdentDef.Ident.Name, FormalPars?.TypeDescr ?? TypeDesc.Function(TypeDesc.None, Array.Empty<Obj>()), "") { 
+				scope = scope,
+			};
 		}
 	}
 
@@ -292,6 +292,10 @@ namespace CPParser.Ast
 	
 	public class Receiver : AstElement
 	{
+        public Receiver(SymTab tab)
+        {
+            this.tab = tab;
+        }
 		public enum Prefix
 		{
 			VAR, IN
@@ -299,8 +303,23 @@ namespace CPParser.Ast
 		public Prefix? ReceiverPrefix;
 		public Ident SelfIdent;
 		public Ident TypeIdent;
-		public override void Accept(IAstVisitor v) => v.Visit(this);
-	}
+        private readonly SymTab tab;
+
+        public override void Accept(IAstVisitor v) => v.Visit(this);
+
+		public TypeDesc GetType() {
+			return tab.Find(TypeIdent.Name).type;
+		}
+		public Obj GetObj()
+		{
+			
+			return new Obj(ObjCLass.RECIEVER, SelfIdent.Name, GetType(), null);
+		}
+        public override string ToString()
+        {
+            return $"{SelfIdent.Name} : {TypeIdent}";
+        }
+    }
     public abstract class IType : AstElement
     {
 		public abstract Common.SymTable.TypeDesc TypeDescr { get; }
@@ -698,7 +717,7 @@ namespace CPParser.Ast
 		{
 			public Number Value;
 
-            public override TypeDesc TypeDescr => TypeDesc.Predefined("NUMBER");//todo
+            public override TypeDesc TypeDescr => TypeDesc.Predefined("NUMBER", null);//todo
 
             public override void Accept(IAstVisitor v) => v.Visit(this);
 			public override string ToString()
@@ -710,7 +729,7 @@ namespace CPParser.Ast
 		{
 			public String Value;
 
-            public override TypeDesc TypeDescr => TypeDesc.Predefined("CHAR");
+            public override TypeDesc TypeDescr => TypeDesc.Predefined("CHAR", null);
 
 			public override void Accept(IAstVisitor v) => v.Visit(this);
 			public override string ToString()
@@ -722,7 +741,7 @@ namespace CPParser.Ast
 		{
 			public String Value;
 
-            public override TypeDesc TypeDescr => TypeDesc.Array(TypeDesc.Predefined("CHAR"), Array.Empty<int>());
+            public override TypeDesc TypeDescr => TypeDesc.Array(TypeDesc.Predefined("CHAR", null), Array.Empty<int>());
 
             public override void Accept(IAstVisitor v) => v.Visit(this);
 			public override string ToString()
@@ -744,7 +763,7 @@ namespace CPParser.Ast
 		{
 			public Set Value;
 
-            public override TypeDesc TypeDescr => TypeDesc.Predefined("SET");
+            public override TypeDesc TypeDescr => TypeDesc.Predefined("SET", null);
 
 			public override void Accept(IAstVisitor v) => v.Visit(this);
 			public override string ToString()

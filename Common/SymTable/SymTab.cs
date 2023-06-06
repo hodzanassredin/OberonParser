@@ -16,7 +16,8 @@ namespace Common.SymTable
 		CONST,
 		FIELD,
 		PARAM,
-		MODULE
+		MODULE,
+		RECIEVER
 	}
 	//----------------------------------------------------------------------------------------------
 	// Objects
@@ -26,7 +27,7 @@ namespace Common.SymTable
 		public ObjCLass objClass;    // VAR, TYPE, FUNC
 		public string name;
 		public TypeDesc type;
-
+		public Scope scope;//
 		public string value;
 		public Obj(ObjCLass objClass, string name, TypeDesc type, string value) { this.objClass = objClass; this.name = name; this.type = type; this.value = value; }
 
@@ -34,20 +35,26 @@ namespace Common.SymTable
         {
             switch (objClass)
             {
+                case ObjCLass.NONE:
+                    break;
                 case ObjCLass.VAR:
-				case ObjCLass.PARAM:
-				case ObjCLass.FIELD:
-					return $"{name} : {type}" + (String.IsNullOrEmpty(value) ? "" : $" = {value}");
-				case ObjCLass.TYPE:
-					return $"{name} = {type};";
-				case ObjCLass.FUNC:
-					return $"PROCEDURE {name} {type} = {value};";
-				case ObjCLass.CONST:
-					return $"{name} = {value};";
-				default:
-					return $"";
-			}
-
+                    break;
+                case ObjCLass.TYPE:
+                    break;
+                case ObjCLass.FUNC:
+                    break;
+                case ObjCLass.CONST:
+                    break;
+                case ObjCLass.FIELD:
+                    break;
+                case ObjCLass.PARAM:
+                    break;
+                default:
+                    break;
+            }
+            return $"{objClass} {name}"
+				+ (type==null || type == TypeDesc.None ? "" : $" : {type}")
+				+ (String.IsNullOrEmpty(value) ? "" : $" = {value}");
         }
     }
 
@@ -61,7 +68,7 @@ namespace Common.SymTable
 
 	public class TypeDesc
 	{
-		public static TypeDesc Predefined(String name)
+		public static TypeDesc Predefined(String name, Scope scope)
 		{
 			return new TypeDesc(TypeForm.PREDEFINED)
 			{
@@ -120,8 +127,13 @@ namespace Common.SymTable
 		public TypeDesc elemType; // for ARRAY, PTR, FUNC
 		public List<Obj> fieldsOrParams;   // for STRUCT, UNION, ENUM
         private string predefinedName;
+		private Scope predefinedScope;
 
-        private TypeDesc(TypeForm form) { this.form = form; }
+		public TypeDesc Resolve() {
+			return predefinedScope.Find(predefinedName)?.type;
+		}
+
+		private TypeDesc(TypeForm form) { this.form = form; }
 
         public override string ToString()
         {
@@ -141,7 +153,7 @@ namespace Common.SymTable
 					var size = length.Length == 0 ? "" : "[" + String.Join(", ", length.Select(x=>x.ToString())) + "]";
 					return $"ARRAY OF {elemType}";
 				case TypeForm.FUNC:
-					return $"PROCEDURE ({String.Join(" ,", this.fieldsOrParams)}) : {elemType}";
+					return $"({String.Join(" ,", this.fieldsOrParams)}) : {elemType}";
                 default:
                     break;
             }
@@ -155,22 +167,28 @@ namespace Common.SymTable
 	//----------------------------------------------------------------------------------------------
 	public class Scope
 	{
-        public Scope(string name)
+		public static Obj noObj = new Obj(ObjCLass.NONE, "???", TypeDesc.None, "");
+		public Scope()
         {
-            this.name = name;
         }
         public List<Obj> locals = new List<Obj>();
 
-		public List<Scope> subScopes = new List<Scope>();
 		public Scope outer;
-        public readonly string name;
 
-        public override string ToString()
-        {
-			if (outer==null) return name;
-			return $"{outer}.{name}";
-        }
-    }
+		public Obj Find(string name)
+		{
+			for (Scope s = this; s != null; s = s.outer)
+			{
+				foreach (Obj x in s.locals)
+				{
+					if (x.name.Equals(name)) return x;
+				}
+			}
+			// when all declarations are processed correctly this error should be reported
+			// Error("-- " + name + " undeclared");
+			return noObj;
+		}
+	}
 
 
 	//----------------------------------------------------------------------------------------------
@@ -179,11 +197,10 @@ namespace Common.SymTable
 	public class SymTab
 	{
 		public Scope curScope;
-		public Obj noObj;
+
 
 		public SymTab()
 		{
-			noObj = new Obj(ObjCLass.NONE, "???", TypeDesc.None, "");
 		}
 		public void Insert(IEnumerable<Obj> objs)
 		{
@@ -217,24 +234,14 @@ namespace Common.SymTable
 
 		public Obj Find(string name)
 		{
-			for (Scope s = curScope; s != null; s = s.outer)
-			{
-				foreach (Obj x in s.locals)
-				{
-					if (x.name.Equals(name)) return x;
-				}
-			}
-			// when all declarations are processed correctly this error should be reported
-			// Error("-- " + name + " undeclared");
-			return noObj;
+			return curScope.Find(name);
 		}
 
-		public void OpenScope(String name)
+		public void OpenScope()
 		{
 			Scope s = curScope;
-			curScope = new Scope(name);
+			curScope = new Scope();
 			curScope.outer = s;
-			s?.subScopes?.Add(curScope);
 		}
 
 		public void CloseScope()
