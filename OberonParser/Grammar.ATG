@@ -194,7 +194,7 @@ PRODUCTIONS
 			(																	(. var o = new AOParser.Ast.IStatement.AssignmentStatement(); o.Designator = d; .) 
 				 ":=" Expr<out o.Expr>											(. os = o; .)
 				|																(. var o = new AOParser.Ast.IStatement.ProcCallStatement(); o.Designator = d; .) 
-					["(" [ExprList<out o.ExprList>] ")"]						(. os = o;.) )
+											(. os = o;.) )
 		|																		(. var o = new AOParser.Ast.IStatement.IfStatement(); .) 
 			"IF" Expr<out o.If.Cond> "THEN" StatementSeq<out o.If.ThenBody>
 				{																(. var elsif = new AOParser.Ast.IStatement.IfStatement.IfThen(); .) 
