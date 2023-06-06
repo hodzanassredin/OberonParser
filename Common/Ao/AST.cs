@@ -91,7 +91,7 @@ namespace AOParser.Ast
 
 		public TypeDesc FindType()
 		{
-			return TypeDesc.Predefined($"{Ident1.Name}.{Ident2.Name}", tab.curScope);
+			return TypeDesc.Predefined(ToString(), tab.curScope);
 		}
 	}
 	public class Guard : AstElement

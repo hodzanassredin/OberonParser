@@ -334,7 +334,7 @@ public Common.SymTable.SymTab symTab = new ();
 			break;
 		}
 		case 29: {
-			var at = new AOParser.Ast.IType.RecordType(); 
+			symTab.OpenScope(); var at = new AOParser.Ast.IType.RecordType(symTab.curScope); 
 			Get();
 			if (la.kind == 23) {
 				SysFlag(out at.SysFlag);
@@ -348,7 +348,7 @@ public Common.SymTable.SymTab symTab = new ();
 				FieldList(out at.FieldList);
 			}
 			Expect(15);
-			o = at; 
+			o = at; symTab.CloseScope();
 			break;
 		}
 		case 30: {
@@ -363,7 +363,7 @@ public Common.SymTable.SymTab symTab = new ();
 			break;
 		}
 		case 32: {
-			var at = new AOParser.Ast.IType.ObjectType(); 
+			symTab.OpenScope(); var at = new AOParser.Ast.IType.ObjectType(symTab.curScope); 
 			Get();
 			if (StartOf(2)) {
 				if (la.kind == 23) {
@@ -382,11 +382,11 @@ public Common.SymTable.SymTab symTab = new ();
 				Body(out at.Body);
 				Ident(out at.Ident);
 			}
-			o = at; 
+			o = at; symTab.CloseScope();
 			break;
 		}
 		case 14: {
-			var at = new AOParser.Ast.IType.ProcedureType(); 
+			symTab.OpenScope(); var at = new AOParser.Ast.IType.ProcedureType(symTab.curScope); 
 			Get();
 			if (la.kind == 23) {
 				SysFlag(out at.SysFlag);
@@ -394,7 +394,7 @@ public Common.SymTable.SymTab symTab = new ();
 			if (la.kind == 25) {
 				FormalPars(out at.FormalPars);
 			}
-			o = at; 
+			o = at; symTab.CloseScope(); 
 			break;
 		}
 		default: SynErr(73); break;
@@ -457,6 +457,7 @@ public Common.SymTable.SymTab symTab = new ();
 		Expect(20);
 		Type(out o.Type_);
 		lst.Add(o); 
+		symTab.Insert(o.Objects());  
 	}
 
 	void FieldList(out AOParser.Ast.FieldList o) {
@@ -476,6 +477,7 @@ public Common.SymTable.SymTab symTab = new ();
 			IdentList(out o.IdentList);
 			Expect(20);
 			Type(out o.Type_);
+			symTab.Insert(o.Fields); 
 		}
 	}
 
