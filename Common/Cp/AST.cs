@@ -143,6 +143,11 @@ namespace CPParser.Ast
 		{
 			return $"{Name} : {OriginalName}";
 		}
+
+		public Obj GetObj()
+		{
+			return new Obj(ObjCLass.MODULE, Name.Name, TypeDesc.None, null);
+		}
 	}
 
 	public class IdentDef : AstElement

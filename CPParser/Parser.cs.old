@@ -38,6 +38,11 @@ public Common.SymTable.SymTab symTab = new ();
 		return obj.objClass == Common.SymTable.ObjCLass.VAR;
 	}
 
+	bool IsModule(){
+		var obj = symTab.Find(t.val);
+		return obj.objClass == Common.SymTable.ObjCLass.MODULE;
+	}
+
 
 
 	public Parser(Scanner scanner) {
@@ -210,6 +215,7 @@ public Common.SymTable.SymTab symTab = new ();
 			Ident(out o.OriginalName);
 		}
 		i.Add(o); 
+		symTab.Insert(o.GetObj());  
 	}
 
 	void ConstDecl(CPParser.Ast.AstList lst) {
@@ -474,8 +480,8 @@ public Common.SymTable.SymTab symTab = new ();
 	void Qualident(out CPParser.Ast.Qualident o) {
 		o = new CPParser.Ast.Qualident(symTab); 
 		Ident(out o.Ident1);
-		if (la.kind == 11) {
-			Get();
+		if (IsModule()) {
+			Expect(11);
 			Ident(out o.Ident2);
 		}
 	}
@@ -675,7 +681,7 @@ public Common.SymTable.SymTab symTab = new ();
 				Get();
 				var s = new CPParser.Ast.Designator.IDesignatorSpec.PointerDesignatorSpec(); 
 				o.Specs.Add(s); 
-			} else if (IsNotProcedure()) {
+			} else if (IsCast()) {
 				Expect(26);
 				var s = new CPParser.Ast.Designator.IDesignatorSpec.CastDesignatorSpec(symTab); 
 				Qualident(out s.Value);

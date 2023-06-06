@@ -13,6 +13,11 @@ COMPILER CP
 		return obj.objClass == Common.SymTable.ObjCLass.VAR;
 	}
 
+	bool IsModule(){
+		var obj = symTab.Find(t.val);
+		return obj.objClass == Common.SymTable.ObjCLass.MODULE;
+	}
+
 CHARACTERS
   cr  = '\r'.
   lf  = '\n'.
@@ -57,7 +62,8 @@ PRODUCTIONS
 
 	ImportedModule<CPParser.Ast.AstList i> 
 		=																		(. var o = new CPParser.Ast.Import(); .)
-		Ident<out o.Name> [ ":=" Ident<out o.OriginalName> ]					(. i.Add(o); .).
+		Ident<out o.Name> [ ":=" Ident<out o.OriginalName> ]					(. i.Add(o); .)
+		(. symTab.Insert(o.GetObj());  .).
 
 	ImportList<out CPParser.Ast.AstList o> 
 		=																		(. o = new CPParser.Ast.AstList(); .)
@@ -316,7 +322,7 @@ PRODUCTIONS
 		=																		(. o = new CPParser.Ast.Designator(this.symTab); .) 
 		Qualident<out o.Qualident> 
 		{ 
-			  "."																(. var s = new CPParser.Ast.Designator.IDesignatorSpec.RecordDesignatorSpec(); .) 
+			 "."																(. var s = new CPParser.Ast.Designator.IDesignatorSpec.RecordDesignatorSpec(); .) 
 			  Ident<out s.Value>												(. o.Specs.Add(s); .)
 			| "["																(. var s = new CPParser.Ast.Designator.IDesignatorSpec.ArrayDesignatorSpec(); .) 
 			ExprList<out s.Value> "]"											(. o.Specs.Add(s); .)
@@ -348,7 +354,7 @@ PRODUCTIONS
 
 	Qualident<out CPParser.Ast.Qualident o>
 		=																		(. o = new CPParser.Ast.Qualident(symTab); .)
-		Ident<out o.Ident1> ["." Ident<out o.Ident2>] .
+		Ident<out o.Ident1> [IF(IsModule()) "." Ident<out o.Ident2>] .
 
 	IdentDef<out CPParser.Ast.IdentDef o> 	
 		=																		(. o = new CPParser.Ast.IdentDef (); .)

@@ -15,7 +15,8 @@ namespace Common.SymTable
 		FUNC,
 		CONST,
 		FIELD,
-		PARAM
+		PARAM,
+		MODULE
 	}
 	//----------------------------------------------------------------------------------------------
 	// Objects
