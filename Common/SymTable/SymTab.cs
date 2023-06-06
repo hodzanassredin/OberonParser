@@ -9,6 +9,7 @@ namespace Common.SymTable
 
 	public enum ObjCLass
 	{
+		NONE,
 		VAR,
 		TYPE,
 		FUNC,
@@ -181,7 +182,7 @@ namespace Common.SymTable
 
 		public SymTab()
 		{
-			noObj = new Obj(ObjCLass.VAR, "???", TypeDesc.None, "");
+			noObj = new Obj(ObjCLass.NONE, "???", TypeDesc.None, "");
 		}
 		public void Insert(IEnumerable<Obj> objs)
 		{

@@ -33,6 +33,12 @@ public Common.SymTable.SymTab symTab = new ();
 		return t.val == "ABSTRACT" || t.val == "EMPTY";
 	}
 
+	bool IsCast(){
+		var obj = symTab.Find(t.val);
+		return obj.objClass == Common.SymTable.ObjCLass.VAR;
+	}
+
+
 
 	public Parser(Scanner scanner) {
 		this.scanner = scanner;
@@ -669,6 +675,12 @@ public Common.SymTable.SymTab symTab = new ();
 				Get();
 				var s = new CPParser.Ast.Designator.IDesignatorSpec.PointerDesignatorSpec(); 
 				o.Specs.Add(s); 
+			} else if (IsNotProcedure()) {
+				Expect(26);
+				var s = new CPParser.Ast.Designator.IDesignatorSpec.CastDesignatorSpec(symTab); 
+				Qualident(out s.Value);
+				o.Specs.Add(s); 
+				Expect(27);
 			} else {
 				Get();
 				var s = new CPParser.Ast.Designator.IDesignatorSpec.ProcCallDesignatorSpec(); 

@@ -748,7 +748,9 @@ namespace CPParser
 
         public void Visit(Designator.IDesignatorSpec.CastDesignatorSpec o)
         {
-            throw new NotImplementedException();
+            sw.Write("(");
+            o.Value.AcceptWithComments(this);
+            sw.Write(")");
         }
 
         public void Visit(Designator.IDesignatorSpec.PointerDesignatorSpec o)

@@ -7,6 +7,12 @@ COMPILER CP
 	bool IsEmptyProc(){
 		return t.val == "ABSTRACT" || t.val == "EMPTY";
 	}
+
+	bool IsCast(){
+		var obj = symTab.Find(t.val);
+		return obj.objClass == Common.SymTable.ObjCLass.VAR;
+	}
+
 CHARACTERS
   cr  = '\r'.
   lf  = '\n'.
@@ -316,6 +322,11 @@ PRODUCTIONS
 			ExprList<out s.Value> "]"											(. o.Specs.Add(s); .)
 			| "^"																(. var s = new CPParser.Ast.Designator.IDesignatorSpec.PointerDesignatorSpec(); .) 
 																				(. o.Specs.Add(s); .)
+			| IF(IsCast()) "("											(. var s = new CPParser.Ast.Designator.IDesignatorSpec.CastDesignatorSpec(symTab); .) 
+			Qualident<out s.Value>												(. o.Specs.Add(s); .)  
+			")" 
+
+
 			| "("																(. var s = new CPParser.Ast.Designator.IDesignatorSpec.ProcCallDesignatorSpec(); .) 
 			[ExprList<out s.Value>]												(. o.Specs.Add(s); .)  
 			")" 
