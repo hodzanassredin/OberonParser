@@ -476,6 +476,7 @@ public Common.SymTable.SymTab symTab = new ();
 		Expect(20);
 		Type(out o.Type_);
 		lst.Add(o); 
+		symTab.Insert(o.Objects());  
 	}
 
 	void Qualident(out CPParser.Ast.Qualident o) {

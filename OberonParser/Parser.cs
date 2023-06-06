@@ -13,7 +13,7 @@ public class Parser {
 	public const int _real = 3;
 	public const int _character = 4;
 	public const int _string = 5;
-	public const int maxT = 70;
+	public const int maxT = 71;
 
 	const bool _T = true;
 	const bool _x = false;
@@ -33,6 +33,11 @@ public Common.SymTable.SymTab symTab = new ();
 	bool IsModule(){
 		var obj = symTab.Find(t.val);
 		return obj.objClass == Common.SymTable.ObjCLass.MODULE;
+	}
+
+	bool IsCast(){
+		var obj = symTab.Find(t.val);
+		return obj.objClass == Common.SymTable.ObjCLass.VAR;
 	}
 
 
@@ -129,7 +134,7 @@ public Common.SymTable.SymTab symTab = new ();
 		} else if (la.kind == 3) {
 			Get();
 			o = new AOParser.Ast.Number{Value = t.val}; 
-		} else SynErr(71);
+		} else SynErr(72);
 	}
 
 	void ImportList(out AOParser.Ast.AstList o) {
@@ -206,7 +211,7 @@ public Common.SymTable.SymTab symTab = new ();
 			StatBlock(out o.StatBlock);
 		} else if (la.kind == 15) {
 			Get();
-		} else SynErr(72);
+		} else SynErr(73);
 	}
 
 	void ImportedModule(AOParser.Ast.AstList i) {
@@ -397,7 +402,7 @@ public Common.SymTable.SymTab symTab = new ();
 			o = at; symTab.CloseScope(); 
 			break;
 		}
-		default: SynErr(73); break;
+		default: SynErr(74); break;
 		}
 	}
 
@@ -529,7 +534,7 @@ public Common.SymTable.SymTab symTab = new ();
 						Expect(26);
 					}
 					os = o;
-				} else SynErr(74);
+				} else SynErr(75);
 				break;
 			}
 			case 37: {
@@ -669,7 +674,7 @@ public Common.SymTable.SymTab symTab = new ();
 	void Designator(out AOParser.Ast.Designator o) {
 		o = new AOParser.Ast.Designator(this.symTab); 
 		Qualident(out o.Qualident);
-		while (la.kind == 8 || la.kind == 23 || la.kind == 25) {
+		while (StartOf(6)) {
 			if (la.kind == 8) {
 				Get();
 				var s = new AOParser.Ast.Designator.IDesignatorSpec.RecordDesignatorSpec(); 
@@ -681,14 +686,24 @@ public Common.SymTable.SymTab symTab = new ();
 				ExprList(out s.Value);
 				Expect(24);
 				o.Specs.Add(s); 
-			} else {
+			} else if (la.kind == 70) {
 				Get();
+				var s = new AOParser.Ast.Designator.IDesignatorSpec.PointerDesignatorSpec(); 
+				o.Specs.Add(s); 
+			} else if (IsCast()) {
+				Expect(25);
+				var s = new AOParser.Ast.Designator.IDesignatorSpec.CastDesignatorSpec(symTab); 
+				Qualident(out s.Value);
+				o.Specs.Add(s); 
+				Expect(26);
+			} else {
 				var s = new AOParser.Ast.Designator.IDesignatorSpec.ProcCallDesignatorSpec(); 
+				Get();
 				if (StartOf(1)) {
 					ExprList(out s.Value);
 				}
-				o.Specs.Add(s); 
 				Expect(26);
+				o.Specs.Add(s); 
 			}
 		}
 	}
@@ -696,7 +711,7 @@ public Common.SymTable.SymTab symTab = new ();
 	void Expr(out AOParser.Ast.Expr o) {
 		o = new AOParser.Ast.Expr(); 
 		SimpleExpr(out o.SimpleExpr);
-		if (StartOf(6)) {
+		if (StartOf(7)) {
 			Relation(out o.Relation);
 			SimpleExpr(out o.SimpleExpr2);
 		}
@@ -740,7 +755,7 @@ public Common.SymTable.SymTab symTab = new ();
 	void SimpleExpr(out AOParser.Ast.SimpleExpr o) {
 		o = new AOParser.Ast.SimpleExpr(); AOParser.Ast.SimpleElementExpr e; 
 		Term(out o.Term);
-		while (StartOf(7)) {
+		while (StartOf(8)) {
 			e = new AOParser.Ast.SimpleElementExpr(); 
 			MulOp(out e.MulOp);
 			Term(out e.Term);
@@ -791,7 +806,7 @@ public Common.SymTable.SymTab symTab = new ();
 			o.Op = AOParser.Ast.Relation.Relations.Is ; 
 			break;
 		}
-		default: SynErr(75); break;
+		default: SynErr(76); break;
 		}
 	}
 
@@ -832,7 +847,7 @@ public Common.SymTable.SymTab symTab = new ();
 		} else if (la.kind == 22) {
 			Get();
 			o.Op = AOParser.Ast.MulOp.MulOps.AND; 
-		} else SynErr(76);
+		} else SynErr(77);
 	}
 
 	void Factor(out AOParser.Ast.IFactor f) {
@@ -889,7 +904,7 @@ public Common.SymTable.SymTab symTab = new ();
 			f = o; 
 			break;
 		}
-		default: SynErr(77); break;
+		default: SynErr(78); break;
 		}
 	}
 
@@ -904,7 +919,7 @@ public Common.SymTable.SymTab symTab = new ();
 		} else if (la.kind == 69) {
 			Get();
 			o.Op = AOParser.Ast.AddOp.AddOps.Or; 
-		} else SynErr(78);
+		} else SynErr(79);
 	}
 
 	void Set(out AOParser.Ast.Set o) {
@@ -943,14 +958,15 @@ public Common.SymTable.SymTab symTab = new ();
 	}
 	
 	static readonly bool[,] set = {
-		{_T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
-		{_x,_T,_T,_T, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _T,_T,_T,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
-		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _T,_T,_T,_x, _x,_x,_x,_T, _x,_T,_x,_x, _x,_x,_x,_x, _x,_T,_T,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
-		{_x,_T,_x,_x, _x,_x,_x,_T, _x,_x,_x,_x, _x,_x,_x,_T, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_x, _x,_T,_x,_x, _x,_T,_x,_x, _T,_T,_x,_T, _x,_T,_T,_T, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
-		{_x,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_x, _x,_T,_x,_x, _x,_T,_x,_x, _T,_T,_x,_T, _x,_T,_T,_T, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
-		{_x,_x,_x,_x, _x,_x,_x,_T, _x,_x,_x,_x, _x,_x,_x,_T, _x,_x,_x,_x, _x,_x,_x,_x, _x,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _T,_x,_x,_T, _x,_x,_T,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
-		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _T,_T,_T,_T, _T,_T,_x,_x, _x,_x,_x,_x},
-		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_T,_T,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_T, _T,_x,_x,_x}
+		{_T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x},
+		{_x,_T,_T,_T, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _T,_T,_T,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x},
+		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _T,_T,_T,_x, _x,_x,_x,_T, _x,_T,_x,_x, _x,_x,_x,_x, _x,_T,_T,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x},
+		{_x,_T,_x,_x, _x,_x,_x,_T, _x,_x,_x,_x, _x,_x,_x,_T, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_x, _x,_T,_x,_x, _x,_T,_x,_x, _T,_T,_x,_T, _x,_T,_T,_T, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x},
+		{_x,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_x, _x,_T,_x,_x, _x,_T,_x,_x, _T,_T,_x,_T, _x,_T,_T,_T, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x},
+		{_x,_x,_x,_x, _x,_x,_x,_T, _x,_x,_x,_x, _x,_x,_x,_T, _x,_x,_x,_x, _x,_x,_x,_x, _x,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _T,_x,_x,_T, _x,_x,_T,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x},
+		{_x,_x,_x,_x, _x,_x,_x,_x, _T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _x,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_x, _x},
+		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _T,_T,_T,_T, _T,_T,_x,_x, _x,_x,_x,_x, _x},
+		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_T,_T,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_T, _T,_x,_x,_x, _x}
 
 	};
 } // end Parser
@@ -1034,15 +1050,16 @@ public class Errors {
 			case 67: s = "\"DIV\" expected"; break;
 			case 68: s = "\"MOD\" expected"; break;
 			case 69: s = "\"OR\" expected"; break;
-			case 70: s = "??? expected"; break;
-			case 71: s = "invalid Number"; break;
-			case 72: s = "invalid Body"; break;
-			case 73: s = "invalid Type"; break;
-			case 74: s = "invalid Statement"; break;
-			case 75: s = "invalid Relation"; break;
-			case 76: s = "invalid MulOp"; break;
-			case 77: s = "invalid Factor"; break;
-			case 78: s = "invalid AddOp"; break;
+			case 70: s = "\"^\" expected"; break;
+			case 71: s = "??? expected"; break;
+			case 72: s = "invalid Number"; break;
+			case 73: s = "invalid Body"; break;
+			case 74: s = "invalid Type"; break;
+			case 75: s = "invalid Statement"; break;
+			case 76: s = "invalid Relation"; break;
+			case 77: s = "invalid MulOp"; break;
+			case 78: s = "invalid Factor"; break;
+			case 79: s = "invalid AddOp"; break;
 
 			default: s = "error " + n; break;
 		}

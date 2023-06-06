@@ -10,6 +10,11 @@ COMPILER ActiveOberon
 		return obj.objClass == Common.SymTable.ObjCLass.MODULE;
 	}
 
+	bool IsCast(){
+		var obj = symTab.Find(t.val);
+		return obj.objClass == Common.SymTable.ObjCLass.VAR;
+	}
+
 CHARACTERS
   cr  = '\r'.
   lf  = '\n'.
@@ -329,9 +334,13 @@ PRODUCTIONS
 			  Ident<out s.Value>												(. o.Specs.Add(s); .)
 			| "["																(. var s = new AOParser.Ast.Designator.IDesignatorSpec.ArrayDesignatorSpec(); .) 
 			ExprList<out s.Value> "]"											(. o.Specs.Add(s); .)
-			| "("																(. var s = new AOParser.Ast.Designator.IDesignatorSpec.ProcCallDesignatorSpec(); .) 
-			[ExprList<out s.Value>]												(. o.Specs.Add(s); .)  
+			| "^"																(. var s = new AOParser.Ast.Designator.IDesignatorSpec.PointerDesignatorSpec(); .) 
+																				(. o.Specs.Add(s); .)
+			| IF(IsCast()) "("																(. var s = new AOParser.Ast.Designator.IDesignatorSpec.CastDesignatorSpec(symTab); .) 
+			Qualident<out s.Value>												(. o.Specs.Add(s); .)  
 			")" 
+			| 																	(. var s = new AOParser.Ast.Designator.IDesignatorSpec.ProcCallDesignatorSpec(); .)
+			"(" [ExprList<out s.Value>] ")"										(. o.Specs.Add(s); .)
 			}.
 
 	ExprList<out AOParser.Ast.ExprList o>

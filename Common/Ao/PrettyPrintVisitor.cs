@@ -612,7 +612,9 @@ namespace AOParser
 
         public void Visit(Designator.IDesignatorSpec.CastDesignatorSpec o)
         {
-            throw new NotImplementedException();
+            sw.Write("(");
+            o.Value.AcceptWithComments(this);
+            sw.Write(")");
         }
 
         public void Visit(Designator.IDesignatorSpec.ProcCallDesignatorSpec o)
@@ -790,6 +792,11 @@ namespace AOParser
         public void Visit(IStatement.StatBlockStatement o)
         {
             o.StatBlock.AcceptWithComments(this);
+        }
+
+        public void Visit(Designator.IDesignatorSpec.PointerDesignatorSpec o)
+        {
+            sw.Write("^");
         }
     }
 }

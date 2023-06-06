@@ -79,5 +79,6 @@ namespace AOParser
         void Visit(IType.ObjectType objectType);
         void Visit(IStatement.AwaitStatement awaitStatement);
         void Visit(IStatement.StatBlockStatement statBlockStatement);
+        void Visit(Designator.IDesignatorSpec.PointerDesignatorSpec pointerDesignatorSpec);
     }
 }

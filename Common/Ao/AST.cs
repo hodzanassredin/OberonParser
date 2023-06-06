@@ -1005,6 +1005,20 @@ namespace AOParser.Ast
 					return parent.scope.Find(Value.Name).type;
 				}
 			}
+			public class PointerDesignatorSpec : IDesignatorSpec
+			{
+				public override void Accept(IAstVisitor v) => v.Visit(this);
+
+				public override TypeDesc Specify(TypeDesc parent)
+				{
+					return parent.elemType;
+				}
+
+				public override string ToString()
+				{
+					return $"^";
+				}
+			}
 			public class ArrayDesignatorSpec : IDesignatorSpec {
 				public ExprList Value;
 				public override void Accept(IAstVisitor v) => v.Visit(this);
