@@ -20,6 +20,7 @@ namespace Common.Mappers
 
         public CPParser.Ast.Qualident Map(AOParser.Ast.Qualident o)
         {
+            if (o == null) return null;
             return new CPParser.Ast.Qualident(null) { 
                 Ident1 = Map(o.Ident1),
                 Ident2 = Map(o.Ident2)
@@ -67,7 +68,27 @@ namespace Common.Mappers
 
         public CPParser.Ast.IdentDef Map(AOParser.Ast.IdentDef o)
         {
-            throw new NotImplementedException();
+            var res = new CPParser.Ast.IdentDef { 
+                Ident = Map(o.Ident)
+                
+            };
+            if (o.Export.HasValue) {
+                res.Export = Map(o.Export.Value);
+            }
+            return res;
+        }
+
+        private CPParser.Ast.IdentDef.IdentExport Map(AOParser.Ast.IdentDef.IdentExport export)
+        {
+            switch (export)
+            {
+                case AOParser.Ast.IdentDef.IdentExport.ExportReadonly:
+                    return CPParser.Ast.IdentDef.IdentExport.ExportReadonly;
+                case AOParser.Ast.IdentDef.IdentExport.Export:
+                    return CPParser.Ast.IdentDef.IdentExport.Export;
+                default:
+                    throw new ArgumentException(export.ToString());
+            }
         }
 
         public (CPParser.Ast.IConstTypeVarListDecl, List<CPParser.Ast.ProcDecl>) Map(AOParser.Ast.IConstTypeVarListDecl o)
@@ -92,9 +113,12 @@ namespace Common.Mappers
             {
                 var r = Map(item);
                 res.ConstTypeVarDecls.Add(r.Item1);
-                foreach (var pd in r.Item2)
+                if (r.Item2 != null)
                 {
-                    res.ProcForwardDecls.Add(pd);
+                    foreach (var pd in r.Item2)
+                    {
+                        res.ProcForwardDecls.Add(pd);
+                    }
                 }
             }
             foreach (var item in o.ProcDecl.Cast<AOParser.Ast.ProcDecl>())
@@ -122,7 +146,10 @@ namespace Common.Mappers
             {
                 var m = Map(item);
                 res.Values.Add(m.Item1);
-                pds.AddRange(m.Item2);
+                if (m.Item2 != null)
+                {
+                    pds.AddRange(m.Item2);
+                }
             }
             return (res, pds);
         }
@@ -135,7 +162,10 @@ namespace Common.Mappers
             {
                 var m = Map(item);
                 res.Values.Add(m.Item1);
-                pds.AddRange(m.Item2);
+                if (m.Item2 != null)
+                {
+                    pds.AddRange(m.Item2);
+                }
             }
             return (res, pds);
         }
@@ -299,7 +329,44 @@ namespace Common.Mappers
 
         public CPParser.Ast.StatementSeq Map(AOParser.Ast.StatementSeq o)
         {
-            throw new NotImplementedException();
+            return new CPParser.Ast.StatementSeq { 
+                Statements = MapLst<AOParser.Ast.IStatement, CPParser.Ast.IStatement>(o.Statements,Map)
+            };
+        }
+
+        private CPParser.Ast.IStatement Map(AOParser.Ast.IStatement arg)
+        {
+            switch (arg)
+            {
+                case AOParser.Ast.IStatement.AssignmentStatement s:
+                    return Map(s);
+                case AOParser.Ast.IStatement.AwaitStatement s:
+                    throw new NotSupportedException("AwaitStatement");
+                case AOParser.Ast.IStatement.CaseStatement s:
+                    return Map(s);
+                case AOParser.Ast.IStatement.ExitStatement s:
+                    return Map(s);
+                case AOParser.Ast.IStatement.ForStatement s:
+                    return Map(s);
+                case AOParser.Ast.IStatement.IfStatement s:
+                    return Map(s);
+                case AOParser.Ast.IStatement.LoopStatement s:
+                    return Map(s);
+                case AOParser.Ast.IStatement.ProcCallStatement s:
+                    return Map(s);
+                case AOParser.Ast.IStatement.RepeatStatement s:
+                    return Map(s);
+                case AOParser.Ast.IStatement.ReturnStatement s:
+                    return Map(s);
+                case AOParser.Ast.IStatement.WithStatement s:
+                    return Map(s);
+                case AOParser.Ast.IStatement.WhileStatement s:
+                    return Map(s);
+                case AOParser.Ast.IStatement.StatBlockStatement s:
+                    throw new NotSupportedException("StatBlockStatement");
+                default:
+                    throw new NotSupportedException();
+            }
         }
 
         public CPParser.Ast.Set Map(AOParser.Ast.Set o)
@@ -314,21 +381,68 @@ namespace Common.Mappers
 
         public CPParser.Ast.AddOp Map(AOParser.Ast.AddOp o)
         {
-            throw new NotImplementedException();
+            switch (o.Op)
+            {
+                case AOParser.Ast.AddOp.AddOps.Add:
+                    return new CPParser.Ast.AddOp { Op = CPParser.Ast.AddOp.AddOps.Add };
+                case AOParser.Ast.AddOp.AddOps.Sub:
+                    return new CPParser.Ast.AddOp { Op = CPParser.Ast.AddOp.AddOps.Sub };
+                case AOParser.Ast.AddOp.AddOps.Or:
+                    return new CPParser.Ast.AddOp { Op = CPParser.Ast.AddOp.AddOps.Or };
+                default:
+                    throw new Exception();
+            }
         }
 
         public CPParser.Ast.MulOp Map(AOParser.Ast.MulOp o)
         {
-            throw new NotImplementedException();
+            switch (o.Op)
+            {
+                case AOParser.Ast.MulOp.MulOps.Mul:
+                    return new CPParser.Ast.MulOp { Op = CPParser.Ast.MulOp.MulOps.Mul };
+                case AOParser.Ast.MulOp.MulOps.Division:
+                    return new CPParser.Ast.MulOp { Op = CPParser.Ast.MulOp.MulOps.Division };
+                case AOParser.Ast.MulOp.MulOps.DIV:
+                    return new CPParser.Ast.MulOp { Op = CPParser.Ast.MulOp.MulOps.DIV };
+                case AOParser.Ast.MulOp.MulOps.MOD:
+                    return new CPParser.Ast.MulOp { Op = CPParser.Ast.MulOp.MulOps.MOD };
+                case AOParser.Ast.MulOp.MulOps.AND:
+                    return new CPParser.Ast.MulOp { Op = CPParser.Ast.MulOp.MulOps.AND };
+                default:
+                    throw new NotImplementedException();
+            }
         }
 
         public CPParser.Ast.Relation Map(AOParser.Ast.Relation o)
         {
-            throw new NotImplementedException();
+            if (o == null) return null;
+            switch (o.Op)
+            {
+                case AOParser.Ast.Relation.Relations.Eq:
+                    return new CPParser.Ast.Relation { Op = CPParser.Ast.Relation.Relations.Eq };
+                case AOParser.Ast.Relation.Relations.Neq:
+                    return new CPParser.Ast.Relation { Op = CPParser.Ast.Relation.Relations.Neq };
+                case AOParser.Ast.Relation.Relations.Lss:
+                    return new CPParser.Ast.Relation { Op = CPParser.Ast.Relation.Relations.Lss };
+                case AOParser.Ast.Relation.Relations.Leq:
+                    return new CPParser.Ast.Relation { Op = CPParser.Ast.Relation.Relations.Leq };
+                case AOParser.Ast.Relation.Relations.Gtr:
+                    return new CPParser.Ast.Relation { Op = CPParser.Ast.Relation.Relations.Gtr };
+                case AOParser.Ast.Relation.Relations.Geq:
+                    return new CPParser.Ast.Relation { Op = CPParser.Ast.Relation.Relations.Geq };
+                case AOParser.Ast.Relation.Relations.In:
+                    return new CPParser.Ast.Relation { Op = CPParser.Ast.Relation.Relations.In };
+                case AOParser.Ast.Relation.Relations.Is:
+                    return new CPParser.Ast.Relation { Op = CPParser.Ast.Relation.Relations.Is };
+                default:
+                    throw new NotImplementedException();
+            }
         }
 
         public CPParser.Ast.SimpleExpr Map(AOParser.Ast.SimpleExpr o)
         {
+            if (o == null) return null;
+
             var t = Map(o.Term);
             if (!o.SimpleExprElements.Any()) {
                 return t;
@@ -387,7 +501,27 @@ namespace Common.Mappers
 
         private CPParser.Ast.IFactor Map(AOParser.Ast.IFactor factor)
         {
-            throw new NotImplementedException();
+            switch (factor)
+            {
+                case AOParser.Ast.IFactor.ExprFactor f:
+                    return Map(f);
+                case AOParser.Ast.IFactor.NilFactor f:
+                    return Map(f);
+                case AOParser.Ast.IFactor.SetFactor f:
+                    return Map(f);
+                case AOParser.Ast.IFactor.CharacterFactor f:
+                    return Map(f);
+                case AOParser.Ast.IFactor.DesignatorFactor f:
+                    return Map(f);
+                case AOParser.Ast.IFactor.NegFactor f:
+                    return Map(f);
+                case AOParser.Ast.IFactor.NumberFactor f:
+                    return Map(f);
+                case AOParser.Ast.IFactor.StringFactor f:
+                    return Map(f);
+                default:
+                    throw new NotImplementedException();
+            }
         }
 
         private CPParser.Ast.SimpleExpr.SimpleExprPrefix Map(AOParser.Ast.Term.TermExprPrefix value)
@@ -411,7 +545,10 @@ namespace Common.Mappers
 
         public CPParser.Ast.IStatement.AssignmentStatement Map(AOParser.Ast.IStatement.AssignmentStatement o)
         {
-            throw new NotImplementedException();
+            return new CPParser.Ast.IStatement.AssignmentStatement { 
+                Expr = Map(o.Expr),
+                Designator = Map(o.Designator)
+            };
         }
 
         public CPParser.Ast.IStatement.ProcCallStatement Map(AOParser.Ast.IStatement.ProcCallStatement o)
@@ -466,7 +603,9 @@ namespace Common.Mappers
 
         public CPParser.Ast.IType.ArrayType Map(AOParser.Ast.IType.ArrayType o)
         {
-            throw new NotImplementedException();
+            return new CPParser.Ast.IType.ArrayType { 
+                ConstExprs = MapLst<AOParser.Ast.ConstExpr,CPParser.Ast.ConstExpr>(o.ConstExprs, Map)
+            };
         }
 
         public CPParser.Ast.IType.PointerType Map(AOParser.Ast.IType.PointerType o)
@@ -481,32 +620,51 @@ namespace Common.Mappers
 
         public CPParser.Ast.IType.RecordType Map(AOParser.Ast.IType.RecordType o)
         {
-            throw new NotImplementedException();
+            var lst = o.FieldList.FieldDecl
+                        .Cast<AOParser.Ast.FieldDecl>()
+                        .Select(x => new CPParser.Ast.FieldList()
+                        {
+                            IdentList = Map(x.IdentList),
+                            Type_ = Map(x.Type_).Item1
+                        }).Cast<CPParser.Ast.AstElement>().ToList();
+
+            return new CPParser.Ast.IType.RecordType(null) {
+                Qualident = Map(o.Qualident),
+                FieldList = new CPParser.Ast.AstList(lst)
+            };
         }
 
         public CPParser.Ast.IType.SynonimType Map(AOParser.Ast.IType.SynonimType o)
         {
-            throw new NotImplementedException();
+            return new CPParser.Ast.IType.SynonimType() { 
+                Qualident = Map(o.Qualident)
+            };
         }
 
         public CPParser.Ast.Number Map(AOParser.Ast.Number o)
         {
-            throw new NotImplementedException();
+            return new CPParser.Ast.Number { 
+                Value = o.Value
+            };
         }
 
         public CPParser.Ast.IFactor.CharacterFactor Map(AOParser.Ast.IFactor.CharacterFactor o)
         {
-            throw new NotImplementedException();
+            return new CPParser.Ast.IFactor.CharacterFactor { 
+                Value = o.Value
+            };
         }
 
-        public CPParser.Ast.Comment Map(AOParser.Ast.DefinitionProc definitionProc)
+        public CPParser.Ast.Comment Map(AOParser.Ast.DefinitionProc o)
         {
             throw new NotImplementedException();
         }
 
         public CPParser.Ast.IFactor.DesignatorFactor Map(AOParser.Ast.IFactor.DesignatorFactor o)
         {
-            throw new NotImplementedException();
+            return new CPParser.Ast.IFactor.DesignatorFactor {
+                Value = Map(o.Value)
+            };
         }
 
         public CPParser.Ast.Comment Map(AOParser.Ast.Definition definition)
@@ -516,12 +674,18 @@ namespace Common.Mappers
 
         public CPParser.Ast.IFactor.ExprFactor Map(AOParser.Ast.IFactor.ExprFactor o)
         {
-            throw new NotImplementedException();
+            return new CPParser.Ast.IFactor.ExprFactor
+            {
+                Value = Map(o.Value)
+            };
         }
 
         public CPParser.Ast.IFactor.NegFactor Map(AOParser.Ast.IFactor.NegFactor o)
         {
-            throw new NotImplementedException();
+            return new CPParser.Ast.IFactor.NegFactor
+            {
+                Value = Map(o.Value)
+            };
         }
 
         public CPParser.Ast.Comment Map(AOParser.Ast.SysFlag sysFlag)
@@ -536,7 +700,9 @@ namespace Common.Mappers
 
         public CPParser.Ast.IFactor.NilFactor Map(AOParser.Ast.IFactor.NilFactor o)
         {
-            throw new NotImplementedException();
+            return new CPParser.Ast.IFactor.NilFactor
+            {
+            };
         }
 
         public CPParser.Ast.Comment Map(AOParser.Ast.FieldDecl fieldDecl)
@@ -556,20 +722,36 @@ namespace Common.Mappers
 
         public CPParser.Ast.IFactor.NumberFactor Map(AOParser.Ast.IFactor.NumberFactor o)
         {
-            throw new NotImplementedException();
+            return new CPParser.Ast.IFactor.NumberFactor
+            {
+                Value = Map(o.Value)
+            };
         }
 
         public CPParser.Ast.IFactor.SetFactor Map(AOParser.Ast.IFactor.SetFactor o)
         {
-            throw new NotImplementedException();
+            return new CPParser.Ast.IFactor.SetFactor
+            {
+                Value = Map(o.Value)
+            };
         }
 
         public CPParser.Ast.IFactor.StringFactor Map(AOParser.Ast.IFactor.StringFactor o)
         {
-            throw new NotImplementedException();
+            return new CPParser.Ast.IFactor.StringFactor
+            {
+                Value = o.Value
+            };
+        }
+        public CPParser.Ast.Designator Map(AOParser.Ast.Designator o)
+        {
+            return new CPParser.Ast.Designator(null) { 
+                Qualident = Map(o.Qualident),
+                Specs = MapLst< AOParser.Ast.Designator.IDesignatorSpec, CPParser.Ast.Designator.IDesignatorSpec> (o.Specs, Map)
+            };
         }
 
-        public CPParser.Ast.Designator Map(AOParser.Ast.Designator o)
+        private CPParser.Ast.Designator.IDesignatorSpec Map(AOParser.Ast.Designator.IDesignatorSpec arg)
         {
             throw new NotImplementedException();
         }
