@@ -68,7 +68,7 @@ MODULE PaketController;
 	BEGIN
 		i := 0;
 		REPEAT buf[i] := x MOD 10; x := x DIV 10; INC(i) UNTIL x = 0;
-		REPEAT DEC(i); StdLog.Char(CHR(buf[i] + ORD("0" + ("")))) UNTIL i = 0
+		REPEAT DEC(i); StdLog.Char(CHR(buf[i] + ORD("0" ))) UNTIL i = 0
 	END WriteInt;
 
 	PROCEDURE WriteString (IN s: ARRAY OF CHAR);

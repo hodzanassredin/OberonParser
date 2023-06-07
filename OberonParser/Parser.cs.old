@@ -383,7 +383,9 @@ public Common.SymTable.SymTab symTab = new ();
 				}
 				DeclSeq(out at.DeclSeq);
 				Body(out at.Body);
-				Ident(out at.Ident);
+				if (la.kind == 1) {
+					Ident(out at.Ident);
+				}
 			}
 			o = at; symTab.CloseScope();
 			break;

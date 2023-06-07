@@ -28,13 +28,17 @@ public class Parser {
 
 public Common.SymTable.SymTab symTab = new ();
 	public CPParser.Ast.Module module; 
-
+	HashSet<string> predefinedFunctions = new HashSet<string> { "ABS", "ASH", "BITS", "CAP", "CHR", "ENTIER", "LEN", "LONG", "MAX", "MIN", "ODD", "ORD", "SHORT", "SIZE", "ASSERT", "DEC", "EXCL", "HALT", "INC", "INCL", "NEW" };
 	bool IsEmptyProc(){
 		return t.val == "ABSTRACT" || t.val == "EMPTY";
 	}
-
+	//todo v is an IN or VAR parameter of record type or v is a pointer to a record type
 	bool IsCast(){
+		if (predefinedFunctions.Contains(t.val)) return false;
 		var obj = symTab.Find(t.val);
+		if (obj.objClass == Common.SymTable.ObjCLass.FUNC) return false;
+		if (obj.objClass == Common.SymTable.ObjCLass.VAR && obj.type.form == Common.SymTable.TypeForm.FUNC) 
+			return false;
 		return obj.objClass == Common.SymTable.ObjCLass.VAR;
 	}
 

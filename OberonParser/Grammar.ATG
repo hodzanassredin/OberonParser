@@ -146,10 +146,10 @@ PRODUCTIONS
 				"RECORD" [SysFlag<out at.SysFlag>] 
 					["(" Qualident<out at.Qualident> ")"] 
 					FieldList<out at.FieldList>									
-					"END"															(. o = at; symTab.CloseScope();.)
+					"END"														(. o = at; symTab.CloseScope();.)
 
 			|																	(. var at = new AOParser.Ast.IType.PointerType(); .)
-				"POINTER" [SysFlag<out at.SysFlag>] "TO" Type<out at.Type_>			(. o = at; .)
+				"POINTER" [SysFlag<out at.SysFlag>] "TO" Type<out at.Type_>		(. o = at; .)
 
 			| 																	(. symTab.OpenScope(); var at = new AOParser.Ast.IType.ObjectType(symTab.curScope); .)
 				"OBJECT" [
