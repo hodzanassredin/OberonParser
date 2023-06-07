@@ -27,9 +27,17 @@ namespace CPParser.Ast
 
 	public class AstList : IEnumerable<AstElement>
 	{
-		public List<AstElement> Value { get; set; } = new List<AstElement>();
+		public List<AstElement> Value { get; set; }
 
-        public void Add(AstElement obj)
+        public AstList()
+        {
+			Value = new List<AstElement>();
+		}
+		public AstList(List<AstElement> vals)
+		{
+			Value = vals;
+		}
+		public void Add(AstElement obj)
         {
 			if (obj != null)
 			{
