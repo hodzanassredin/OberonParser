@@ -324,7 +324,10 @@ namespace Common.Mappers
 
         public CPParser.Ast.CaseLabels Map(AOParser.Ast.CaseLabels o)
         {
-            throw new NotImplementedException();
+            return new CPParser.Ast.CaseLabels { 
+                ConstExpr1 = Map(o.ConstExpr1),
+                ConstExpr2 = Map(o.ConstExpr2)
+            };
         }
 
         public CPParser.Ast.StatementSeq Map(AOParser.Ast.StatementSeq o)
@@ -371,7 +374,9 @@ namespace Common.Mappers
 
         public CPParser.Ast.Set Map(AOParser.Ast.Set o)
         {
-            throw new NotImplementedException();
+            return new CPParser.Ast.Set { 
+                Elements = MapLst<AOParser.Ast.Element, CPParser.Ast.Element>(o.Elements, Map)
+            };
         }
 
         public CPParser.Ast.Element Map(AOParser.Ast.Element o)
@@ -526,7 +531,15 @@ namespace Common.Mappers
 
         private CPParser.Ast.SimpleExpr.SimpleExprPrefix Map(AOParser.Ast.Term.TermExprPrefix value)
         {
-            throw new NotImplementedException();
+            switch (value)
+            {
+                case AOParser.Ast.Term.TermExprPrefix.Add:
+                    return CPParser.Ast.SimpleExpr.SimpleExprPrefix.Add;
+                case AOParser.Ast.Term.TermExprPrefix.Sub:
+                    return CPParser.Ast.SimpleExpr.SimpleExprPrefix.Sub;
+                default:
+                    throw new Exception();
+            }
         }
 
         public CPParser.Ast.Expr Map(AOParser.Ast.Expr o)
@@ -540,7 +553,10 @@ namespace Common.Mappers
 
         public CPParser.Ast.Case Map(AOParser.Ast.Case o)
         {
-            throw new NotImplementedException();
+            return new CPParser.Ast.Case { 
+                CaseLabels = MapLst<AOParser.Ast.CaseLabels, CPParser.Ast.CaseLabels>(o.CaseLabels, Map),
+                StatementSeq = Map(o.StatementSeq)
+            };
         }
 
         public CPParser.Ast.IStatement.AssignmentStatement Map(AOParser.Ast.IStatement.AssignmentStatement o)
@@ -553,32 +569,54 @@ namespace Common.Mappers
 
         public CPParser.Ast.IStatement.ProcCallStatement Map(AOParser.Ast.IStatement.ProcCallStatement o)
         {
-            throw new NotImplementedException();
+            return new CPParser.Ast.IStatement.ProcCallStatement { 
+                Designator = Map(o.Designator),
+                ExprList = Map(o.ExprList)
+            };
         }
 
         public CPParser.Ast.IStatement.IfStatement Map(AOParser.Ast.IStatement.IfStatement o)
         {
-            throw new NotImplementedException();
+            return new CPParser.Ast.IStatement.IfStatement
+            {
+                If = Map(o.If),
+                ElseBody = Map(o.ElseBody),
+                ELSIFs = MapLst<AOParser.Ast.IStatement.IfStatement.IfThen, CPParser.Ast.IStatement.IfStatement.IfThen>(o.ELSIFs, Map)
+            };
         }
-
         public CPParser.Ast.IStatement.CaseStatement Map(AOParser.Ast.IStatement.CaseStatement o)
         {
-            throw new NotImplementedException();
+            return new CPParser.Ast.IStatement.CaseStatement
+            {
+                Expr = Map(o.Expr),
+                ElseBody = Map(o.ElseBody),
+                Cases = MapLst<AOParser.Ast.Case, CPParser.Ast.Case>(o.Cases, Map)
+            };
         }
 
         public CPParser.Ast.IStatement.WhileStatement Map(AOParser.Ast.IStatement.WhileStatement o)
         {
-            throw new NotImplementedException();
+            return new CPParser.Ast.IStatement.WhileStatement
+            {
+                Expr = Map(o.Expr),
+                StatementSeq = Map(o.StatementSeq)
+            };
         }
 
         public CPParser.Ast.IStatement.LoopStatement Map(AOParser.Ast.IStatement.LoopStatement o)
         {
-            throw new NotImplementedException();
+            return new CPParser.Ast.IStatement.LoopStatement
+            {
+                StatementSeq = Map(o.StatementSeq)
+            };
         }
 
         public CPParser.Ast.IStatement.RepeatStatement Map(AOParser.Ast.IStatement.RepeatStatement o)
         {
-            throw new NotImplementedException();
+            return new CPParser.Ast.IStatement.RepeatStatement { 
+                Expr = Map(o.Expr),
+                StatementSeq = Map(o.StatementSeq)
+            };
         }
 
         public CPParser.Ast.IStatement.WithStatement Map(AOParser.Ast.IStatement.WithStatement o)
@@ -588,17 +626,26 @@ namespace Common.Mappers
 
         public CPParser.Ast.IStatement.ExitStatement Map(AOParser.Ast.IStatement.ExitStatement o)
         {
-            throw new NotImplementedException();
+            return new CPParser.Ast.IStatement.ExitStatement();
         }
 
         public CPParser.Ast.IStatement.ReturnStatement Map(AOParser.Ast.IStatement.ReturnStatement o)
         {
-            throw new NotImplementedException();
+            return new CPParser.Ast.IStatement.ReturnStatement {
+                Expr = Map(o.Expr)
+            };
         }
+
 
         public CPParser.Ast.IStatement.ForStatement Map(AOParser.Ast.IStatement.ForStatement o)
         {
-            throw new NotImplementedException();
+            return new CPParser.Ast.IStatement.ForStatement { 
+                ByExpr = Map(o.ByExpr),
+                Expr = Map(o.Expr),
+                ToExpr = Map(o.ToExpr),
+                Ident = Map(o.Ident),
+                StatementSeq = Map(o.StatementSeq)
+            };
         }
 
         public CPParser.Ast.IType.ArrayType Map(AOParser.Ast.IType.ArrayType o)
