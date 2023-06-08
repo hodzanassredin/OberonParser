@@ -1,8 +1,89 @@
 ﻿
+using System.Text;
+
 namespace Common.Mappers
 {
+
+
+
     public class AoToCpMapper 
     {
+        public static CPParser.Ast.Qualident GetQualident(string name) {
+            return new CPParser.Ast.Qualident(null) { Ident1 = new CPParser.Ast.Ident { Name = name } };
+        }
+        public static CPParser.Ast.Qualident GetQualident(string moduleName, string name)
+        {
+            return new CPParser.Ast.Qualident(null) { Ident1 = new CPParser.Ast.Ident { Name = moduleName },
+                Ident2 = new CPParser.Ast.Ident { Name = name }
+            };
+        }
+        Dictionary<string, CPParser.Ast.Qualident> simpleTypeMap = new Dictionary<string, CPParser.Ast.Qualident>
+        {
+            ["BOOLEAN"] = GetQualident("BOOLEAN"),
+            ["CHAR"] = GetQualident("SHORTCHAR"),
+            ["SIGNED8"] = GetQualident("BYTE"),
+            ["SIGNED16"] = GetQualident("SHORTINT"),
+            ["SIGNED32"] = GetQualident("INTEGER"),
+            ["SIGNED64"] = GetQualident("LONGINT"),
+            ["UNSIGNED8"] = GetQualident("CHAR"),
+            ["UNSIGNED16"] = GetQualident("AOCompat","UNSIGNED16"),
+            ["UNSIGNED32"] = GetQualident("AOCompat", "UNSIGNED32"),
+            ["UNSIGNED64"] = GetQualident("AOCompat", "UNSIGNED64"),
+            ["FLOAT32"] = GetQualident("SHORTREAL"),
+            ["FLOAT64"] = GetQualident("REAL"),
+            ["SET8"] = GetQualident("SET"),
+            ["SET16"] = GetQualident("SET"),
+            ["SET32"] = GetQualident("SET"),
+            ["SET64"] = GetQualident("AOCompat", "SET64"),
+
+            ["REAL"] = GetQualident("REAL"),
+            ["INTEGER"] = GetQualident("INTEGER"),
+            ["ADDRESS"] = GetQualident("AOCompat", "ADDRESS"),
+            ["SIZE"] = GetQualident("AOCompat", "SIZE"),
+            ["SET"] = GetQualident("SET")
+        };
+        public static string BinaryStringToHexString(string binary)
+        {
+            if (string.IsNullOrEmpty(binary))
+                return binary;
+
+            StringBuilder result = new StringBuilder(binary.Length / 8 + 1);
+
+            // TODO: check all 1's or 0's... throw otherwise
+
+            int mod4Len = binary.Length % 8;
+            if (mod4Len != 0)
+            {
+                // pad to length multiple of 8
+                binary = binary.PadLeft(((binary.Length / 8) + 1) * 8, '0');
+            }
+
+            for (int i = 0; i < binary.Length; i += 8)
+            {
+                string eightBits = binary.Substring(i, 8);
+                result.AppendFormat("{0:X2}", Convert.ToByte(eightBits, 2));
+            }
+
+            return result.ToString();
+        }
+        public string MapNumber(string number) {
+            number = number.Replace("\'", "");
+            if (number.StartsWith("0b")) {
+                var binary = number.Substring(2);
+                var suffix = binary.Length > 32 ? 'L' : 'H';
+                return BinaryStringToHexString(number.Substring(2)) + suffix;
+            }
+            if (number.StartsWith("0x"))
+            {
+                var hex = number.Substring(2);
+                if (!Char.IsDigit(hex[0])) hex = "0" + hex;
+                var suffix = hex.Length > 8 ? 'L' : 'H';
+                return hex + suffix;
+            }
+
+            return number;
+        }
+
         public readonly CPParser.Ast.Module module = new CPParser.Ast.Module();
 
         public CPParser.Ast.IStatement.IfStatement.IfThen Map(AOParser.Ast.IStatement.IfStatement.IfThen o)
@@ -24,6 +105,10 @@ namespace Common.Mappers
         public CPParser.Ast.Qualident Map(AOParser.Ast.Qualident o)
         {
             if (o == null) return null;
+            if (simpleTypeMap.ContainsKey(o.ToString())) {
+                return simpleTypeMap[o.ToString()];
+            }
+
             return new CPParser.Ast.Qualident(null) { 
                 Ident1 = Map(o.Ident1),
                 Ident2 = Map(o.Ident2)
@@ -205,13 +290,17 @@ namespace Common.Mappers
                             },
                             DeclSeq = Map(x.DeclSeq),
                             Receiver = new CPParser.Ast.Receiver(null) { 
-                                SelfIdent = new CPParser.Ast.Ident { Name = "self" },
-                                ReceiverPrefix = CPParser.Ast.Receiver.Prefix.VAR,
+                                SelfIdent = new CPParser.Ast.Ident { Name = "SELF" },
+                                //ReceiverPrefix = CPParser.Ast.Receiver.Prefix., //dont need for pointer record
                                 TypeIdent = Map(o.Ident)
                             },
                             StatementSeq = Map(x.Body.StatBlock.StatementSeq),
                             FormalPars = Map(x.ProcHead.FormalPars),
-                            MethAttributes = new CPParser.Ast.MethAttributes()//Map(x.ProcHead.Tag.)
+                            MethAttributes = new CPParser.Ast.MethAttributes() { 
+                                IsNew = true,
+                            }
+                            
+                            //Map(x.ProcHead.Tag.)
                         }).ToList();
 
             var tp = new CPParser.Ast.IType.PointerType()
@@ -715,7 +804,8 @@ namespace Common.Mappers
 
             return new CPParser.Ast.IType.RecordType(null) {
                 Qualident = Map(o.Qualident),
-                FieldList = new CPParser.Ast.AstList(lst)
+                FieldList = new CPParser.Ast.AstList(lst),
+                RecordMeta = CPParser.Ast.IType.RecordType.Meta.EXTENSIBLE
             };
         }
 
@@ -728,8 +818,8 @@ namespace Common.Mappers
 
         public CPParser.Ast.Number Map(AOParser.Ast.Number o)
         {
-            return new CPParser.Ast.Number { 
-                Value = o.Value
+            return new CPParser.Ast.Number {
+                Value = MapNumber(o.Value)
             };
         }
 
