@@ -39,6 +39,12 @@ namespace Common.Mappers
             ["SIZE"] = GetQualident("AOCompat", "SIZE"),
             ["SET"] = GetQualident("SET")
         };
+        Dictionary<string, CPParser.Ast.Qualident> simpleFuncMap = new Dictionary<string, CPParser.Ast.Qualident>
+        {
+            ["SET8"] = GetQualident("BITS"),
+            ["SET16"] = GetQualident("BITS"),
+            ["SET32"] = GetQualident("BITS"),
+        };
         public static string BinaryStringToHexString(string binary)
         {
             if (string.IsNullOrEmpty(binary))
@@ -451,7 +457,7 @@ namespace Common.Mappers
             if (o.IdentLists.Any()) {
                 if (o.IdentLists.Any())
                 {
-                    var comment = new CPParser.Ast.Comment() { Content = "NOT SUPPORTED CONV StatBlock Idents: { " + o.IdentLists.ToString() + " }" };
+                    var comment = new CPParser.Ast.Comment() { Content = "NOT SUPPORTED CONV: { " + o.IdentLists.ToString() + " }" };
                     res.CommentsBefore.Add(comment);
                 }
             }
@@ -472,7 +478,7 @@ namespace Common.Mappers
                 case AOParser.Ast.IStatement.AssignmentStatement s:
                     return Map(s);
                 case AOParser.Ast.IStatement.AwaitStatement s:
-                    return new CPParser.Ast.Comment() {Content = "NOT SUPPORTED CONV StatBlockStatement: " + s.ToString() };
+                    return new CPParser.Ast.Comment() {Content = "NOT SUPPORTED CONV: " + s.ToString() };
                 case AOParser.Ast.IStatement.CaseStatement s:
                     return Map(s);
                 case AOParser.Ast.IStatement.ExitStatement s:
@@ -494,7 +500,7 @@ namespace Common.Mappers
                 case AOParser.Ast.IStatement.WhileStatement s:
                     return Map(s);
                 case AOParser.Ast.IStatement.StatBlockStatement s:
-                    return new CPParser.Ast.Comment() { Content = "NOT SUPPORTED CONV StatBlockStatement: " + s.ToString() };
+                    return new CPParser.Ast.Comment() { Content = "NOT SUPPORTED CONV: " + s.ToString() };
                 default:
                     throw new NotSupportedException();
             }
@@ -948,8 +954,13 @@ namespace Common.Mappers
         }
         public CPParser.Ast.Designator Map(AOParser.Ast.Designator o)
         {
+            var q = Map(o.Qualident);
+            if (simpleFuncMap.ContainsKey(o.Qualident.ToString()) && o.Specs.Any() && o.Specs.Value[0] is AOParser.Ast.Designator.IDesignatorSpec.ProcCallDesignatorSpec)
+            {
+                q = simpleFuncMap[o.Qualident.ToString()];
+            }
             return new CPParser.Ast.Designator(null) { 
-                Qualident = Map(o.Qualident),
+                Qualident = q,
                 Specs = MapLst< AOParser.Ast.Designator.IDesignatorSpec, CPParser.Ast.Designator.IDesignatorSpec> (o.Specs, Map)
             };
         }
