@@ -308,9 +308,7 @@ namespace Common.Mappers
                         .Cast<AOParser.Ast.ProcDecl>()
                         .Select(x => new CPParser.Ast.ProcDecl
                         {
-                            IdentDef = new CPParser.Ast.IdentDef { 
-                                Ident = Map(x.Ident)
-                            },
+                            IdentDef = Map(x.ProcHead.IdentDef),
                             DeclSeq = Map(x.DeclSeq),
                             Receiver = new CPParser.Ast.Receiver(null) { 
                                 SelfIdent = new CPParser.Ast.Ident { Name = "SELF" },
@@ -336,6 +334,7 @@ namespace Common.Mappers
             };
             return (tp, procs);
         }
+
         public (CPParser.Ast.IType, List<CPParser.Ast.ProcDecl>) Map(AOParser.Ast.IType o)
         {
             switch (o)
