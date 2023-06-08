@@ -211,7 +211,7 @@ namespace Common.Mappers
                             },
                             StatementSeq = Map(x.Body.StatBlock.StatementSeq),
                             FormalPars = Map(x.ProcHead.FormalPars),
-                            //MethAttributes = Map(x.ProcHead.Tag.)
+                            MethAttributes = new CPParser.Ast.MethAttributes()//Map(x.ProcHead.Tag.)
                         }).ToList();
 
             var tp = new CPParser.Ast.IType.PointerType()
@@ -271,7 +271,8 @@ namespace Common.Mappers
             return new CPParser.Ast.ProcDecl {
                 DeclSeq = Map(o.DeclSeq),
                 FormalPars = Map(o.ProcHead.FormalPars),
-                StatementSeq = Map(o.Body.StatBlock.StatementSeq)
+                StatementSeq = Map(o.Body.StatBlock.StatementSeq),
+                MethAttributes = new CPParser.Ast.MethAttributes()
             };
         }
 
@@ -289,7 +290,7 @@ namespace Common.Mappers
             if (o == null) return null;
             return new CPParser.Ast.FormalPars {
                 FPSections = MapLst<AOParser.Ast.FPSection, CPParser.Ast.FPSection>(o.FPSections, Map),
-                Type_ = new CPParser.Ast.IType.SynonimType() {
+                Type_ = o.Qualident == null? null : new CPParser.Ast.IType.SynonimType() {
                     Qualident = Map(o.Qualident)
                 }
             };
@@ -453,66 +454,92 @@ namespace Common.Mappers
                     throw new NotImplementedException();
             }
         }
+        private IEnumerable<CPParser.Ast.AstElement> ToSequence(AOParser.Ast.Term t)
+        {
+            if (t.Prefix.HasValue) {
+                yield return new CPParser.Ast.IFactor.ExprFactor() { 
+                    Value = new CPParser.Ast.Expr() { 
+                        SimpleExpr = new CPParser.Ast.SimpleExpr { 
+                            Prefix = Map(t.Prefix.Value),
+                            Term = new CPParser.Ast.Term { 
+                                Factor = Map(t.Factor)
+                            }
+                        }
+                    }
+                };
+            } else {
+                yield return Map(t.Factor);
+            }
+            foreach (var te in t.TermElements.Cast<AOParser.Ast.TermElementExpr>())
+            {
+                yield return Map(te.AddOp);
+                yield return Map(te.Factor);
+            }
+        }
+        private IEnumerable<CPParser.Ast.AstElement> ToSequence(AOParser.Ast.SimpleExpr o) {
+            foreach (var item in ToSequence(o.Term))
+            {
+                yield return item;
+            }
+            foreach (var te in o.SimpleExprElements.Cast<AOParser.Ast.SimpleElementExpr> ())
+            {
+                yield return Map(te.MulOp);
+                foreach (var item in ToSequence(te.Term))
+                {
+                    yield return item;
+                }
+            }
+        }
 
         public CPParser.Ast.SimpleExpr Map(AOParser.Ast.SimpleExpr o)
         {
             if (o == null) return null;
 
-            var t = Map(o.Term);
-            if (!o.SimpleExprElements.Any()) {
-                return t;
-            }
-            var lst = o.SimpleExprElements.Cast<AOParser.Ast.SimpleElementExpr>()
-                                    .Select(e => new CPParser.Ast.TermElementExpr { 
-                                        MulOp = Map(e.MulOp),
-                                        Factor = new CPParser.Ast.IFactor.ExprFactor()
-                                        {
-                                            Value = new CPParser.Ast.Expr()
-                                            {
-                                                SimpleExpr = Map(e.Term)
-                                            }
-                                        },
+            var s = ToSequence(o).ToList();
 
-                                    }).Cast<CPParser.Ast.AstElement>().ToList();
-            var res = new CPParser.Ast.SimpleExpr { 
-                Term = new CPParser.Ast.Term { 
-                    Factor = new CPParser.Ast.IFactor.ExprFactor(){ 
-                        Value = new CPParser.Ast.Expr() { 
-                            SimpleExpr = t
-                        }
-                    },
-                    TermElements = new CPParser.Ast.AstList(lst)
-                }
-            };
-
-            return res;
-        }
-
-        public CPParser.Ast.SimpleExpr Map(AOParser.Ast.Term o)
-        {
             var res = new CPParser.Ast.SimpleExpr();
-            if (o.Prefix.HasValue)
-            {
-                res.Prefix = Map(o.Prefix.Value);
-                res.Term = new CPParser.Ast.Term
+            var t = new CPParser.Ast.Term();
+            CPParser.Ast.TermElementExpr te = null;
+            res.Term = t;
+            foreach (var item in s) {
+                switch (item)
                 {
-                    Factor = Map(o.Factor)
-                };
-            };
-            
-            foreach (var item in o.TermElements.Cast<AOParser.Ast.TermElementExpr>())
-            {
-                res.SimpleExprElements.Add(new CPParser.Ast.SimpleElementExpr
-                {
-                    AddOp = Map(item.AddOp),
-                    Term = new CPParser.Ast.Term
-                    {
-                        Factor = Map(item.Factor)
-                    }
-                });
+                    case CPParser.Ast.IFactor f:
+                        if (te != null)
+                        {
+                            te.Factor = f;
+                        }
+                        else
+                        {
+                            t.Factor = f;
+                        }
+                        break;
+
+                    case CPParser.Ast.AddOp f:
+                        t = new CPParser.Ast.Term();
+                        te = null;
+                        res.SimpleExprElements.Add(new CPParser.Ast.SimpleElementExpr { 
+                            AddOp = f,
+                            Term = t
+                        });
+                        break;
+                    case CPParser.Ast.MulOp f:
+                        te = new CPParser.Ast.TermElementExpr()
+                        {
+                            MulOp = f,
+                        };
+                        t.TermElements.Add(te);
+                        break;
+                    
+                    default:
+                        break;
+                }
             }
+
             return res;
         }
+
+        
 
         private CPParser.Ast.IFactor Map(AOParser.Ast.IFactor factor)
         {
@@ -661,7 +688,8 @@ namespace Common.Mappers
         public CPParser.Ast.IType.ArrayType Map(AOParser.Ast.IType.ArrayType o)
         {
             return new CPParser.Ast.IType.ArrayType { 
-                ConstExprs = MapLst<AOParser.Ast.ConstExpr,CPParser.Ast.ConstExpr>(o.ConstExprs, Map)
+                ConstExprs = MapLst<AOParser.Ast.ConstExpr,CPParser.Ast.ConstExpr>(o.ConstExprs, Map),
+                Type_ = Map(o.Type_).Item1
             };
         }
 
