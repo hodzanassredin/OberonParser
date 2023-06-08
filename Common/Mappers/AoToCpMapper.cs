@@ -720,10 +720,18 @@ namespace Common.Mappers
 
         public CPParser.Ast.IStatement.AssignmentStatement Map(AOParser.Ast.IStatement.AssignmentStatement o)
         {
-            return new CPParser.Ast.IStatement.AssignmentStatement { 
+            if (o.Expr.TypeDescr != o.Designator.TypeDescr)
+            { 
+            
+            }
+
+
+            var res = new CPParser.Ast.IStatement.AssignmentStatement { 
                 Expr = Map(o.Expr),
                 Designator = Map(o.Designator)
             };
+
+            return res;
         }
 
         public CPParser.Ast.IStatement.ProcCallStatement Map(AOParser.Ast.IStatement.ProcCallStatement o)

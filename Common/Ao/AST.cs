@@ -891,6 +891,39 @@ namespace AOParser.Ast
 	
 	public class Number : AstElement
 	{
+		public TypeDesc TypeDescr { get
+			{
+				if (Value.Contains("."))
+				{
+					Double v;
+					if (Double.TryParse(Value.Replace('.', ','), System.Globalization.NumberStyles.Float, null, out v)) {
+						if (v > float.MaxValue || v < float.MinValue) return TypeDesc.FLOAT64;
+						return TypeDesc.FLOAT32;
+					}
+				}
+
+				if (Value.StartsWith("-"))
+				{
+					Int64 v;
+					if (Int64.TryParse(Value, out v))
+					{
+						if (v > Int32.MaxValue || v < Int32.MinValue) return TypeDesc.INT64;
+						if (v > Int16.MaxValue || v < Int16.MinValue) return TypeDesc.INT32;
+						if (v > SByte.MaxValue || v < SByte.MinValue) return TypeDesc.INT16;
+						return TypeDesc.INT8;
+					}
+				}
+				UInt64 v;
+				if (UInt64.TryParse(Value, out v))
+				{
+					if (v > UInt32.MaxValue || v < UInt32.MinValue) return TypeDesc.UINT64;
+					if (v > UInt16.MaxValue || v < UInt16.MinValue) return TypeDesc.UINT32;
+					if (v > byte.MaxValue || v < byte.MinValue) return TypeDesc.UINT32;
+					return TypeDesc.UINT8;
+				}
+				return TypeDesc.None;
+			}
+		}
 		public string Value;
 		public override void Accept(IAstVisitor v) => v.Visit(this);
         public override string ToString()
@@ -915,7 +948,7 @@ namespace AOParser.Ast
 		}
 		public class NumberFactor : IFactor
 		{
-			public override TypeDesc TypeDescr => TypeDesc.Predefined("NUMBER", null);//todo
+			public override TypeDesc TypeDescr => Value.TypeDescr;//todo
 			public Number Value;
 			public override void Accept(IAstVisitor v) => v.Visit(this);
 			public override string ToString()

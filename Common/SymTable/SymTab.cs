@@ -60,11 +60,22 @@ namespace Common.SymTable
 	// Types
 	//----------------------------------------------------------------------------------------------
 	public enum TypeForm {
-		NONE = 0, STRUCT = 10, UNION = 11, ENUM = 12, PTR = 13, ARRAY = 14, FUNC = 15, PREDEFINED = 16
+		NONE = 0, UINT8, INT8, UINT16, INT16, UINT32, INT32, UINT64, INT64, FLOAT32, FLOAT64, STRUCT = 10, UNION = 11, ENUM = 12, PTR = 13, ARRAY = 14, FUNC = 15, PREDEFINED = 16
 	}
 
 	public class TypeDesc
 	{
+		public static TypeDesc UINT8 = new TypeDesc(TypeForm.UINT8);
+		public static TypeDesc INT8 = new TypeDesc(TypeForm.INT8);
+		public static TypeDesc UINT16 = new TypeDesc(TypeForm.UINT16);
+		public static TypeDesc INT16 = new TypeDesc(TypeForm.INT16);
+		public static TypeDesc INT32 = new TypeDesc(TypeForm.INT32);
+		public static TypeDesc INT64 = new TypeDesc(TypeForm.INT64);
+		public static TypeDesc UINT32 = new TypeDesc(TypeForm.UINT32);
+		public static TypeDesc UINT64 = new TypeDesc(TypeForm.UINT64);
+		public static TypeDesc FLOAT32 = new TypeDesc(TypeForm.FLOAT32);
+		public static TypeDesc FLOAT64 = new TypeDesc(TypeForm.FLOAT64);
+
 		public static TypeDesc Predefined(String name, Scope scope)
 		{
 			return new TypeDesc(TypeForm.PREDEFINED)
