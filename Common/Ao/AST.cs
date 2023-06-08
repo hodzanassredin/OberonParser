@@ -75,9 +75,10 @@ namespace AOParser.Ast
 
 	public class Qualident : AstElement
 	{
-        public Qualident(SymTab tab)
+		public bool IsSelf => Ident2 == null && scope.IsSelf(Ident1.Name);
+        public Qualident(Scope scope)
         {
-			this.tab = tab;
+			this.scope = scope;
 
 		}
 		public Ident Ident1;
@@ -87,11 +88,11 @@ namespace AOParser.Ast
         {
             return Ident2 != null ? $"{Ident1}.{Ident2}" : Ident1.ToString();
         }
-		private readonly SymTab tab;
+		private readonly Scope scope;
 
 		public TypeDesc FindType()
 		{
-			return TypeDesc.Predefined(ToString(), tab.curScope);
+			return TypeDesc.Predefined(ToString(), scope);
 		}
 	}
 	public class Guard : AstElement

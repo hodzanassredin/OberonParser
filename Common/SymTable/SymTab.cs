@@ -165,13 +165,29 @@ namespace Common.SymTable
 	//----------------------------------------------------------------------------------------------
 	public class Scope
 	{
+		bool isSelf = false;
 		public static Obj noObj = new Obj(ObjCLass.NONE, "???", TypeDesc.None, "");
-		public Scope()
+		public Scope(bool isSelf)
         {
+            this.isSelf = isSelf;	
         }
         public List<Obj> locals = new List<Obj>();
 
 		public Scope outer;
+
+		public bool IsSelf(string name)
+		{
+			for (Scope s = this; s != null; s = s.outer)
+			{
+				foreach (Obj x in s.locals)
+				{
+					if (x.name.Equals(name)) return s.isSelf;
+				}
+			}
+			// when all declarations are processed correctly this error should be reported
+			// Error("-- " + name + " undeclared");
+			return false;
+		}
 
 		public Obj Find(string name)
 		{
@@ -239,10 +255,10 @@ namespace Common.SymTable
 			return curScope.Find(name);
 		}
 
-		public void OpenScope()
+		public void OpenScope(bool isSelf = false)
 		{
 			Scope s = curScope;
-			curScope = new Scope();
+			curScope = new Scope(isSelf);
 			curScope.outer = s;
 		}
 

@@ -151,7 +151,7 @@ PRODUCTIONS
 			|																	(. var at = new AOParser.Ast.IType.PointerType(); .)
 				"POINTER" [SysFlag<out at.SysFlag>] "TO" Type<out at.Type_>		(. o = at; .)
 
-			| 																	(. symTab.OpenScope(); var at = new AOParser.Ast.IType.ObjectType(symTab.curScope); .)
+			| 																	(. symTab.OpenScope(true); var at = new AOParser.Ast.IType.ObjectType(symTab.curScope); .)
 				"OBJECT" [
 				[SysFlag<out at.SysFlag>] 
 				["(" Qualident<out at.Qualident> ")"] 
@@ -358,7 +358,7 @@ PRODUCTIONS
 		}.
 
 	Qualident<out AOParser.Ast.Qualident o>
-		=																		(. o = new AOParser.Ast.Qualident(symTab); .)
+		=																		(. o = new AOParser.Ast.Qualident(symTab.curScope); .)
 		Ident<out o.Ident1> [IF(IsModule()) "." Ident<out o.Ident2>] .
 
 	IdentDef<out AOParser.Ast.IdentDef o> 	

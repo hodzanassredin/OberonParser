@@ -105,6 +105,24 @@ namespace Common.Mappers
             if (simpleTypeMap.ContainsKey(o.ToString())) {
                 return simpleTypeMap[o.ToString()];
             }
+            if (o.IsSelf) {
+                return new CPParser.Ast.Qualident(null)
+                {
+                    Ident1 = new CPParser.Ast.Ident() {Name = "SELF" },
+                    Ident2 = Map(o.Ident1)
+                };
+            }
+
+            if (o.Ident1.Name == "Math" && o.Ident2 != null) {
+
+                var name = o.Ident2.Name;
+                name = char.ToUpper(name[0]) + name.Substring(1);
+                return new CPParser.Ast.Qualident(null)
+                {
+                    Ident1 = Map(o.Ident1),
+                    Ident2 = new CPParser.Ast.Ident {Name = name }
+                };
+            }
 
             return new CPParser.Ast.Qualident(null) { 
                 Ident1 = Map(o.Ident1),
@@ -267,7 +285,6 @@ namespace Common.Mappers
                 IdentDef = Map(o.IdentDef)
             };
         }
-        
         public (CPParser.Ast.IType.PointerType, List<CPParser.Ast.ProcDecl>) Map(AOParser.Ast.IType.ObjectType o)
         {
             var vars = o.DeclSeq.ConstTypeVarDecls
@@ -279,6 +296,7 @@ namespace Common.Mappers
                             IdentList = Map(x.IdentList),
                             Type_ = Map(x.Type_).Item1//TODO support procs for anonymous objects
                         }).Cast<CPParser.Ast.AstElement>().ToList();
+
 
             var procs = o.DeclSeq.ProcDecl
                         .Cast<AOParser.Ast.ProcDecl>()

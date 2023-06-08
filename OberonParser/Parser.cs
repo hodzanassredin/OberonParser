@@ -226,7 +226,7 @@ public Common.SymTable.SymTab symTab = new ();
 	}
 
 	void Qualident(out AOParser.Ast.Qualident o) {
-		o = new AOParser.Ast.Qualident(symTab); 
+		o = new AOParser.Ast.Qualident(symTab.curScope); 
 		Ident(out o.Ident1);
 		if (IsModule()) {
 			Expect(8);
@@ -366,7 +366,7 @@ public Common.SymTable.SymTab symTab = new ();
 			break;
 		}
 		case 32: {
-			symTab.OpenScope(); var at = new AOParser.Ast.IType.ObjectType(symTab.curScope); 
+			symTab.OpenScope(true); var at = new AOParser.Ast.IType.ObjectType(symTab.curScope); 
 			Get();
 			if (StartOf(2)) {
 				if (la.kind == 23) {
