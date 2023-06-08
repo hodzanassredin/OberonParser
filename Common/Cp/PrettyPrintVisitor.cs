@@ -806,7 +806,7 @@ namespace CPParser
 
         public void Visit(Comment comment)
         {
-            sw.Write($"(*{comment.Content}*)");
+            sw.WriteLine($"(*{comment.Content}*)");
         }
     }
 }

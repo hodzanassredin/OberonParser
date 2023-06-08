@@ -56,7 +56,7 @@ namespace AOParser.Ast
         {
 			var sb = new StringBuilder();
 			foreach (var item in Value) { 
-				sb.AppendLine(item.ToString());
+				sb.Append(item.ToString());
 			}	
             return sb.ToString();
         }

@@ -3,9 +3,6 @@ using System.Text;
 
 namespace Common.Mappers
 {
-
-
-
     public class AoToCpMapper 
     {
         public static CPParser.Ast.Qualident GetQualident(string name) {
@@ -143,7 +140,9 @@ namespace Common.Mappers
             }
             if (o.Body.StatBlock != null)
             {
-                res.Begin = Map(o.Body.StatBlock.StatementSeq);
+                res.Begin = Map(o.Body.StatBlock);
+
+                
             }
             return res;
             
@@ -294,7 +293,7 @@ namespace Common.Mappers
                                 //ReceiverPrefix = CPParser.Ast.Receiver.Prefix., //dont need for pointer record
                                 TypeIdent = Map(o.Ident)
                             },
-                            StatementSeq = Map(x.Body.StatBlock.StatementSeq),
+                            StatementSeq = Map(x.Body.StatBlock),
                             FormalPars = Map(x.ProcHead.FormalPars),
                             MethAttributes = new CPParser.Ast.MethAttributes() { 
                                 IsNew = true,
@@ -360,7 +359,7 @@ namespace Common.Mappers
             return new CPParser.Ast.ProcDecl {
                 DeclSeq = Map(o.DeclSeq),
                 FormalPars = Map(o.ProcHead.FormalPars),
-                StatementSeq = Map(o.Body.StatBlock.StatementSeq),
+                StatementSeq = Map(o.Body.StatBlock),
                 MethAttributes = new CPParser.Ast.MethAttributes()
             };
         }
@@ -428,23 +427,34 @@ namespace Common.Mappers
                 ConstExpr2 = Map(o.ConstExpr2)
             };
         }
-
+        public CPParser.Ast.StatementSeq Map(AOParser.Ast.StatBlock o)
+        {
+            var res = Map(o.StatementSeq);
+            if (o.IdentLists.Any()) {
+                if (o.IdentLists.Any())
+                {
+                    var comment = new CPParser.Ast.Comment() { Content = "NOT SUPPORTED CONV StatBlock Idents: { " + o.IdentLists.ToString() + " }" };
+                    res.CommentsBefore.Add(comment);
+                }
+            }
+            return res;
+        }
         public CPParser.Ast.StatementSeq Map(AOParser.Ast.StatementSeq o)
         {
             if (o == null) return null;
             return new CPParser.Ast.StatementSeq { 
-                Statements = MapLst<AOParser.Ast.IStatement, CPParser.Ast.IStatement>(o.Statements,Map)
+                Statements = MapLst<AOParser.Ast.IStatement, CPParser.Ast.AstElement>(o.Statements,Map)
             };
         }
 
-        private CPParser.Ast.IStatement Map(AOParser.Ast.IStatement arg)
+        private CPParser.Ast.AstElement Map(AOParser.Ast.IStatement arg)
         {
             switch (arg)
             {
                 case AOParser.Ast.IStatement.AssignmentStatement s:
                     return Map(s);
                 case AOParser.Ast.IStatement.AwaitStatement s:
-                    throw new NotSupportedException("AwaitStatement");
+                    return new CPParser.Ast.Comment() {Content = "NOT SUPPORTED CONV StatBlockStatement: " + s.ToString() };
                 case AOParser.Ast.IStatement.CaseStatement s:
                     return Map(s);
                 case AOParser.Ast.IStatement.ExitStatement s:
@@ -466,7 +476,7 @@ namespace Common.Mappers
                 case AOParser.Ast.IStatement.WhileStatement s:
                     return Map(s);
                 case AOParser.Ast.IStatement.StatBlockStatement s:
-                    throw new NotSupportedException("StatBlockStatement");
+                    return new CPParser.Ast.Comment() { Content = "NOT SUPPORTED CONV StatBlockStatement: " + s.ToString() };
                 default:
                     throw new NotSupportedException();
             }
