@@ -328,7 +328,7 @@ PRODUCTIONS
 
 
 	Designator<out AOParser.Ast.Designator o>
-		=																		(. o = new AOParser.Ast.Designator(this.symTab); .) 
+		=																		(. o = new AOParser.Ast.Designator(this.symTab.curScope); .) 
 		Qualident<out o.Qualident> 
 		{ 
 			  "."																(. var s = new AOParser.Ast.Designator.IDesignatorSpec.RecordDesignatorSpec(); .) 
@@ -337,7 +337,7 @@ PRODUCTIONS
 			ExprList<out s.Value> "]"											(. o.Specs.Add(s); .)
 			| "^"																(. var s = new AOParser.Ast.Designator.IDesignatorSpec.PointerDesignatorSpec(); .) 
 																				(. o.Specs.Add(s); .)
-			| IF(IsCast()) "("																(. var s = new AOParser.Ast.Designator.IDesignatorSpec.CastDesignatorSpec(symTab); .) 
+			| IF(IsCast()) "("													(. var s = new AOParser.Ast.Designator.IDesignatorSpec.CastDesignatorSpec(symTab.curScope); .) 
 			Qualident<out s.Value>												(. o.Specs.Add(s); .)  
 			")" 
 			| 																	(. var s = new AOParser.Ast.Designator.IDesignatorSpec.ProcCallDesignatorSpec(); .)

@@ -60,11 +60,61 @@ namespace Common.SymTable
 	// Types
 	//----------------------------------------------------------------------------------------------
 	public enum TypeForm {
-		NONE = 0, UINT8, INT8, UINT16, INT16, UINT32, INT32, UINT64, INT64, FLOAT32, FLOAT64, STRUCT = 10, UNION = 11, ENUM = 12, PTR = 13, ARRAY = 14, FUNC = 15, PREDEFINED = 16
-	}
+		BOOL = 0,
+		UINT8 = 1,
+		INT8 = 2,
+		UINT16 = 3,
+		INT16 = 4,
+		UINT32 = 5,
+		INT32 = 6,
+		UINT64 = 7,
+		INT64 = 8,
+		FLOAT32 = 9,
+		FLOAT64 = 10,
+		NONE = 11,
 
+		STRUCT = 12, UNION = 13, ENUM = 14, PTR = 15, ARRAY = 16, FUNC = 17, PREDEFINED = 18
+	}
 	public class TypeDesc
 	{
+		public bool IsSimple => form <= TypeForm.FLOAT64;
+
+		public static TypeDesc FromNumber(String number) {
+			if (number.Contains("."))
+			{
+				Double v;
+				if (Double.TryParse(number.Replace('.', ','), System.Globalization.NumberStyles.Float, null, out v))
+				{
+					if (v > float.MaxValue || v < float.MinValue) return TypeDesc.FLOAT64;
+					return TypeDesc.FLOAT32;
+				}
+			}
+
+			else if (number.StartsWith("-"))
+			{
+				Int64 v;
+				if (Int64.TryParse(number, out v))
+				{
+					if (v > Int32.MaxValue || v < Int32.MinValue) return TypeDesc.INT64;
+					if (v > Int16.MaxValue || v < Int16.MinValue) return TypeDesc.INT32;
+					if (v > SByte.MaxValue || v < SByte.MinValue) return TypeDesc.INT16;
+					return TypeDesc.INT8;
+				}
+			}
+			else
+			{
+				UInt64 v;
+				if (UInt64.TryParse(number, out v))
+				{
+					if (v > UInt32.MaxValue || v < UInt32.MinValue) return TypeDesc.UINT64;
+					if (v > UInt16.MaxValue || v < UInt16.MinValue) return TypeDesc.UINT32;
+					if (v > byte.MaxValue || v < byte.MinValue) return TypeDesc.UINT32;
+					return TypeDesc.UINT8;
+				}
+			}
+			return TypeDesc.None;
+		}
+		public static TypeDesc BOOL = new TypeDesc(TypeForm.BOOL);
 		public static TypeDesc UINT8 = new TypeDesc(TypeForm.UINT8);
 		public static TypeDesc INT8 = new TypeDesc(TypeForm.INT8);
 		public static TypeDesc UINT16 = new TypeDesc(TypeForm.UINT16);
@@ -148,7 +198,9 @@ namespace Common.SymTable
         {
             switch (form)
             {
-                case TypeForm.NONE:
+				case TypeForm.PREDEFINED:
+					return predefinedName;
+				case TypeForm.NONE:
 					return "NONE";
 				case TypeForm.STRUCT:
 					return $"RECORD ({elemType}) BEGIN {scope} END;";
@@ -166,7 +218,7 @@ namespace Common.SymTable
                 default:
                     break;
             }
-			return predefinedName;
+			return this.form.ToString();
         }
     }
 

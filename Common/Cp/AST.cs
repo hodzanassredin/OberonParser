@@ -1,3 +1,4 @@
+using Common.Cp;
 using Common.SymTable;
 using System.Collections;
 using System.Text;
@@ -527,7 +528,19 @@ namespace CPParser.Ast
 
 	public class SimpleExpr : AstElement
 	{
-		public Common.SymTable.TypeDesc TypeDescr => Term.TypeDescr;
+		public Common.SymTable.TypeDesc TypeDescr
+        {
+			get {
+				var type = Term.TypeDescr;
+
+                foreach (var item in SimpleExprElements.Cast<SimpleElementExpr>())
+                {
+					type = TypeResolver.ResolveAddOp(item.AddOp.Op, type.form, item.Term.TypeDescr.form);
+                }
+
+				return type;
+			}
+		}
 		public enum SimpleExprPrefix
 		{
 			Add, Sub
@@ -571,7 +584,20 @@ namespace CPParser.Ast
     }
 	public class Term : AstElement
 	{
-		public Common.SymTable.TypeDesc TypeDescr => Factor.TypeDescr;
+		public Common.SymTable.TypeDesc TypeDescr
+		{
+			get
+			{
+				var type = Factor.TypeDescr;
+
+				foreach (var item in TermElements.Cast<TermElementExpr>())
+				{
+					type = TypeResolver.ResolveMulOp(item.MulOp.Op, type.form, item.Factor.TypeDescr.form);
+				}
+
+				return type;
+			}
+		}
 		public IFactor Factor;
 		public AstList TermElements = new AstList();
 		public override void Accept(IAstVisitor v) => v.Visit(this);
@@ -584,8 +610,7 @@ namespace CPParser.Ast
 
 	public class Expr : AstElement
 	{
-		public Common.SymTable.TypeDesc TypeDescr => SimpleExpr.TypeDescr;
-
+		public Common.SymTable.TypeDesc TypeDescr => TypeResolver.ResolveRel(Relation.Op, SimpleExpr.TypeDescr.form,SimpleExpr2.TypeDescr.form);
 
 		public SimpleExpr SimpleExpr;
 		public Relation Relation;

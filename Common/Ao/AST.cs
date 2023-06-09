@@ -75,6 +75,24 @@ namespace AOParser.Ast
 
 	public class Qualident : AstElement
 	{
+		Dictionary<string, TypeDesc> baseTypes = new Dictionary<string, TypeDesc>
+		{
+			["BOOLEAN"] = TypeDesc.BOOL,
+			["CHAR"] = TypeDesc.UINT8,
+			["SIGNED8"] = TypeDesc.INT8,
+			["SIGNED16"] = TypeDesc.INT16,
+			["SIGNED32"] = TypeDesc.INT32,
+			["SIGNED64"] = TypeDesc.INT64,
+			["UNSIGNED8"] = TypeDesc.UINT8,
+			["UNSIGNED16"] = TypeDesc.UINT16,
+			["UNSIGNED32"] = TypeDesc.UINT32,
+			["UNSIGNED64"] = TypeDesc.UINT64,
+			["FLOAT32"] = TypeDesc.FLOAT32,
+			["FLOAT64"] = TypeDesc.FLOAT64,
+			["REAL"] = TypeDesc.FLOAT64,
+			["INTEGER"] = TypeDesc.INT32,
+		};
+
 		public bool IsSelf => Ident2 == null && scope.IsSelf(Ident1.Name);
         public Qualident(Scope scope)
         {
@@ -92,6 +110,10 @@ namespace AOParser.Ast
 
 		public TypeDesc FindType()
 		{
+			var name = ToString();
+			if (baseTypes.ContainsKey(name)) {
+				return baseTypes[name];
+			}
 			return TypeDesc.Predefined(ToString(), scope);
 		}
 	}
@@ -891,39 +913,8 @@ namespace AOParser.Ast
 	
 	public class Number : AstElement
 	{
-		public TypeDesc TypeDescr { get
-			{
-				if (Value.Contains("."))
-				{
-					Double v;
-					if (Double.TryParse(Value.Replace('.', ','), System.Globalization.NumberStyles.Float, null, out v)) {
-						if (v > float.MaxValue || v < float.MinValue) return TypeDesc.FLOAT64;
-						return TypeDesc.FLOAT32;
-					}
-				}
+		public TypeDesc TypeDescr => TypeDesc.FromNumber(Value);
 
-				if (Value.StartsWith("-"))
-				{
-					Int64 v;
-					if (Int64.TryParse(Value, out v))
-					{
-						if (v > Int32.MaxValue || v < Int32.MinValue) return TypeDesc.INT64;
-						if (v > Int16.MaxValue || v < Int16.MinValue) return TypeDesc.INT32;
-						if (v > SByte.MaxValue || v < SByte.MinValue) return TypeDesc.INT16;
-						return TypeDesc.INT8;
-					}
-				}
-				UInt64 v;
-				if (UInt64.TryParse(Value, out v))
-				{
-					if (v > UInt32.MaxValue || v < UInt32.MinValue) return TypeDesc.UINT64;
-					if (v > UInt16.MaxValue || v < UInt16.MinValue) return TypeDesc.UINT32;
-					if (v > byte.MaxValue || v < byte.MinValue) return TypeDesc.UINT32;
-					return TypeDesc.UINT8;
-				}
-				return TypeDesc.None;
-			}
-		}
 		public string Value;
 		public override void Accept(IAstVisitor v) => v.Visit(this);
         public override string ToString()
@@ -958,7 +949,7 @@ namespace AOParser.Ast
 		}
 		public class CharacterFactor : IFactor
 		{
-			public override TypeDesc TypeDescr => TypeDesc.Predefined("CHAR", null);
+			public override TypeDesc TypeDescr => TypeDesc.UINT8;
 			public String Value;
 			public override void Accept(IAstVisitor v) => v.Visit(this);
 			public override string ToString()
@@ -968,7 +959,7 @@ namespace AOParser.Ast
 		}
 		public class StringFactor : IFactor
 		{
-			public override TypeDesc TypeDescr => TypeDesc.Array(TypeDesc.Predefined("CHAR", null), Array.Empty<int>());
+			public override TypeDesc TypeDescr => TypeDesc.Array(TypeDesc.UINT8, Array.Empty<int>());
 
 			public String Value;
 			public override void Accept(IAstVisitor v) => v.Visit(this);
@@ -1020,9 +1011,9 @@ namespace AOParser.Ast
 
 	public class Designator : AstElement
 	{
-		public Designator(Common.SymTable.SymTab tab)
+		public Designator(Common.SymTable.Scope scope)
 		{
-			this.tab = tab;
+			this.scope = scope;
 		}
 		public abstract class IDesignatorSpec : AstElement
 		{
@@ -1066,11 +1057,11 @@ namespace AOParser.Ast
 				}
 			}
 			public class CastDesignatorSpec : IDesignatorSpec {
-				public CastDesignatorSpec(Common.SymTable.SymTab tab)
+				public CastDesignatorSpec(Common.SymTable.Scope scope)
 				{
-					this.tab = tab;
+					this.scope = scope;
 				}
-				private SymTab tab;
+				private Scope scope;
 				public Qualident Value;
 				public override void Accept(IAstVisitor v) => v.Visit(this);
 				public override string ToString()
@@ -1079,7 +1070,7 @@ namespace AOParser.Ast
 				}
 				public override TypeDesc Specify(TypeDesc parent)
 				{
-					return tab.Find(this.Value.Ident2.Name)?.type;
+					return scope.Find(this.Value.ToString())?.type;
 				}
 			}
 			public class ProcCallDesignatorSpec : IDesignatorSpec {
@@ -1095,14 +1086,14 @@ namespace AOParser.Ast
 				}
 			}
 		}
-		private readonly SymTab tab;
+		private Scope scope;
 
 		public TypeDesc TypeDescr
 		{
 			get
 			{
-				var t = tab.Find(this.Qualident.Ident2.Name)?.type;
-				if (t == null) return t;
+				var t = scope.Find(this.Qualident.ToString())?.type;
+				if (t == null || t.form == TypeForm.NONE) return t;
 
 				foreach (var spec in Specs.Cast<IDesignatorSpec>())
 				{

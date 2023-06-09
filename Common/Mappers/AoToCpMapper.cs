@@ -718,19 +718,40 @@ namespace Common.Mappers
             };
         }
 
+        public CPParser.Ast.Expr Downcast(CPParser.Ast.Expr e) {
+            return new CPParser.Ast.Expr { 
+                SimpleExpr = new CPParser.Ast.SimpleExpr { 
+                    Term = new CPParser.Ast.Term { 
+                        Factor = new CPParser.Ast.IFactor.DesignatorFactor() { 
+                            Value = new CPParser.Ast.Designator(null) { 
+                                Qualident = GetQualident("SHORT"),
+                                Specs = new CPParser.Ast.AstList { new CPParser.Ast.Designator.IDesignatorSpec.ProcCallDesignatorSpec() { 
+                                    Value = new CPParser.Ast.ExprList{ 
+                                        Exprs = new CPParser.Ast.AstList(){ 
+                                            e
+                                        }
+                                    }
+                                } }
+                            }
+                        }
+                    }
+                }
+            };
+        }
+
         public CPParser.Ast.IStatement.AssignmentStatement Map(AOParser.Ast.IStatement.AssignmentStatement o)
         {
-            if (o.Expr.TypeDescr != o.Designator.TypeDescr)
-            { 
-            
-            }
-
+            var downcast = o.Designator.TypeDescr.IsSimple && 
+                           o.Expr.TypeDescr.IsSimple &&
+                           o.Designator.TypeDescr.form < o.Expr.TypeDescr.form;
 
             var res = new CPParser.Ast.IStatement.AssignmentStatement { 
                 Expr = Map(o.Expr),
                 Designator = Map(o.Designator)
             };
-
+            if (downcast) {
+                res.Expr = Downcast(res.Expr);
+            }
             return res;
         }
 

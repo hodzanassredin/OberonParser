@@ -661,7 +661,7 @@ public Common.SymTable.SymTab symTab = new ();
 	}
 
 	void Designator(out AOParser.Ast.Designator o) {
-		o = new AOParser.Ast.Designator(this.symTab); 
+		o = new AOParser.Ast.Designator(this.symTab.curScope); 
 		Qualident(out o.Qualident);
 		while (StartOf(5)) {
 			if (la.kind == 8) {
@@ -681,7 +681,7 @@ public Common.SymTable.SymTab symTab = new ();
 				o.Specs.Add(s); 
 			} else if (IsCast()) {
 				Expect(25);
-				var s = new AOParser.Ast.Designator.IDesignatorSpec.CastDesignatorSpec(symTab); 
+				var s = new AOParser.Ast.Designator.IDesignatorSpec.CastDesignatorSpec(symTab.curScope); 
 				Qualident(out s.Value);
 				o.Specs.Add(s); 
 				Expect(26);
