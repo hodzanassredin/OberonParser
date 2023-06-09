@@ -236,23 +236,23 @@ public class Scanner {
 		start[58] = 42; 
 		start[44] = 21; 
 		start[61] = 22; 
-		start[42] = 23; 
+		start[94] = 23; 
 		start[38] = 24; 
-		start[91] = 25; 
-		start[93] = 26; 
+		start[126] = 25; 
+		start[45] = 26; 
 		start[40] = 27; 
 		start[41] = 28; 
 		start[123] = 29; 
 		start[125] = 30; 
 		start[124] = 31; 
 		start[43] = 33; 
-		start[45] = 34; 
-		start[126] = 35; 
-		start[35] = 36; 
+		start[35] = 34; 
 		start[60] = 43; 
 		start[62] = 44; 
-		start[47] = 39; 
-		start[94] = 40; 
+		start[42] = 37; 
+		start[47] = 38; 
+		start[91] = 39; 
+		start[93] = 40; 
 		start[Buffer.EOF] = -1;
 
 	}
@@ -355,14 +355,14 @@ public class Scanner {
 			case "CONST": t.kind = 16; break;
 			case "TYPE": t.kind = 17; break;
 			case "VAR": t.kind = 18; break;
-			case "ARRAY": t.kind = 27; break;
-			case "OF": t.kind = 28; break;
-			case "RECORD": t.kind = 29; break;
-			case "POINTER": t.kind = 30; break;
-			case "TO": t.kind = 31; break;
-			case "OBJECT": t.kind = 32; break;
-			case "IMPLEMENTS": t.kind = 33; break;
-			case "BEGIN": t.kind = 34; break;
+			case "ARRAY": t.kind = 29; break;
+			case "OF": t.kind = 30; break;
+			case "RECORD": t.kind = 31; break;
+			case "POINTER": t.kind = 32; break;
+			case "TO": t.kind = 33; break;
+			case "OBJECT": t.kind = 34; break;
+			case "IMPLEMENTS": t.kind = 35; break;
+			case "BEGIN": t.kind = 36; break;
 			case "IF": t.kind = 37; break;
 			case "THEN": t.kind = 38; break;
 			case "ELSIF": t.kind = 39; break;
@@ -379,12 +379,12 @@ public class Scanner {
 			case "EXIT": t.kind = 51; break;
 			case "RETURN": t.kind = 52; break;
 			case "AWAIT": t.kind = 53; break;
-			case "NIL": t.kind = 57; break;
-			case "IN": t.kind = 64; break;
-			case "IS": t.kind = 65; break;
-			case "DIV": t.kind = 67; break;
-			case "MOD": t.kind = 68; break;
-			case "OR": t.kind = 69; break;
+			case "NIL": t.kind = 56; break;
+			case "IN": t.kind = 62; break;
+			case "IS": t.kind = 63; break;
+			case "DIV": t.kind = 66; break;
+			case "MOD": t.kind = 67; break;
+			case "OR": t.kind = 68; break;
 			default: break;
 		}
 	}
@@ -513,9 +513,9 @@ public class Scanner {
 			case 28:
 				{t.kind = 26; break;}
 			case 29:
-				{t.kind = 35; break;}
+				{t.kind = 27; break;}
 			case 30:
-				{t.kind = 36; break;}
+				{t.kind = 28; break;}
 			case 31:
 				{t.kind = 42; break;}
 			case 32:
@@ -523,17 +523,17 @@ public class Scanner {
 			case 33:
 				{t.kind = 55; break;}
 			case 34:
-				{t.kind = 56; break;}
+				{t.kind = 57; break;}
 			case 35:
-				{t.kind = 58; break;}
-			case 36:
 				{t.kind = 59; break;}
-			case 37:
+			case 36:
 				{t.kind = 61; break;}
+			case 37:
+				{t.kind = 64; break;}
 			case 38:
-				{t.kind = 63; break;}
+				{t.kind = 65; break;}
 			case 39:
-				{t.kind = 66; break;}
+				{t.kind = 69; break;}
 			case 40:
 				{t.kind = 70; break;}
 			case 41:
@@ -545,13 +545,13 @@ public class Scanner {
 				if (ch == '=') {AddCh(); goto case 20;}
 				else {t.kind = 20; break;}
 			case 43:
-				recEnd = pos; recKind = 60;
-				if (ch == '=') {AddCh(); goto case 37;}
-				else {t.kind = 60; break;}
+				recEnd = pos; recKind = 58;
+				if (ch == '=') {AddCh(); goto case 35;}
+				else {t.kind = 58; break;}
 			case 44:
-				recEnd = pos; recKind = 62;
-				if (ch == '=') {AddCh(); goto case 38;}
-				else {t.kind = 62; break;}
+				recEnd = pos; recKind = 60;
+				if (ch == '=') {AddCh(); goto case 36;}
+				else {t.kind = 60; break;}
 
 		}
 		t.val = new String(tval, 0, tlen);

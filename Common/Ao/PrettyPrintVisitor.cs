@@ -517,7 +517,7 @@ namespace AOParser
         public void Visit(IType.RecordType o)
         {
             sw.Write("RECORD");
-            o.SysFlag?.AcceptWithComments(this);
+            
             if (o.Qualident != null) {
                 sw.Write("(");
                 o.Qualident.AcceptWithComments(this);
@@ -686,11 +686,16 @@ namespace AOParser
             sw.Write("END "); o.Ident.AcceptWithComments(this);
         }
 
-        public void Visit(SysFlag o)
+        public void Visit(Flag o)
         {
-            sw.Write("[");
             o.Ident.AcceptWithComments(this);
-            sw.Write("]");
+        }
+
+        public void Visit(Flags o)
+        {
+            sw.Write(" {");
+            VisitList(o.Values, () => { }, () => { });
+            sw.Write("}");
         }
 
         public void Visit(Body o)
@@ -717,10 +722,8 @@ namespace AOParser
         public void Visit(StatBlock o)
         {
             WriteTabs(); sw.Write("BEGIN");
-            if (o.IdentLists.Any()) {
-                sw.Write(" {");
-                VisitList(o.IdentLists, () => { }, () => { });
-                sw.Write("}");
+            if (o.Flags!=null) {
+                o.Flags.AcceptWithComments(this);
             }
             sw.WriteLine();
             if (o.StatementSeq != null)
@@ -734,23 +737,13 @@ namespace AOParser
 
         public void Visit(ProcHead o)
         {
-            if (o.SysFlag != null)
+            if (o.Flags != null)
             {
-                o.SysFlag.AcceptWithComments(this);
+                o.Flags.AcceptWithComments(this);
             }
-            if (o.Tag.HasValue)
+            if (o.Tag!=null)
             {
-                switch (o.Tag.Value)
-                {
-                    case ProcHead.Tags.Export:
-                        sw.Write("*");
-                        break;
-                    case ProcHead.Tags.Initializer:
-                        sw.Write("&");
-                        break;
-                    default:
-                        break;
-                }
+                sw.Write(o.Tag);
             }
             o.IdentDef.AcceptWithComments(this);
             if (o.FormalPars != null)
@@ -762,8 +755,8 @@ namespace AOParser
         public void Visit(IType.ObjectType o)
         {
             sw.Write("OBJECT");
-            if (o.SysFlag != null) { 
-                o.SysFlag.AcceptWithComments(this); 
+            if (o.Flags != null) { 
+                o.Flags.AcceptWithComments(this); 
             }
             if (o.Qualident != null)
             {

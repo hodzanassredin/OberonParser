@@ -60,7 +60,6 @@ namespace AOParser
         void Visit(Definition definition);
         void Visit(IFactor.ExprFactor o);
 		void Visit(IFactor.NegFactor o);
-        void Visit(SysFlag sysFlag);
         void Visit(Body body);
         void Visit(IFactor.NilFactor o);
         void Visit(FieldDecl fieldDecl);
@@ -80,5 +79,7 @@ namespace AOParser
         void Visit(IStatement.AwaitStatement awaitStatement);
         void Visit(IStatement.StatBlockStatement statBlockStatement);
         void Visit(Designator.IDesignatorSpec.PointerDesignatorSpec pointerDesignatorSpec);
+        void Visit(Flag flag);
+        void Visit(Flags flags);
     }
 }

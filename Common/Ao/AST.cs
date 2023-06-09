@@ -153,38 +153,59 @@ namespace AOParser.Ast
 	}
 	public class ProcHead : AstElement
 	{
-		public enum Tags {
-			Export, Initializer
-		}
-		public SysFlag SysFlag;
-		public IdentDef IdentDef;
+
+		public Flags Flags;
+        public IdentDef IdentDef;
 		public FormalPars FormalPars;
-		public Tags? Tag;
+		public String Tag;
 		public override void Accept(IAstVisitor v) => v.Visit(this);
 		public override string ToString()
 		{
-			return $"{SysFlag} {Tag} {IdentDef} {FormalPars}";
+			return $"{Flags} {Tag} {IdentDef} {FormalPars}";
 		}
 	}
 
-	public class SysFlag : AstElement
+	public class Flag : AstElement
 	{
 		public Ident Ident;
+        public Expr QualExpr;
+        public Expr AssignExpr;
+
+        public override void Accept(IAstVisitor v) => v.Visit(this);
+		public override string ToString()
+		{
+			var sb = new StringBuilder();
+			sb.Append(Ident);
+			if (QualExpr != null) {
+				sb.Append($"({QualExpr})");
+			}
+			if (AssignExpr != null)
+			{
+				sb.Append($" = {AssignExpr}");
+			}
+
+			return sb.ToString();
+		}
+	}
+
+	public class Flags : AstElement
+	{
+		public AstList Values;
 		public override void Accept(IAstVisitor v) => v.Visit(this);
 		public override string ToString()
 		{
-			return $"[{Ident}]";
+			return $"{{{String.Join(",", Values)}}}";
 		}
 	}
 	public class StatBlock : AstElement
 	{
-		public AstList IdentLists = new AstList();
+		public Flags Flags;
 		public StatementSeq StatementSeq;
 
 		public override void Accept(IAstVisitor v) => v.Visit(this);
 		public override string ToString()
 		{
-			return $"BEGIN {IdentLists} {StatementSeq} END";
+			return $"BEGIN {Flags} {StatementSeq} END";
 		}
 	}
 	public class Body : AstElement
@@ -423,13 +444,12 @@ namespace AOParser.Ast
 				}
 			}
 
-			public SysFlag SysFlag;
 			public AstList ConstExprs = new AstList();
 			public IType Type_;
 			public override void Accept(IAstVisitor v) => v.Visit(this);
             public override string ToString()
             {
-                return $"ARRAY {SysFlag} {String.Join(",", ConstExprs)} OF {Type_}";
+                return $"ARRAY {String.Join(",", ConstExprs)} OF {Type_}";
             }
 
         }
@@ -440,7 +460,6 @@ namespace AOParser.Ast
             {
                 this.scope = scope;
             }
-			public SysFlag SysFlag;
 			public Qualident Qualident;
 			public FieldList FieldList;
             private readonly Scope scope;
@@ -448,7 +467,7 @@ namespace AOParser.Ast
             public override void Accept(IAstVisitor v) => v.Visit(this);
 			public override string ToString()
 			{
-				return $"RECORD {SysFlag}({Qualident}) {FieldList} END";
+				return $"RECORD ({Qualident}) {FieldList} END";
 			}
 
 			public override TypeDesc TypeDescr
@@ -466,7 +485,7 @@ namespace AOParser.Ast
             {
                 this.scope = scope;
             }
-			public SysFlag SysFlag;
+			public Flags Flags;
 			public Qualident Qualident;
 			public Qualident ImplementsQualident;
 			public DeclSeq DeclSeq;
@@ -481,7 +500,7 @@ namespace AOParser.Ast
             {
 				var impl = ImplementsQualident != null? $"IMPLEMENTS {ImplementsQualident}" : "";
 
-				return $"OBJECT {SysFlag}({Qualident}) {impl} {DeclSeq} {Body} {Ident}";
+				return $"OBJECT {Flags}({Qualident}) {impl} {DeclSeq} {Body} {Ident}";
             }
 
 			public override TypeDesc TypeDescr
@@ -499,12 +518,12 @@ namespace AOParser.Ast
 		{
 			public override TypeDesc TypeDescr => TypeDesc.Pointer(Type_.TypeDescr);
 
-			public SysFlag SysFlag;
+			public Flags Flags;
 			public IType Type_;
 			public override void Accept(IAstVisitor v) => v.Visit(this);
 			public override string ToString()
 			{
-				return $"POINTER {SysFlag} TO {Type_}";
+				return $"POINTER {Flags} TO {Type_}";
 			}
 		}
 		public class ProcedureType : IType
@@ -514,14 +533,14 @@ namespace AOParser.Ast
                 this.scope = scope;
             }
 			public override TypeDesc TypeDescr => FormalPars.TypeDescr(scope);
-			public SysFlag SysFlag;
+			public Flags Flags;
 			public FormalPars FormalPars;
             private readonly Scope scope;
 
             public override void Accept(IAstVisitor v) => v.Visit(this);
 			public override string ToString()
 			{
-				return $"PROCEDURE {SysFlag} {FormalPars}";
+				return $"PROCEDURE {Flags} {FormalPars}";
 			}
 		}
 	}

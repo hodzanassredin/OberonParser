@@ -109,15 +109,25 @@ PRODUCTIONS
 
 	ProcHead<out AOParser.Ast.ProcHead o>  
 		=																			(. o = new AOParser.Ast.ProcHead(); .)	
-		[SysFlag<out o.SysFlag>] 
-		["*"																		(. o.Tag = AOParser.Ast.ProcHead.Tags.Export; .) 
-		| "&"																		(. o.Tag = AOParser.Ast.ProcHead.Tags.Initializer; .)
-		] IdentDef<out o.IdentDef> (. symTab.OpenScope(); .)
+		["^"																		(. o.Tag = "^"; .) 
+		|"&"																		(. o.Tag = "&"; .) 
+		|"~"																		(. o.Tag = "~"; .) 
+		|"-"																		(. o.Tag = "-"; .) 
+		|Flags<out o.Flags> ["-"													(. o.Tag = "-"; .) 
+		]
+		]
+		IdentDef<out o.IdentDef> (. symTab.OpenScope(); .)
 		[FormalPars<out o.FormalPars>].
 
-	SysFlag<out AOParser.Ast.SysFlag o> 
-		=																			(. o = new AOParser.Ast.SysFlag(); .)	
-		"[" Ident<out o.Ident> "]".
+	Flag<out AOParser.Ast.Flag o> 
+		=																			(. o = new AOParser.Ast.Flag(); .)	
+		Ident<out o.Ident> ["(" Expr<out o.QualExpr> ")" | "=" Expr<out o.AssignExpr>].
+
+	Flags<out AOParser.Ast.Flags o>  
+	=																				(. o = new AOParser.Ast.Flags(); AOParser.Ast.Flag flag = null;.)	
+	"{" [ Flag<out flag>															(. o.Values.Add(flag); .) 
+	{"," Flag<out flag>															(. o.Values.Add(flag); .) 
+	} ] "}".
 
 	FormalPars<out AOParser.Ast.FormalPars o> 	
 		=																		(. o = new AOParser.Ast.FormalPars(); .)	
@@ -139,27 +149,27 @@ PRODUCTIONS
 		=																		(. var at = new AOParser.Ast.IType.SynonimType(); .)
 			Qualident<out at.Qualident>												(. o = at; .)
 			|  "ARRAY"															(. var at = new AOParser.Ast.IType.ArrayType(); AOParser.Ast.ConstExpr ce; .)
-				[SysFlag<out at.SysFlag>] [ConstExpr<out ce>						(. at.ConstExprs.Add(ce); .) 
+				[ConstExpr<out ce>						(. at.ConstExprs.Add(ce); .) 
 				{"," ConstExpr<out ce>												(. at.ConstExprs.Add(ce); .)
 				}] "OF" Type<out at.Type_>											(. o = at; .)
 
 			|																	(. symTab.OpenScope(); var at = new AOParser.Ast.IType.RecordType(symTab.curScope); .)
-				"RECORD" [SysFlag<out at.SysFlag>] 
+				"RECORD"  
 					["(" Qualident<out at.Qualident> ")"] 
 					FieldList<out at.FieldList>									
 					"END"														(. o = at; symTab.CloseScope();.)
 
 			|																	(. var at = new AOParser.Ast.IType.PointerType(); .)
-				"POINTER" [SysFlag<out at.SysFlag>] "TO" Type<out at.Type_>		(. o = at; .)
+				"POINTER" [Flags<out at.Flags>] "TO" Type<out at.Type_>		(. o = at; .)
 
 			| 																	(. symTab.OpenScope(true); var at = new AOParser.Ast.IType.ObjectType(symTab.curScope); .)
 				"OBJECT" [
-				[SysFlag<out at.SysFlag>] 
+				[Flags<out at.Flags>] 
 				["(" Qualident<out at.Qualident> ")"] 
 				["IMPLEMENTS" Qualident<out at.ImplementsQualident>] 
 				DeclSeq<out at.DeclSeq> Body<out at.Body> Ident<out at.Ident>]	(. o = at; symTab.CloseScope();.)
 			|																	(. symTab.OpenScope(); var at = new AOParser.Ast.IType.ProcedureType(symTab.curScope); .)
-				"PROCEDURE" [SysFlag<out at.SysFlag>] 
+				"PROCEDURE" [Flags<out at.Flags>]
 				[FormalPars<out at.FormalPars>]									(. o = at; symTab.CloseScope(); .).
 
 	FieldDecl<out AOParser.Ast.FieldDecl o> 	
@@ -178,9 +188,8 @@ PRODUCTIONS
 	StatBlock<out o.StatBlock> | "END".
 	
 	StatBlock<out AOParser.Ast.StatBlock o> 	
-	= 																			(. o = new AOParser.Ast.StatBlock(); AOParser.Ast.IdentList il; .)
-	"BEGIN" ["{" IdentList<out il>												(. o.IdentLists.Add(il); .)
-			"}"]												
+	= 																			(. o = new AOParser.Ast.StatBlock(); .)
+	"BEGIN" [Flags<out o.Flags>]												
 	StatementSeq<out o.StatementSeq> "END".
 
 	StatementSeq<out AOParser.Ast.StatementSeq o>	

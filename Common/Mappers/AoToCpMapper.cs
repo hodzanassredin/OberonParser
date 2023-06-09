@@ -454,10 +454,10 @@ namespace Common.Mappers
         {
             if (o == null) return null;
             var res = Map(o.StatementSeq, expecteType);
-            if (o.IdentLists.Any()) {
-                if (o.IdentLists.Any())
+            if (o.Flags!=null) {
+                if (o.Flags.Values.Any())
                 {
-                    var comment = new CPParser.Ast.Comment() { Content = "NOT SUPPORTED CONV: { " + o.IdentLists.ToString() + " }" };
+                    var comment = new CPParser.Ast.Comment() { Content = "NOT SUPPORTED CONV: " + o.Flags.ToString() };
                     res.CommentsBefore.Add(comment);
                 }
             }
@@ -936,7 +936,7 @@ namespace Common.Mappers
             };
         }
 
-        public CPParser.Ast.Comment Map(AOParser.Ast.SysFlag sysFlag)
+        public CPParser.Ast.Comment Map(AOParser.Ast.Flags sysFlag)
         {
             throw new NotImplementedException();
         }
