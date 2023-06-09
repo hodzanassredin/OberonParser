@@ -610,7 +610,7 @@ namespace CPParser.Ast
 
 	public class Expr : AstElement
 	{
-		public Common.SymTable.TypeDesc TypeDescr => TypeResolver.ResolveRel(Relation.Op, SimpleExpr.TypeDescr.form,SimpleExpr2.TypeDescr.form);
+		public Common.SymTable.TypeDesc TypeDescr => SimpleExpr2 != null ? TypeResolver.ResolveRel(Relation.Op, SimpleExpr.TypeDescr.form,SimpleExpr2.TypeDescr.form) : SimpleExpr.TypeDescr;
 
 		public SimpleExpr SimpleExpr;
 		public Relation Relation;
@@ -928,7 +928,7 @@ namespace CPParser.Ast
 		}
 		private readonly SymTab tab;
 		public TypeDesc TypeDescr { get {
-				var t = tab.Find(this.Qualident.Ident2.Name)?.type;
+				var t = tab.Find(this.Qualident.ToString())?.type;
 				if (t == null) return t;
 				
                 foreach (var spec in Specs.Cast<IDesignatorSpec>())

@@ -79,41 +79,7 @@ namespace Common.SymTable
 	{
 		public bool IsSimple => form <= TypeForm.FLOAT64;
 
-		public static TypeDesc FromNumber(String number) {
-			if (number.Contains("."))
-			{
-				Double v;
-				if (Double.TryParse(number.Replace('.', ','), System.Globalization.NumberStyles.Float, null, out v))
-				{
-					if (v > float.MaxValue || v < float.MinValue) return TypeDesc.FLOAT64;
-					return TypeDesc.FLOAT32;
-				}
-			}
-
-			else if (number.StartsWith("-"))
-			{
-				Int64 v;
-				if (Int64.TryParse(number, out v))
-				{
-					if (v > Int32.MaxValue || v < Int32.MinValue) return TypeDesc.INT64;
-					if (v > Int16.MaxValue || v < Int16.MinValue) return TypeDesc.INT32;
-					if (v > SByte.MaxValue || v < SByte.MinValue) return TypeDesc.INT16;
-					return TypeDesc.INT8;
-				}
-			}
-			else
-			{
-				UInt64 v;
-				if (UInt64.TryParse(number, out v))
-				{
-					if (v > UInt32.MaxValue || v < UInt32.MinValue) return TypeDesc.UINT64;
-					if (v > UInt16.MaxValue || v < UInt16.MinValue) return TypeDesc.UINT32;
-					if (v > byte.MaxValue || v < byte.MinValue) return TypeDesc.UINT32;
-					return TypeDesc.UINT8;
-				}
-			}
-			return TypeDesc.None;
-		}
+		
 		public static TypeDesc BOOL = new TypeDesc(TypeForm.BOOL);
 		public static TypeDesc UINT8 = new TypeDesc(TypeForm.UINT8);
 		public static TypeDesc INT8 = new TypeDesc(TypeForm.INT8);

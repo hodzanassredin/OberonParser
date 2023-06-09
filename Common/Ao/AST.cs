@@ -106,7 +106,7 @@ namespace AOParser.Ast
         {
             return Ident2 != null ? $"{Ident1}.{Ident2}" : Ident1.ToString();
         }
-		private readonly Scope scope;
+		public Scope scope;
 
 		public TypeDesc FindType()
 		{
@@ -418,8 +418,8 @@ namespace AOParser.Ast
 			{
 				get
 				{
-					var sizes = ConstExprs.Cast<ConstExpr>().Select(x => Int32.Parse(x.ToString())).ToArray();
-					return TypeDesc.Array(Type_.TypeDescr, sizes);
+					var sizes = ConstExprs.Cast<ConstExpr>().Count;//.Select(x => Int32.Parse(x.ToString())).ToArray();
+					return TypeDesc.Array(Type_.TypeDescr, new int[sizes]);
 				}
 			}
 
@@ -913,7 +913,58 @@ namespace AOParser.Ast
 	
 	public class Number : AstElement
 	{
-		public TypeDesc TypeDescr => TypeDesc.FromNumber(Value);
+		public TypeDesc GetTypeDescr()
+		{
+			var number = Value.Replace("'", "");
+			if (number.Contains("."))
+			{
+				Double v;
+				if (Double.TryParse(number.Replace('.', ','), System.Globalization.NumberStyles.Float, null, out v))
+				{
+					if (v > float.MaxValue || v < float.MinValue) return TypeDesc.FLOAT64;
+					return TypeDesc.FLOAT32;
+				}
+			}
+			else
+			{
+				Int64 v = 0;
+				if (number.StartsWith("0x")) {
+					v = Convert.ToInt64(number.Substring(2), 16);
+				} else if (number.StartsWith("0b"))
+				{
+					v = Convert.ToInt64(number.Substring(2), 2);
+				}
+				else
+				{
+					Int64.TryParse(number, out v);
+				}
+				if (v > Int32.MaxValue || v < Int32.MinValue) return TypeDesc.INT64;
+			}
+			return TypeDesc.INT32;
+			//else if (number.StartsWith("-"))
+			//{
+			//	Int64 v;
+			//	if (Int64.TryParse(number, out v))
+			//	{
+			//		if (v > Int32.MaxValue || v < Int32.MinValue) return TypeDesc.INT64;
+			//		if (v > Int16.MaxValue || v < Int16.MinValue) return TypeDesc.INT32;
+			//		if (v > SByte.MaxValue || v < SByte.MinValue) return TypeDesc.INT16;
+			//		return TypeDesc.INT8;
+			//	}
+			//}
+			//else
+			//{
+			//	UInt64 v;
+			//	if (UInt64.TryParse(number, out v))
+			//	{
+			//		if (v > UInt32.MaxValue || v < UInt32.MinValue) return TypeDesc.UINT64;
+			//		if (v > UInt16.MaxValue || v < UInt16.MinValue) return TypeDesc.UINT32;
+			//		if (v > byte.MaxValue || v < byte.MinValue) return TypeDesc.UINT32;
+			//		return TypeDesc.UINT8;
+			//	}
+			//}
+			//return TypeDesc.None;
+		}
 
 		public string Value;
 		public override void Accept(IAstVisitor v) => v.Visit(this);
@@ -939,7 +990,7 @@ namespace AOParser.Ast
 		}
 		public class NumberFactor : IFactor
 		{
-			public override TypeDesc TypeDescr => Value.TypeDescr;//todo
+			public override TypeDesc TypeDescr => Value.GetTypeDescr();//todo
 			public Number Value;
 			public override void Accept(IAstVisitor v) => v.Visit(this);
 			public override string ToString()
