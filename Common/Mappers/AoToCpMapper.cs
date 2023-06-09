@@ -380,9 +380,10 @@ namespace Common.Mappers
         public CPParser.Ast.ProcDecl Map(AOParser.Ast.ProcDecl o)
         {
             return new CPParser.Ast.ProcDecl {
+                IdentDef = Map(o.ProcHead.IdentDef),
                 DeclSeq = Map(o.DeclSeq),
                 FormalPars = Map(o.ProcHead.FormalPars),
-                StatementSeq = Map(o.Body.StatBlock, o.ProcHead.FormalPars.Qualident.FindType()),
+                StatementSeq = Map(o.Body.StatBlock, o.ProcHead.FormalPars?.Qualident?.FindType()??Common.SymTable.TypeDesc.None),
                 MethAttributes = new CPParser.Ast.MethAttributes()
             };
         }
@@ -515,7 +516,10 @@ namespace Common.Mappers
 
         public CPParser.Ast.Element Map(AOParser.Ast.Element o)
         {
-            throw new NotImplementedException();
+            return new CPParser.Ast.Element { 
+                Expr1 = Map(o.Expr1),
+                Expr2 = Map(o.Expr2)
+            };
         }
 
         public CPParser.Ast.AddOp Map(AOParser.Ast.AddOp o)
@@ -704,6 +708,7 @@ namespace Common.Mappers
 
         public CPParser.Ast.Expr Map(AOParser.Ast.Expr o)
         {
+            if (o == null) return null;
             return new CPParser.Ast.Expr {
                 SimpleExpr = Map(o.SimpleExpr),
                 Relation = Map(o.Relation),
@@ -862,7 +867,9 @@ namespace Common.Mappers
 
         public CPParser.Ast.IType.ProcedureType Map(AOParser.Ast.IType.ProcedureType o)
         {
-            throw new NotImplementedException();
+            return new CPParser.Ast.IType.ProcedureType(null) { 
+                FormalPars = Map(o.FormalPars)
+            };
         }
 
         public CPParser.Ast.IType.RecordType Map(AOParser.Ast.IType.RecordType o)

@@ -82,7 +82,7 @@ PRODUCTIONS
 				{TypeDecl<lst.Values> ";"}												(. o.ConstTypeVarDecls.Add(lst); .)
 			| "VAR"																(. var lst = new AOParser.Ast.IConstTypeVarListDecl.VarDeclList(); .) 
 				{VarDecl<lst.Values> ";"}												(. o.ConstTypeVarDecls.Add(lst); .) 
-			{ ProcDecl<o.ProcDecl> ";"} }.
+			| ProcDecl<o.ProcDecl> ";" }.
 
 
 	ConstDecl<AOParser.Ast.AstList lst> 
@@ -114,7 +114,7 @@ PRODUCTIONS
 		|"~"																		(. o.Tag = "~"; .) 
 		|"-"																		(. o.Tag = "-"; .) 
 		|Flags<out o.Flags> ["-"													(. o.Tag = "-"; .) 
-		]
+							]
 		]
 		IdentDef<out o.IdentDef> (. symTab.OpenScope(); .)
 		[FormalPars<out o.FormalPars>].

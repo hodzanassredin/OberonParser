@@ -172,7 +172,7 @@ public Common.SymTable.SymTab symTab = new ();
 
 	void DeclSeq(out AOParser.Ast.DeclSeq o) {
 		o = new AOParser.Ast.DeclSeq(); 
-		while (la.kind == 16 || la.kind == 17 || la.kind == 18) {
+		while (StartOf(1)) {
 			if (la.kind == 16) {
 				Get();
 				var lst = new AOParser.Ast.IConstTypeVarListDecl.ConstDeclList(); 
@@ -189,7 +189,7 @@ public Common.SymTable.SymTab symTab = new ();
 					Expect(7);
 				}
 				o.ConstTypeVarDecls.Add(lst); 
-			} else {
+			} else if (la.kind == 18) {
 				Get();
 				var lst = new AOParser.Ast.IConstTypeVarListDecl.VarDeclList(); 
 				while (la.kind == 1) {
@@ -197,10 +197,9 @@ public Common.SymTable.SymTab symTab = new ();
 					Expect(7);
 				}
 				o.ConstTypeVarDecls.Add(lst); 
-				while (la.kind == 14) {
-					ProcDecl(o.ProcDecl);
-					Expect(7);
-				}
+			} else {
+				ProcDecl(o.ProcDecl);
+				Expect(7);
 			}
 		}
 	}
@@ -321,7 +320,7 @@ public Common.SymTable.SymTab symTab = new ();
 		case 29: {
 			Get();
 			var at = new AOParser.Ast.IType.ArrayType(); AOParser.Ast.ConstExpr ce; 
-			if (StartOf(1)) {
+			if (StartOf(2)) {
 				ConstExpr(out ce);
 				at.ConstExprs.Add(ce); 
 				while (la.kind == 11) {
@@ -362,7 +361,7 @@ public Common.SymTable.SymTab symTab = new ();
 		case 34: {
 			symTab.OpenScope(true); var at = new AOParser.Ast.IType.ObjectType(symTab.curScope); 
 			Get();
-			if (StartOf(2)) {
+			if (StartOf(3)) {
 				if (la.kind == 27) {
 					Flags(out at.Flags);
 				}
@@ -411,7 +410,7 @@ public Common.SymTable.SymTab symTab = new ();
 
 	void ProcHead(out AOParser.Ast.ProcHead o) {
 		o = new AOParser.Ast.ProcHead(); 
-		if (StartOf(3)) {
+		if (StartOf(4)) {
 			if (la.kind == 21) {
 				Get();
 				o.Tag = "^"; 
@@ -472,7 +471,7 @@ public Common.SymTable.SymTab symTab = new ();
 	void Expr(out AOParser.Ast.Expr o) {
 		o = new AOParser.Ast.Expr(); 
 		SimpleExpr(out o.SimpleExpr);
-		if (StartOf(4)) {
+		if (StartOf(5)) {
 			Relation(out o.Relation);
 			SimpleExpr(out o.SimpleExpr2);
 		}
@@ -547,7 +546,7 @@ public Common.SymTable.SymTab symTab = new ();
 
 	void Statement(out AOParser.Ast.IStatement os) {
 		os=null; 
-		if (StartOf(5)) {
+		if (StartOf(6)) {
 			switch (la.kind) {
 			case 1: {
 				AOParser.Ast.Designator d; 
@@ -557,7 +556,7 @@ public Common.SymTable.SymTab symTab = new ();
 					Get();
 					Expr(out o.Expr);
 					os = o; 
-				} else if (StartOf(6)) {
+				} else if (StartOf(7)) {
 					var o = new AOParser.Ast.IStatement.ProcCallStatement(); o.Designator = d; 
 					os = o;
 				} else SynErr(75);
@@ -675,7 +674,7 @@ public Common.SymTable.SymTab symTab = new ();
 			case 52: {
 				var o = new AOParser.Ast.IStatement.ReturnStatement(); 
 				Get();
-				if (StartOf(1)) {
+				if (StartOf(2)) {
 					Expr(out o.Expr);
 				}
 				os = o;
@@ -703,7 +702,7 @@ public Common.SymTable.SymTab symTab = new ();
 	void Designator(out AOParser.Ast.Designator o) {
 		o = new AOParser.Ast.Designator(this.symTab.curScope); 
 		Qualident(out o.Qualident);
-		while (StartOf(7)) {
+		while (StartOf(8)) {
 			if (la.kind == 8) {
 				Get();
 				var s = new AOParser.Ast.Designator.IDesignatorSpec.RecordDesignatorSpec(); 
@@ -728,7 +727,7 @@ public Common.SymTable.SymTab symTab = new ();
 			} else {
 				var s = new AOParser.Ast.Designator.IDesignatorSpec.ProcCallDesignatorSpec(); 
 				Get();
-				if (StartOf(1)) {
+				if (StartOf(2)) {
 					ExprList(out s.Value);
 				}
 				Expect(26);
@@ -739,7 +738,7 @@ public Common.SymTable.SymTab symTab = new ();
 
 	void Case(out AOParser.Ast.Case o) {
 		o = new AOParser.Ast.Case(); AOParser.Ast.CaseLabels cl; 
-		if (StartOf(1)) {
+		if (StartOf(2)) {
 			CaseLabels(out cl);
 			o.CaseLabels.Add(cl); 
 			while (la.kind == 11) {
@@ -764,7 +763,7 @@ public Common.SymTable.SymTab symTab = new ();
 	void SimpleExpr(out AOParser.Ast.SimpleExpr o) {
 		o = new AOParser.Ast.SimpleExpr(); AOParser.Ast.SimpleElementExpr e; 
 		Term(out o.Term);
-		while (StartOf(8)) {
+		while (StartOf(9)) {
 			e = new AOParser.Ast.SimpleElementExpr(); 
 			MulOp(out e.MulOp);
 			Term(out e.Term);
@@ -934,7 +933,7 @@ public Common.SymTable.SymTab symTab = new ();
 	void Set(out AOParser.Ast.Set o) {
 		o = new AOParser.Ast.Set(); AOParser.Ast.Element e; 
 		Expect(27);
-		if (StartOf(1)) {
+		if (StartOf(2)) {
 			Element(out e);
 			o.Elements.Add(e); 
 			while (la.kind == 11) {
@@ -979,8 +978,9 @@ public Common.SymTable.SymTab symTab = new ();
 	
 	static readonly bool[,] set = {
 		{_T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x},
+		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_x, _T,_T,_T,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x},
 		{_x,_T,_T,_T, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _T,_T,_x,_T, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x},
-		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _T,_T,_T,_x, _x,_x,_x,_x, _x,_T,_x,_T, _x,_x,_x,_x, _x,_x,_x,_T, _T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x},
+		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_T, _T,_T,_T,_x, _x,_x,_x,_x, _x,_T,_x,_T, _x,_x,_x,_x, _x,_x,_x,_T, _T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x},
 		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_T,_T,_T, _T,_x,_x,_T, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x},
 		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_T,_T,_T, _T,_T,_T,_T, _x,_x,_x,_x, _x,_x,_x,_x, _x},
 		{_x,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _T,_T,_x,_x, _x,_T,_x,_T, _x,_T,_x,_T, _x,_T,_T,_T, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x},
