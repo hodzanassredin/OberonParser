@@ -174,6 +174,9 @@ namespace AOParser
                     case FPSection.Prefix.VAR:
                         sw.Write("VAR");
                         break;
+                    case FPSection.Prefix.CONST:
+                        sw.Write("CONST");
+                        break;
                     default:
                         break;
                 }
@@ -363,8 +366,10 @@ namespace AOParser
         {
             if (o.CaseLabels.Any()) {
                 VisitList(o.CaseLabels, () => { }, () => sw.Write(","));
-                sw.Write(" : ");
+                sw.WriteLine(":");
+                EnterScope();
                 o.StatementSeq.AcceptWithComments(this);
+                ExitScope();
             }
         }
 
@@ -389,7 +394,7 @@ namespace AOParser
         public void Visit(IStatement.IfStatement o)
         {
             WriteTabs();sw.Write("IF ");o.If.AcceptWithComments(this);
-            VisitList(o.ELSIFs, () => { WriteTabs(); sw.Write("ELSIF"); }, () => { });
+            VisitList(o.ELSIFs, () => { WriteTabs(); sw.Write("ELSIF "); }, () => { });
             if (o.ElseBody != null) {
                 WriteTabs(); sw.WriteLine("ELSE");
                 EnterScope();
@@ -405,11 +410,8 @@ namespace AOParser
             for (int i = 0; i < o.Cases.Value.Count; i++)
             {
                 WriteTabs();
-                if (i != 0)
-                {
-                    sw.Write("|"); 
-                }
-                sw.Write("\t"); o.Cases.Value[i].AcceptWithComments(this);
+                sw.Write("|"); 
+                sw.Write(" "); o.Cases.Value[i].AcceptWithComments(this);
             }
             if (o.ElseBody != null) {
                 WriteTabs(); sw.WriteLine("ELSE");
@@ -759,16 +761,17 @@ namespace AOParser
 
         public void Visit(IType.ObjectType o)
         {
-            sw.WriteLine("OBJECT");
+            sw.Write("OBJECT");
             if (o.SysFlag != null) { 
                 o.SysFlag.AcceptWithComments(this); 
             }
             if (o.Qualident != null)
             {
-                sw.Write("(");
+                sw.Write(" (");
                 o.Qualident.AcceptWithComments(this);
                 sw.Write(")");
             }
+            sw.WriteLine();
             if (o.ImplementsQualident != null)
             {
                 sw.Write("IMPLEMENTS ");

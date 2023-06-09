@@ -127,6 +127,7 @@ PRODUCTIONS
 	FPSection<AOParser.Ast.AstList lst> 	
 		=																		(. var o = new AOParser.Ast.FPSection(); .)
 		["VAR"																		(. o.FpSectionPrefix = AOParser.Ast.FPSection.Prefix.VAR; .) 
+		| "CONST"																	(. o.FpSectionPrefix = AOParser.Ast.FPSection.Prefix.CONST; .)
 		]																			(. AOParser.Ast.Ident i; .)
 		Ident<out i>																(. o.Idents.Add(i); .) 
 		{"," Ident<out i>															(. o.Idents.Add(i); .) 
@@ -203,8 +204,8 @@ PRODUCTIONS
 				}
 				["ELSE" StatementSeq<out o.ElseBody>] "END"						(. os = o; .)
 		|																		(. var o = new AOParser.Ast.IStatement.CaseStatement(); .) 
-			"CASE" Expr<out o.Expr> "DO"										(. var c = new AOParser.Ast.Case(); .) 
-			Case<out c>															(. o.Cases.Add(c); .) 
+			"CASE" Expr<out o.Expr> "OF"										(. var c = new AOParser.Ast.Case(); .) 
+			["|"] Case<out c>															(. o.Cases.Add(c); .) 
 			{"|" Case<out c>													(. o.Cases.Add(c); .)
 			}
 				["ELSE" StatementSeq<out o.ElseBody>] "END"						(. os = o;.)

@@ -452,6 +452,7 @@ namespace Common.Mappers
         }
         public CPParser.Ast.StatementSeq Map(AOParser.Ast.StatBlock o, Common.SymTable.TypeDesc expecteType)
         {
+            if (o == null) return null;
             var res = Map(o.StatementSeq, expecteType);
             if (o.IdentLists.Any()) {
                 if (o.IdentLists.Any())
@@ -1015,11 +1016,19 @@ namespace Common.Mappers
                     return Map(s);
                 case AOParser.Ast.Designator.IDesignatorSpec.ProcCallDesignatorSpec s:
                     return Map(s);
+                case AOParser.Ast.Designator.IDesignatorSpec.PointerDesignatorSpec s:
+                    return Map(s);
                 default:
                     throw new ArgumentException();
             }
         }
-
+        public CPParser.Ast.Designator.IDesignatorSpec.PointerDesignatorSpec Map(AOParser.Ast.Designator.IDesignatorSpec.PointerDesignatorSpec o)
+        {
+            return new CPParser.Ast.Designator.IDesignatorSpec.PointerDesignatorSpec
+            {
+                
+            };
+        }
         public CPParser.Ast.Designator.IDesignatorSpec.RecordDesignatorSpec Map(AOParser.Ast.Designator.IDesignatorSpec.RecordDesignatorSpec o)
         {
             return new CPParser.Ast.Designator.IDesignatorSpec.RecordDesignatorSpec { 

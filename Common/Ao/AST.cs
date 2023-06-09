@@ -378,7 +378,7 @@ namespace AOParser.Ast
 	{
 		public enum Prefix
 		{
-			VAR
+			VAR, CONST
 		}
 		public Prefix? FpSectionPrefix;
 		public AstList Idents = new AstList();

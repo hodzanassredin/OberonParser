@@ -237,7 +237,7 @@ public Common.SymTable.SymTab symTab = new ();
 	void FormalPars(out AOParser.Ast.FormalPars o) {
 		o = new AOParser.Ast.FormalPars(); 
 		Expect(25);
-		if (la.kind == 1 || la.kind == 18) {
+		if (la.kind == 1 || la.kind == 16 || la.kind == 18) {
 			FPSection(o.FPSections);
 			while (la.kind == 7) {
 				Get();
@@ -445,9 +445,14 @@ public Common.SymTable.SymTab symTab = new ();
 
 	void FPSection(AOParser.Ast.AstList lst) {
 		var o = new AOParser.Ast.FPSection(); 
-		if (la.kind == 18) {
-			Get();
-			o.FpSectionPrefix = AOParser.Ast.FPSection.Prefix.VAR; 
+		if (la.kind == 16 || la.kind == 18) {
+			if (la.kind == 18) {
+				Get();
+				o.FpSectionPrefix = AOParser.Ast.FPSection.Prefix.VAR; 
+			} else {
+				Get();
+				o.FpSectionPrefix = AOParser.Ast.FPSection.Prefix.CONST; 
+			}
 		}
 		AOParser.Ast.Ident i; 
 		Ident(out i);
@@ -552,11 +557,14 @@ public Common.SymTable.SymTab symTab = new ();
 				var o = new AOParser.Ast.IStatement.CaseStatement(); 
 				Get();
 				Expr(out o.Expr);
-				Expect(42);
+				Expect(28);
 				var c = new AOParser.Ast.Case(); 
+				if (la.kind == 42) {
+					Get();
+				}
 				Case(out c);
 				o.Cases.Add(c); 
-				while (la.kind == 43) {
+				while (la.kind == 42) {
 					Get();
 					Case(out c);
 					o.Cases.Add(c); 
@@ -569,11 +577,11 @@ public Common.SymTable.SymTab symTab = new ();
 				os = o;
 				break;
 			}
-			case 44: {
+			case 43: {
 				var o = new AOParser.Ast.IStatement.WhileStatement(); 
 				Get();
 				Expr(out o.Expr);
-				Expect(42);
+				Expect(44);
 				StatementSeq(out o.StatementSeq);
 				Expect(15);
 				os = o; 
@@ -600,7 +608,7 @@ public Common.SymTable.SymTab symTab = new ();
 					Get();
 					ConstExpr(out o.ByExpr);
 				}
-				Expect(42);
+				Expect(44);
 				StatementSeq(out o.StatementSeq);
 				Expect(15);
 				os = o;
@@ -620,7 +628,7 @@ public Common.SymTable.SymTab symTab = new ();
 				Qualident(out o.Qualident1);
 				Expect(20);
 				Qualident(out o.Qualident2);
-				Expect(42);
+				Expect(44);
 				StatementSeq(out o.StatementSeq);
 				Expect(15);
 				os = o;
@@ -950,8 +958,8 @@ public Common.SymTable.SymTab symTab = new ();
 		{_T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x},
 		{_x,_T,_T,_T, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _T,_T,_T,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x},
 		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _T,_T,_T,_x, _x,_x,_x,_T, _x,_T,_x,_x, _x,_x,_x,_x, _x,_T,_T,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x},
-		{_x,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_x, _x,_T,_x,_x, _x,_T,_x,_x, _T,_T,_x,_T, _x,_T,_T,_T, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x},
-		{_x,_x,_x,_x, _x,_x,_x,_T, _x,_x,_x,_x, _x,_x,_x,_T, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _T,_x,_x,_T, _x,_x,_T,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x},
+		{_x,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_x, _x,_T,_x,_x, _x,_T,_x,_T, _x,_T,_x,_T, _x,_T,_T,_T, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x},
+		{_x,_x,_x,_x, _x,_x,_x,_T, _x,_x,_x,_x, _x,_x,_x,_T, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _T,_x,_T,_x, _x,_x,_T,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x},
 		{_x,_x,_x,_x, _x,_x,_x,_x, _T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _x,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_x, _x},
 		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _T,_T,_T,_T, _T,_T,_x,_x, _x,_x,_x,_x, _x},
 		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_T,_T,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_T, _T,_x,_x,_x, _x}
@@ -1010,9 +1018,9 @@ public class Errors {
 			case 39: s = "\"ELSIF\" expected"; break;
 			case 40: s = "\"ELSE\" expected"; break;
 			case 41: s = "\"CASE\" expected"; break;
-			case 42: s = "\"DO\" expected"; break;
-			case 43: s = "\"|\" expected"; break;
-			case 44: s = "\"WHILE\" expected"; break;
+			case 42: s = "\"|\" expected"; break;
+			case 43: s = "\"WHILE\" expected"; break;
+			case 44: s = "\"DO\" expected"; break;
 			case 45: s = "\"REPEAT\" expected"; break;
 			case 46: s = "\"UNTIL\" expected"; break;
 			case 47: s = "\"FOR\" expected"; break;

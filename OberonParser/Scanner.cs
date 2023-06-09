@@ -368,8 +368,8 @@ public class Scanner {
 			case "ELSIF": t.kind = 39; break;
 			case "ELSE": t.kind = 40; break;
 			case "CASE": t.kind = 41; break;
-			case "DO": t.kind = 42; break;
-			case "WHILE": t.kind = 44; break;
+			case "WHILE": t.kind = 43; break;
+			case "DO": t.kind = 44; break;
 			case "REPEAT": t.kind = 45; break;
 			case "UNTIL": t.kind = 46; break;
 			case "FOR": t.kind = 47; break;
@@ -517,7 +517,7 @@ public class Scanner {
 			case 30:
 				{t.kind = 36; break;}
 			case 31:
-				{t.kind = 43; break;}
+				{t.kind = 42; break;}
 			case 32:
 				{t.kind = 54; break;}
 			case 33:
