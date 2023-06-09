@@ -809,7 +809,16 @@ namespace Common.Mappers
 
         public CPParser.Ast.IStatement.WithStatement Map(AOParser.Ast.IStatement.WithStatement o)
         {
-            throw new NotImplementedException();
+            var res = new CPParser.Ast.IStatement.WithStatement {
+            };
+            res.Alternatives.Add(new CPParser.Ast.IStatement.WithAlternativeStatement() { 
+                StatementSeq = Map(o.StatementSeq),
+                Guard = new CPParser.Ast.Guard { 
+                    VarQualident = Map(o.Qualident1),
+                    TypeQualident = Map(o.Qualident2)
+                }
+            });
+            return res;
         }
 
         public CPParser.Ast.IStatement.ExitStatement Map(AOParser.Ast.IStatement.ExitStatement o)
