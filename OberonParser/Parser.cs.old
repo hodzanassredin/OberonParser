@@ -37,6 +37,15 @@ public Common.SymTable.SymTab symTab = new ();
 
 	bool IsCast(){
 		var obj = symTab.Find(t.val);
+		if (obj.objClass == Common.SymTable.ObjCLass.FUNC) return false;
+		if (obj.objClass == Common.SymTable.ObjCLass.VAR) {
+			if (obj.type.form == Common.SymTable.TypeForm.FUNC)
+				return false;
+			if (obj.type.form == Common.SymTable.TypeForm.PREDEFINED) {
+				if (obj.type.Resolve().form == Common.SymTable.TypeForm.FUNC)
+					return false;
+			}
+		}
 		return obj.objClass == Common.SymTable.ObjCLass.VAR;
 	}
 
