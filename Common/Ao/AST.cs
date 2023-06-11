@@ -1,3 +1,4 @@
+using AOParser.Types;
 using Common.SymTable;
 using System.Collections;
 using System.Text;
@@ -190,7 +191,7 @@ namespace AOParser.Ast
 
 	public class Flags : AstElement
 	{
-		public AstList Values;
+		public AstList Values = new();
 		public override void Accept(IAstVisitor v) => v.Visit(this);
 		public override string ToString()
 		{
@@ -686,7 +687,20 @@ namespace AOParser.Ast
 
 	public class SimpleExpr : AstElement
 	{
-		public Common.SymTable.TypeDesc TypeDescr => Term.TypeDescr;
+		public Common.SymTable.TypeDesc TypeDescr
+		{
+			get
+			{
+				var type = Term.TypeDescr;
+
+				foreach (var item in SimpleExprElements.Cast<SimpleElementExpr>())
+				{
+					type = TypeResolver.ResolveMulOp(item.MulOp.Op, type.form, item.Term.TypeDescr.form);
+				}
+
+				return type;
+			}
+		}
 		public Term Term;
 		public AstList SimpleExprElements = new AstList();
 		public override void Accept(IAstVisitor v) => v.Visit(this);
@@ -722,7 +736,20 @@ namespace AOParser.Ast
     }
 	public class Term : AstElement
 	{
-		public Common.SymTable.TypeDesc TypeDescr => Factor.TypeDescr;
+		public Common.SymTable.TypeDesc TypeDescr
+		{
+			get
+			{
+				var type = Factor.TypeDescr;
+
+				foreach (var item in TermElements.Cast<TermElementExpr>())
+				{
+					type = TypeResolver.ResolveAddOp(item.AddOp.Op, type.form, item.Factor.TypeDescr.form);
+				}
+
+				return type;
+			}
+		}
 		public enum TermExprPrefix
 		{
 			Add, Sub
@@ -752,12 +779,19 @@ namespace AOParser.Ast
 
 	public class Expr : AstElement
 	{
-		public Common.SymTable.TypeDesc TypeDescr => SimpleExpr.TypeDescr;
+		public Expr(Scope scope)
+		{
+            this.scope = scope;
+        }
+
+		public Common.SymTable.TypeDesc TypeDescr => SimpleExpr2 != null ? TypeResolver.ResolveRel(Relation.Op, SimpleExpr.TypeDescr.form, SimpleExpr2.TypeDescr.form) : SimpleExpr.TypeDescr;
 
 		public SimpleExpr SimpleExpr;
 		public Relation Relation;
 		public SimpleExpr SimpleExpr2;
-		public override void Accept(IAstVisitor v) => v.Visit(this);
+        public readonly Scope scope;
+
+        public override void Accept(IAstVisitor v) => v.Visit(this);
 
 		public override string ToString()
 		{
@@ -932,58 +966,7 @@ namespace AOParser.Ast
 	
 	public class Number : AstElement
 	{
-		public TypeDesc GetTypeDescr()
-		{
-			var number = Value.Replace("'", "");
-			if (number.Contains("."))
-			{
-				Double v;
-				if (Double.TryParse(number.Replace('.', ','), System.Globalization.NumberStyles.Float, null, out v))
-				{
-					if (v > float.MaxValue || v < float.MinValue) return TypeDesc.FLOAT64;
-					return TypeDesc.FLOAT32;
-				}
-			}
-			else
-			{
-				Int64 v = 0;
-				if (number.StartsWith("0x")) {
-					v = Convert.ToInt64(number.Substring(2), 16);
-				} else if (number.StartsWith("0b"))
-				{
-					v = Convert.ToInt64(number.Substring(2), 2);
-				}
-				else
-				{
-					Int64.TryParse(number, out v);
-				}
-				if (v > Int32.MaxValue || v < Int32.MinValue) return TypeDesc.INT64;
-			}
-			return TypeDesc.INT32;
-			//else if (number.StartsWith("-"))
-			//{
-			//	Int64 v;
-			//	if (Int64.TryParse(number, out v))
-			//	{
-			//		if (v > Int32.MaxValue || v < Int32.MinValue) return TypeDesc.INT64;
-			//		if (v > Int16.MaxValue || v < Int16.MinValue) return TypeDesc.INT32;
-			//		if (v > SByte.MaxValue || v < SByte.MinValue) return TypeDesc.INT16;
-			//		return TypeDesc.INT8;
-			//	}
-			//}
-			//else
-			//{
-			//	UInt64 v;
-			//	if (UInt64.TryParse(number, out v))
-			//	{
-			//		if (v > UInt32.MaxValue || v < UInt32.MinValue) return TypeDesc.UINT64;
-			//		if (v > UInt16.MaxValue || v < UInt16.MinValue) return TypeDesc.UINT32;
-			//		if (v > byte.MaxValue || v < byte.MinValue) return TypeDesc.UINT32;
-			//		return TypeDesc.UINT8;
-			//	}
-			//}
-			//return TypeDesc.None;
-		}
+		public TypeDesc TypeDescr => TypeResolver.ResolveNumber(Value);
 
 		public string Value;
 		public override void Accept(IAstVisitor v) => v.Visit(this);
@@ -1009,7 +992,7 @@ namespace AOParser.Ast
 		}
 		public class NumberFactor : IFactor
 		{
-			public override TypeDesc TypeDescr => Value.GetTypeDescr();//todo
+			public override TypeDesc TypeDescr => Value.TypeDescr;
 			public Number Value;
 			public override void Accept(IAstVisitor v) => v.Visit(this);
 			public override string ToString()
@@ -1029,7 +1012,7 @@ namespace AOParser.Ast
 		}
 		public class StringFactor : IFactor
 		{
-			public override TypeDesc TypeDescr => TypeDesc.Array(TypeDesc.UINT8, Array.Empty<int>());
+			public override TypeDesc TypeDescr => TypeDesc.Array(TypeDesc.UINT8, Array.Empty<int>());//to do all are short then array of shortreal else real
 
 			public String Value;
 			public override void Accept(IAstVisitor v) => v.Visit(this);
@@ -1162,7 +1145,14 @@ namespace AOParser.Ast
 		{
 			get
 			{
-				var t = scope.Find(this.Qualident.ToString())?.type;
+				TypeDesc t = null;
+				if (this.Qualident.Ident1.Name == "Math")
+				{
+					t = TypeDesc.Function(TypeDesc.FLOAT64, scope);
+				}
+				else {
+					t = scope.Find(this.Qualident.ToString())?.type;
+				}
 				if (t == null || t.form == TypeForm.NONE) return t;
 
 				foreach (var spec in Specs.Cast<IDesignatorSpec>())

@@ -1,5 +1,5 @@
-using Common.Cp;
 using Common.SymTable;
+using CPParser.Types;
 using System.Collections;
 using System.Text;
 
@@ -731,6 +731,7 @@ namespace CPParser.Ast
 	
 	public class Number : AstElement
 	{
+		public TypeDesc TypeDescr => TypeResolver.ResolveNumber(Value);
 		public string Value;
 		public override void Accept(IAstVisitor v) => v.Visit(this);
         public override string ToString()
@@ -759,7 +760,7 @@ namespace CPParser.Ast
 		{
 			public Number Value;
 
-            public override TypeDesc TypeDescr => TypeDesc.Predefined("NUMBER", null);//todo
+			public override TypeDesc TypeDescr => Value.TypeDescr;
 
             public override void Accept(IAstVisitor v) => v.Visit(this);
 			public override string ToString()
@@ -841,9 +842,9 @@ namespace CPParser.Ast
 
 	public class Designator : AstElement
 	{
-        public Designator(Common.SymTable.SymTab tab)
+        public Designator(Common.SymTable.Scope scope)
         {
-            this.tab = tab;
+            this.scope = scope;
         }
 		public abstract class IDesignatorSpec : AstElement
 		{
@@ -926,9 +927,13 @@ namespace CPParser.Ast
 				}
 			}
 		}
-		private readonly SymTab tab;
+		private readonly Scope scope;
 		public TypeDesc TypeDescr { get {
-				var t = tab.Find(this.Qualident.ToString())?.type;
+				if (this.Qualident.Ident1.Name == "Math") {
+					return TypeDesc.Function(TypeDesc.FLOAT64, scope);
+				}
+
+				var t = scope.Find(this.Qualident.ToString())?.type;
 				if (t == null) return t;
 				
                 foreach (var spec in Specs.Cast<IDesignatorSpec>())

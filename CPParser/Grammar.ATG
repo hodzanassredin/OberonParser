@@ -335,7 +335,7 @@ PRODUCTIONS
 		| "&"																	(. o.Op = CPParser.Ast.MulOp.MulOps.AND; .) .
 
 	Designator<out CPParser.Ast.Designator o>
-		=																		(. o = new CPParser.Ast.Designator(this.symTab); .) 
+		=																		(. o = new CPParser.Ast.Designator(this.symTab.curScope); .) 
 		Qualident<out o.Qualident> 
 		{ 
 			 "."																(. var s = new CPParser.Ast.Designator.IDesignatorSpec.RecordDesignatorSpec(); .) 

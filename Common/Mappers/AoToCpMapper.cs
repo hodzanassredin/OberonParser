@@ -5,6 +5,7 @@ namespace Common.Mappers
 {
     public class AoToCpMapper
     {
+        public const string CompatModuleName = "CyptoCompat";
         public static CPParser.Ast.Qualident GetQualident(string name) {
             return new CPParser.Ast.Qualident(null) { Ident1 = new CPParser.Ast.Ident { Name = name } };
         }
@@ -23,20 +24,20 @@ namespace Common.Mappers
             ["SIGNED32"] = GetQualident("INTEGER"),
             ["SIGNED64"] = GetQualident("LONGINT"),
             ["UNSIGNED8"] = GetQualident("CHAR"),
-            ["UNSIGNED16"] = GetQualident("AOCompat", "UNSIGNED16"),
-            ["UNSIGNED32"] = GetQualident("AOCompat", "UNSIGNED32"),
-            ["UNSIGNED64"] = GetQualident("AOCompat", "UNSIGNED64"),
+            ["UNSIGNED16"] = GetQualident(CompatModuleName, "UNSIGNED16"),
+            ["UNSIGNED32"] = GetQualident(CompatModuleName, "UNSIGNED32"),
+            ["UNSIGNED64"] = GetQualident(CompatModuleName, "UNSIGNED64"),
             ["FLOAT32"] = GetQualident("SHORTREAL"),
             ["FLOAT64"] = GetQualident("REAL"),
             ["SET8"] = GetQualident("SET"),
             ["SET16"] = GetQualident("SET"),
             ["SET32"] = GetQualident("SET"),
-            ["SET64"] = GetQualident("AOCompat", "SET64"),
+            ["SET64"] = GetQualident(CompatModuleName, "SET64"),
 
             ["REAL"] = GetQualident("REAL"),
             ["INTEGER"] = GetQualident("INTEGER"),
-            ["ADDRESS"] = GetQualident("AOCompat", "ADDRESS"),
-            ["SIZE"] = GetQualident("AOCompat", "SIZE"),
+            ["ADDRESS"] = GetQualident(CompatModuleName, "ADDRESS"),
+            ["SIZE"] = GetQualident(CompatModuleName, "SIZE"),
             ["SET"] = GetQualident("SET")
         };
         Dictionary<string, CPParser.Ast.Qualident> simpleFuncMap = new Dictionary<string, CPParser.Ast.Qualident>
@@ -108,7 +109,8 @@ namespace Common.Mappers
         public CPParser.Ast.Qualident Map(AOParser.Ast.Qualident o)
         {
             if (o == null) return null;
-            if (simpleTypeMap.ContainsKey(o.ToString())) {
+            if (simpleTypeMap.ContainsKey(o.ToString()))
+            {
                 return simpleTypeMap[o.ToString()];
             }
             if (o.IsSelf) {
@@ -148,15 +150,19 @@ namespace Common.Mappers
         {
             var res = new CPParser.Ast.Module();
             res.Ident = Map(o.Ident);
+            res.ImportList = new CPParser.Ast.AstList();
             if (o.ImportList != null)
             {
-                res.ImportList = new CPParser.Ast.AstList();
                 foreach (var item in o.ImportList.Cast<AOParser.Ast.Import>())
                 {
                     res.ImportList.Add(Map(item));
                 }
+                
             }
-
+            res.ImportList.Add(new CPParser.Ast.Import
+            {
+                Name = new CPParser.Ast.Ident { Name = CompatModuleName }
+            });
             res.DeclSeq = Map(o.DeclSeq);
             if (o.Definition != null)
             {
@@ -337,6 +343,9 @@ namespace Common.Mappers
 
         public (CPParser.Ast.IType, List<CPParser.Ast.ProcDecl>) Map(AOParser.Ast.IType o)
         {
+            
+
+
             switch (o)
             {
                 case AOParser.Ast.IType.ProcedureType t:
@@ -350,6 +359,7 @@ namespace Common.Mappers
                 case AOParser.Ast.IType.RecordType t:
                     return (Map(t), null);
                 case AOParser.Ast.IType.SynonimType t:
+                    
                     return (Map(t), null);
                 default:
                     throw new Exception();
@@ -357,6 +367,7 @@ namespace Common.Mappers
         }
         public (CPParser.Ast.TypeDecl, List<CPParser.Ast.ProcDecl>) Map(AOParser.Ast.TypeDecl o)
         {
+            
             var m = Map(o.Type_);
             var tp = new CPParser.Ast.TypeDecl
             {
@@ -726,19 +737,18 @@ namespace Common.Mappers
 
         public AOParser.Ast.Expr DownOrUpCast(AOParser.Ast.Expr e, Common.SymTable.TypeDesc toType) {
 
-            return e;
             if (!toType.IsSimple || !e.TypeDescr.IsSimple) return e;
             if (toType.form == e.TypeDescr.form) return e;
             var downcast = toType.form < e.TypeDescr.form;
 
-            var fn = downcast ? "SHORT" : "LONG";
+            var fn = "(*WARN CONV CAST*)" + (downcast ? "SHORT" : "LONG");
             
-            return new AOParser.Ast.Expr { 
+            return new AOParser.Ast.Expr(e.scope) { 
                 SimpleExpr = new AOParser.Ast.SimpleExpr { 
                     Term = new AOParser.Ast.Term { 
                         Factor = new AOParser.Ast.IFactor.DesignatorFactor() { 
-                            Value = new AOParser.Ast.Designator(null) { 
-                                Qualident = new AOParser.Ast.Qualident(null) {Ident1 = new AOParser.Ast.Ident() { Name = fn} },
+                            Value = new AOParser.Ast.Designator(e.scope) { 
+                                Qualident = new AOParser.Ast.Qualident(e.scope) {Ident1 = new AOParser.Ast.Ident() { Name = fn} },
                                 Specs = new AOParser.Ast.AstList { new AOParser.Ast.Designator.IDesignatorSpec.ProcCallDesignatorSpec() { 
                                     Value = new AOParser.Ast.ExprList(){ 
                                         Exprs = new AOParser.Ast.AstList(){ 

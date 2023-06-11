@@ -478,7 +478,7 @@ public Common.SymTable.SymTab symTab = new ();
 	}
 
 	void Expr(out AOParser.Ast.Expr o) {
-		o = new AOParser.Ast.Expr(); 
+		o = new AOParser.Ast.Expr(symTab.curScope); 
 		SimpleExpr(out o.SimpleExpr);
 		if (StartOf(5)) {
 			Relation(out o.Relation);

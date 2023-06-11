@@ -275,7 +275,7 @@ PRODUCTIONS
 		Expr<out o.Expr>.
 
 	Expr<out AOParser.Ast.Expr o> 	
-		=																		(. o = new AOParser.Ast.Expr(); .)		
+		=																		(. o = new AOParser.Ast.Expr(symTab.curScope); .)		
 		SimpleExpr<out o.SimpleExpr> [Relation<out o.Relation> 
 		SimpleExpr<out o.SimpleExpr2>].
 

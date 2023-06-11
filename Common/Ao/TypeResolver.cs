@@ -1,7 +1,7 @@
-﻿using CPParser.Ast;
+﻿using AOParser.Ast;
 using Common.SymTable;
 
-namespace CPParser.Types
+namespace AOParser.Types
 {
     public class TypeResolver
     {
@@ -14,28 +14,44 @@ namespace CPParser.Types
             return form.All(IsSimple);
         }
 
+        public static bool IsInteger(TypeForm form) {
+            switch (form)
+            {
+                case TypeForm.UINT8:
+                case TypeForm.INT8:
+                case TypeForm.UINT16:
+                case TypeForm.INT16:
+                case TypeForm.UINT32:
+                case TypeForm.INT32:
+                case TypeForm.UINT64:
+                case TypeForm.INT64:
+                    return true;
+                default:
+                    break;
+            }
+            return false;
+        }
+
         public static TypeDesc ResolveAddOp(AddOp.AddOps op, TypeForm form1, TypeForm form2) {
             if (!AreSimple(form1, form2)) return TypeDesc.None;
             switch (op)
             {
                 case AddOp.AddOps.Add:
-                    if (form1 == TypeForm.INT32 && form2 == TypeForm.INT32)
-                        return TypeDesc.INT64;
                     if (form1 <= TypeForm.INT32 && form2 <= TypeForm.INT32)
                         return TypeDesc.INT32;
+                    if (IsInteger(form1) && IsInteger(form2))
+                        return TypeDesc.INT64;
                     if (form1 <= TypeForm.FLOAT32 && form2 <= TypeForm.FLOAT32)
                         return TypeDesc.FLOAT32;
                     return TypeDesc.FLOAT64;
-                    break;
                 case AddOp.AddOps.Sub:
-                    if (form1 == TypeForm.INT32 && form2 == TypeForm.INT32)
-                        return TypeDesc.INT64;
                     if (form1 <= TypeForm.INT32 && form2 <= TypeForm.INT32)
                         return TypeDesc.INT32;
+                    if (IsInteger(form1) && IsInteger(form2))
+                        return TypeDesc.INT64;
                     if (form1 <= TypeForm.FLOAT32 && form2 <= TypeForm.FLOAT32)
                         return TypeDesc.FLOAT32;
                     return TypeDesc.FLOAT64;
-                    break;
                 case AddOp.AddOps.Or:
                     if (form1 == TypeForm.BOOL && form2 == TypeForm.BOOL)
                         return TypeDesc.BOOL;
@@ -51,32 +67,32 @@ namespace CPParser.Types
             switch (op)
             {
                 case MulOp.MulOps.Mul:
-                    if (form1 == TypeForm.INT32 && form2 == TypeForm.INT32)
-                        return TypeDesc.INT64;
+
                     if (form1 <= TypeForm.INT32 && form2 <= TypeForm.INT32)
                         return TypeDesc.INT32;
-
+                    if (IsInteger(form1) && IsInteger(form2))
+                        return TypeDesc.INT64;
                     if (form1 <= TypeForm.FLOAT32 && form2 <= TypeForm.FLOAT32)
                         return TypeDesc.FLOAT32;
                     return TypeDesc.FLOAT64;
                     break;
                 case MulOp.MulOps.Division:
-                    if (form1 == TypeForm.INT32 && form2 == TypeForm.INT32)
+                    if (IsInteger(form1) && IsInteger(form2))
                         return TypeDesc.FLOAT64;
                     if (form1 <= TypeForm.FLOAT32 && form2 <= TypeForm.FLOAT32)
                         return TypeDesc.FLOAT32;
                     return TypeDesc.FLOAT64;
                     break;
                 case MulOp.MulOps.DIV:
-                    if (form1 < TypeForm.INT32 && form2 < TypeForm.INT32)
+                    if (form1 <= TypeForm.INT32 && form2 <= TypeForm.INT32)
                         return TypeDesc.INT32;
-                    if (form1 == TypeForm.INT32 && form2 == TypeForm.INT32)
+                    if (IsInteger(form1) && IsInteger(form2))
                         return TypeDesc.INT64;
                     break;
                 case MulOp.MulOps.MOD:
-                    if (form1 < TypeForm.INT32 && form2 < TypeForm.INT32)
+                    if (form1 <= TypeForm.INT32 && form2 <= TypeForm.INT32)
                         return TypeDesc.INT32;
-                    if (form1 == TypeForm.INT32 && form2 == TypeForm.INT32)
+                    if (IsInteger(form1) && IsInteger(form2))
                         return TypeDesc.INT64;
                     break;
                 case MulOp.MulOps.AND:
@@ -100,7 +116,8 @@ namespace CPParser.Types
             return TypeDesc.BOOL;
         }
 
-        public static TypeDesc ResolveNumber(String number) {
+        public static TypeDesc ResolveNumber(String number)
+        {
             number = number.Replace("'", "");
             if (number.Contains("."))
             {
@@ -117,6 +134,9 @@ namespace CPParser.Types
                 if (number.StartsWith("0x"))
                 {
                     v = Convert.ToInt64(number.Substring(2), 16);
+                } else if (number.EndsWith("H"))
+                {
+                    v = Convert.ToInt64(number.Substring(0, number.Length-1), 16);
                 }
                 else if (number.StartsWith("0b"))
                 {

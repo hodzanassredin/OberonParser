@@ -37,8 +37,14 @@ public Common.SymTable.SymTab symTab = new ();
 		if (predefinedFunctions.Contains(t.val)) return false;
 		var obj = symTab.Find(t.val);
 		if (obj.objClass == Common.SymTable.ObjCLass.FUNC) return false;
-		if (obj.objClass == Common.SymTable.ObjCLass.VAR && obj.type.form == Common.SymTable.TypeForm.FUNC) 
-			return false;
+		if (obj.objClass == Common.SymTable.ObjCLass.VAR) {
+			if (obj.type.form == Common.SymTable.TypeForm.FUNC)
+				return false;
+			if (obj.type.form == Common.SymTable.TypeForm.PREDEFINED) {
+				if (obj.type.Resolve().form == Common.SymTable.TypeForm.FUNC)
+					return false;
+			}
+		}
 		return obj.objClass == Common.SymTable.ObjCLass.VAR;
 	}
 
@@ -663,7 +669,7 @@ public Common.SymTable.SymTab symTab = new ();
 	}
 
 	void Designator(out CPParser.Ast.Designator o) {
-		o = new CPParser.Ast.Designator(this.symTab); 
+		o = new CPParser.Ast.Designator(this.symTab.curScope); 
 		Qualident(out o.Qualident);
 		while (StartOf(6)) {
 			if (la.kind == 11) {
