@@ -498,7 +498,7 @@ namespace CPParser
         public void Visit(IStatement.IfStatement o)
         {
             WriteTabs();sw.Write("IF ");o.If.AcceptWithComments(this);
-            VisitList(o.ELSIFs, () => { WriteTabs(); sw.Write("ELSIF"); }, () => { });
+            VisitList(o.ELSIFs, () => { WriteTabs(); sw.Write("ELSIF "); }, () => { });
             if (o.ElseBody != null) {
                 WriteTabs(); sw.WriteLine("ELSE");
                 EnterScope();
@@ -767,11 +767,11 @@ namespace CPParser
 
         public void Visit(Import o)
         {
-            sw.Write(o.Name.Name);
+            o.Name.AcceptWithComments(this);
             if (o.OriginalName != null)
             {
                 sw.Write(" := ");
-                sw.Write(o.OriginalName.Name);
+                o.OriginalName.AcceptWithComments(this);
             }
             
         }

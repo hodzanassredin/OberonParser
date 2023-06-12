@@ -7,14 +7,28 @@ namespace Common.Mappers
     {
         public const string CompatModuleName = "CyptoCompat";
         public static CPParser.Ast.Qualident GetQualident(string name) {
-            return new CPParser.Ast.Qualident(null) { Ident1 = new CPParser.Ast.Ident { Name = name } };
+            var res =  new CPParser.Ast.Qualident(null) { Ident1 = new CPParser.Ast.Ident { Name = name } };
+            return res;
+        }
+        public static CPParser.Ast.Qualident GetQualidentFrom(string from, string name)
+        {
+            var res = GetQualident(name);
+            res.Ident1.CommentsBefore.Add(new CPParser.Ast.Comment() { Content = $"CONV FROM {from}" });
+            return res;
         }
         public static CPParser.Ast.Qualident GetQualident(string moduleName, string name)
         {
             return new CPParser.Ast.Qualident(null) { Ident1 = new CPParser.Ast.Ident { Name = moduleName },
                 Ident2 = new CPParser.Ast.Ident { Name = name }
             };
+
         }
+        Dictionary<string, CPParser.Ast.Ident> moduleMap = new Dictionary<string, CPParser.Ast.Ident>
+        {
+            ["Streams"] = new CPParser.Ast.Ident { Name = "CommStreams"},
+            ["KernelLog"] = new CPParser.Ast.Ident { Name = "StdLog" },
+        };
+
         Dictionary<string, CPParser.Ast.Qualident> simpleTypeMap = new Dictionary<string, CPParser.Ast.Qualident>
         {
             ["BOOLEAN"] = GetQualident("BOOLEAN"),
@@ -42,9 +56,9 @@ namespace Common.Mappers
         };
         Dictionary<string, CPParser.Ast.Qualident> simpleFuncMap = new Dictionary<string, CPParser.Ast.Qualident>
         {
-            ["SET8"] = GetQualident("BITS"),
-            ["SET16"] = GetQualident("BITS"),
-            ["SET32"] = GetQualident("BITS"),
+            ["SET8"] = GetQualidentFrom("SET8", "SET"),
+            ["SET16"] = GetQualidentFrom("SET16", "SET"),
+            ["SET32"] = GetQualidentFrom("SET32", "SET"),
         };
         public static string BinaryStringToHexString(string binary)
         {
@@ -178,12 +192,36 @@ namespace Common.Mappers
 
         }
 
+        private CPParser.Ast.Comment GetConvComment(string from) { 
+            return new CPParser.Ast.Comment() { Content = $"CONV FROM {from}" };
+        }
+
         public CPParser.Ast.Import Map(AOParser.Ast.Import o)
         {
-            return new CPParser.Ast.Import {
-                Name = Map(o.Name),
-                OriginalName = Map(o.OriginalName),
-            };
+            CPParser.Ast.Import res = null;
+            if (o.OriginalName == null && moduleMap.ContainsKey(o.Name.Name)) {
+                res = new CPParser.Ast.Import
+                {
+                    Name = moduleMap[o.Name.Name],
+                };
+                res.Name.CommentsBefore.Add(GetConvComment(o.Name.Name));
+            }
+            else if (o.OriginalName != null && moduleMap.ContainsKey(o.OriginalName.Name))
+            {
+                res = new CPParser.Ast.Import
+                {
+                    Name = Map(o.Name),
+                    OriginalName = moduleMap[o.OriginalName.Name],
+                };
+                res.OriginalName.CommentsBefore.Add(GetConvComment(o.OriginalName.Name));
+            }
+            else {
+                res = new CPParser.Ast.Import {
+                        Name = Map(o.Name),
+                        OriginalName = Map(o.OriginalName)
+                       };
+            }
+            return res;
         }
 
         public CPParser.Ast.IdentDef Map(AOParser.Ast.IdentDef o)
@@ -1023,6 +1061,7 @@ namespace Common.Mappers
             if (simpleFuncMap.ContainsKey(o.Qualident.ToString()) && o.Specs.Any() && o.Specs.Value[0] is AOParser.Ast.Designator.IDesignatorSpec.ProcCallDesignatorSpec)
             {
                 q = simpleFuncMap[o.Qualident.ToString()];
+                
             }
             return new CPParser.Ast.Designator(null) { 
                 Qualident = q,

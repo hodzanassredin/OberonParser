@@ -669,7 +669,7 @@ public Common.SymTable.SymTab symTab = new ();
 	}
 
 	void Designator(out CPParser.Ast.Designator o) {
-		o = new CPParser.Ast.Designator(this.symTab); 
+		o = new CPParser.Ast.Designator(this.symTab.curScope); 
 		Qualident(out o.Qualident);
 		while (StartOf(6)) {
 			if (la.kind == 11) {

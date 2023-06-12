@@ -511,6 +511,7 @@ namespace AOParser
         public void Visit(IType.ProcedureType o)
         {
             sw.Write("PROCEDURE");
+            o.Flags?.AcceptWithComments(this);
             o.FormalPars?.AcceptWithComments(this);
         }
 
@@ -794,6 +795,57 @@ namespace AOParser
         public void Visit(Designator.IDesignatorSpec.PointerDesignatorSpec o)
         {
             sw.Write("^");
+        }
+
+        public void Visit(EnumItem o)
+        {
+            o.IdentDef.AcceptWithComments(this);
+            if (o.Expr != null)
+            {
+                sw.Write(" = ");
+                o.Expr.AcceptWithComments(this);
+            }
+        }
+
+        public void Visit(IType.EnumType o)
+        {
+            sw.Write("ENUM");
+
+            if (o.Qualident != null)
+            {
+                sw.Write("(");
+                o.Qualident.AcceptWithComments(this);
+                sw.Write(")");
+            }
+            if (o.Enums.Any())
+            {
+                sw.WriteLine();
+                EnterScope();
+                VisitList(o.Enums, () => { }, () => { sw.WriteLine(","); });
+                ExitScope();
+                sw.WriteLine();
+                WriteTabs(); sw.Write("END");
+            }
+            else
+            {
+                sw.Write(" END");
+            }
+        }
+
+        public void Visit(IFactor.SizeOfFactor o)
+        {
+            sw.Write("SIZE OF");
+            o.Value.AcceptWithComments(this);
+        }
+
+        public void Visit(IStatement.IgnoreStatement o)
+        {
+            WriteTabs(); sw.Write("IGNORE");
+            if (o.Expr != null)
+            {
+                sw.Write(" ");
+                o.Expr.AcceptWithComments(this);
+            }
         }
     }
 }

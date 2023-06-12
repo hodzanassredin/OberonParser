@@ -81,5 +81,9 @@ namespace AOParser
         void Visit(Designator.IDesignatorSpec.PointerDesignatorSpec pointerDesignatorSpec);
         void Visit(Flag flag);
         void Visit(Flags flags);
+        void Visit(EnumItem enumItem);
+        void Visit(IType.EnumType enumType);
+        void Visit(IFactor.SizeOfFactor sizeOfFactor);
+        void Visit(IStatement.IgnoreStatement ignoreStatement);
     }
 }

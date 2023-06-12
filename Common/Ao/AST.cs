@@ -410,7 +410,7 @@ namespace AOParser.Ast
 		public override void Accept(IAstVisitor v) => v.Visit(this);
         public override string ToString()
         {
-            return $"{FpSectionPrefix} {String.Join(",",Idents)}:{Type_}";
+            return $"{FpSectionPrefix} {String.Join(", ",Idents)}:{Type_}";
         }
 
 		public IEnumerable<Obj> Objects()
@@ -482,6 +482,31 @@ namespace AOParser.Ast
 			}
 		}
 
+		public class EnumType : IType
+		{
+			public EnumType(Scope scope)
+			{
+				this.scope = scope;
+			}
+			public Qualident Qualident;
+			public AstList Enums = new AstList();
+			private readonly Scope scope;
+
+			public override void Accept(IAstVisitor v) => v.Visit(this);
+			public override string ToString()
+			{
+				return $"ENUM ({Qualident}) {Enums} END";
+			}
+
+			public override TypeDesc TypeDescr
+			{
+				get
+				{
+					return TypeDesc.Enum(Qualident?.TypeDescr, scope);
+				}
+			}
+		}
+
 		public class ObjectType : IType
 		{
             public ObjectType(Scope scope)
@@ -547,9 +572,18 @@ namespace AOParser.Ast
 			}
 		}
 	}
-    
 
-	public class ExprList : AstElement {
+    public class EnumItem : AstElement
+    {
+		public IdentDef IdentDef;
+		public Expr Expr;
+
+		public override void Accept(IAstVisitor v)
+        {
+			v.Visit(this);
+        }
+    }
+    public class ExprList : AstElement {
 		public AstList Exprs = new AstList();
 		public override void Accept(IAstVisitor v) => v.Visit(this);
 
@@ -955,6 +989,16 @@ namespace AOParser.Ast
 				return $"EXIT";
 			}
 		}
+		
+		public class IgnoreStatement : IStatement
+		{
+			public Expr Expr;
+			public override void Accept(IAstVisitor v) => v.Visit(this);
+			public override string ToString()
+			{
+				return $"IGNORE {Expr}";
+			}
+		}
 		public class ReturnStatement : IStatement
 		{
 			public Expr Expr;
@@ -1050,6 +1094,17 @@ namespace AOParser.Ast
 			public override string ToString()
 			{
 				return $"{Value}";
+			}
+		}
+		
+		public class SizeOfFactor : IFactor
+		{
+			public override TypeDesc TypeDescr => Value.TypeDescr;
+			public IFactor Value;
+			public override void Accept(IAstVisitor v) => v.Visit(this);
+			public override string ToString()
+			{
+				return $"SIZE OF {Value}";
 			}
 		}
 		public class NegFactor : IFactor

@@ -14,6 +14,15 @@ COMPILER ActiveOberon
 		return t.val == "." && la.val == ".";
 	}
 
+	bool IsSizeOf(){
+		var r = la.val == "SIZE";
+		if (r){
+			Token x = scanner.Peek();
+			return x.val == "OF";
+		}
+		return r;
+	}
+
 	bool IsCast(){
 		var obj = symTab.Find(t.val);
 		if (obj.objClass == Common.SymTable.ObjCLass.FUNC) return false;
@@ -60,7 +69,7 @@ PRODUCTIONS
     ActiveOberon =  Module<out module> .
 
     Ident<out AOParser.Ast.Ident o>
-		= ident																	(. o = new AOParser.Ast.Ident{Name = t.val}; .).
+		= (ident	|  "SIZE")																(. o = new AOParser.Ast.Ident{Name = t.val}; .).
 
 	Number<out AOParser.Ast.Number o>											(. o = null; .)
 		= integer																(. o = new AOParser.Ast.Number{Value = t.val}; .)
@@ -165,7 +174,7 @@ PRODUCTIONS
 
 	Type<out AOParser.Ast.IType o> 												(. o = null; .) 
 		=																		(. var at = new AOParser.Ast.IType.SynonimType(); .)
-			Qualident<out at.Qualident>												(. o = at; .)
+			Qualident<out at.Qualident>											(. o = at; .)
 			|  "ARRAY"															(. var at = new AOParser.Ast.IType.ArrayType(); AOParser.Ast.ConstExpr ce; .)
 				[ConstExpr<out ce>						(. at.ConstExprs.Add(ce); .) 
 				{"," ConstExpr<out ce>												(. at.ConstExprs.Add(ce); .)
@@ -180,7 +189,7 @@ PRODUCTIONS
 			|																	(. var at = new AOParser.Ast.IType.PointerType(); .)
 				"POINTER" [Flags<out at.Flags>] "TO" Type<out at.Type_>		(. o = at; .)
 
-			| 																	(. symTab.OpenScope(true); var at = new AOParser.Ast.IType.ObjectType(symTab.curScope); .)
+			| 																	(. symTab.OpenScope(true); var at = new AOParser.Ast.IType.ObjectType(symTab.curScope);.)
 				"OBJECT" [
 				[Flags<out at.Flags>] 
 				["(" Qualident<out at.Qualident> ")"] 
@@ -188,7 +197,14 @@ PRODUCTIONS
 				DeclSeq<out at.DeclSeq> Body<out at.Body> Ident<out at.Ident>]	(. o = at; symTab.CloseScope();.)
 			|																	(. symTab.OpenScope(); var at = new AOParser.Ast.IType.ProcedureType(symTab.curScope); .)
 				"PROCEDURE" [Flags<out at.Flags>]
-				[FormalPars<out at.FormalPars>]									(. o = at; symTab.CloseScope(); .).
+				[FormalPars<out at.FormalPars>]									(. o = at; symTab.CloseScope(); .)
+			|																	(. symTab.OpenScope(); var at = new AOParser.Ast.IType.EnumType(symTab.curScope);  AOParser.Ast.EnumItem e = new AOParser.Ast.EnumItem();.)
+				"ENUM" ["(" Qualident<out at.Qualident> ")"]
+				IdentDef<out e.IdentDef> ["=" Expr<out e.Expr>] 				(. at.Enums.Add(e); .) 
+				{																(.e = new AOParser.Ast.EnumItem(); .)
+				
+				"," IdentDef<out e.IdentDef> ["=" Expr<out e.Expr>]				(. at.Enums.Add(e); .) 
+				} "END"															(. o = at; symTab.CloseScope(); .).
 
 	FieldDecl<out AOParser.Ast.FieldDecl o> 	
 	=																			(. o = new AOParser.Ast.FieldDecl(); .)
@@ -260,7 +276,8 @@ PRODUCTIONS
 			"EXIT"																(. os = o;.)
 		|																		(. var o = new AOParser.Ast.IStatement.ReturnStatement(); .) 
 			"RETURN" [Expr<out o.Expr>]											(. os = o;.)
-
+		|																		(. var o = new AOParser.Ast.IStatement.IgnoreStatement(); .) 
+			"IGNORE" [Expr<out o.Expr>]											(. os = o;.)
 		| 																		(. var o = new AOParser.Ast.IStatement.AwaitStatement(); .) 
 			"AWAIT" "(" Expr<out o.Expr> ")"									(. os = o;.)
 
@@ -303,7 +320,11 @@ PRODUCTIONS
 		}.
 
 	Factor<out AOParser.Ast.IFactor f>											(. f = null;.)	
-		=																		(. var o = new AOParser.Ast.IFactor.DesignatorFactor(); .) 
+		=																		
+																		
+		 ( IF(IsSizeOf())																		(. var o = new AOParser.Ast.IFactor.SizeOfFactor(); .) 
+		 "SIZE" "OF" Factor<out o.Value>										(. f = o; .)
+		|																		(. var o = new AOParser.Ast.IFactor.DesignatorFactor(); .) 
 		Designator<out o.Value>													(. f = o; .)
 		|																		(. var o = new AOParser.Ast.IFactor.NumberFactor(); .) 
 		Number<out o.Value>														(. f = o; .)
@@ -313,12 +334,12 @@ PRODUCTIONS
 		string																	(. o.Value = t.val; f = o; .)
 		|																		(. var o = new AOParser.Ast.IFactor.NilFactor(); .) 
 		"NIL"																	(. f = o; .)
-		|																		(. var o = new AOParser.Ast.IFactor.SetFactor(); .) 
+		| 																		(. var o = new AOParser.Ast.IFactor.SetFactor(); .) 
 		Set<out o.Value>														(. f = o; .)
 		|																		(. var o = new AOParser.Ast.IFactor.ExprFactor(); .) 
 		"(" Expr<out o.Value> ")"												(. f = o; .)
 		|																		(. var o = new AOParser.Ast.IFactor.NegFactor(); .) 
-		"~" Factor<out o.Value>													(. f = o; .) .
+		"~" Factor<out o.Value>													(. f = o; .)) .
 
 	Set<out AOParser.Ast.Set o>	
 		=																		(. o = new AOParser.Ast.Set(); AOParser.Ast.Element e; .)	
