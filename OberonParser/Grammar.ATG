@@ -38,6 +38,7 @@ CHARACTERS
   hexDigit = digit + "ABCDEF" .
   binaryDigit = "01" .
   noQuote  = ANY - '"' - eol  .
+  noQuote2  = ANY - "'" - eol  .
 
 TOKENS
     ident =  letter { letter | digit | "_" } .
@@ -48,7 +49,7 @@ TOKENS
 			| "0b" {["'"]binaryDigit} . 
     real =  digit { ["'"]digit } "." { digit } [ ("E" | "D") [ "+" | "-" ] digit { digit } ] .
     character = digit { hexDigit } "X" .
-    string =  '"' { noQuote } '"' .
+    string =  '"' { noQuote } '"' | "'" {noQuote2} "'".
 
 COMMENTS
   FROM "(*" TO "*)" NESTED
@@ -269,10 +270,10 @@ PRODUCTIONS
 
 	Case<out AOParser.Ast.Case o> 	
 		=																		(. o = new AOParser.Ast.Case(); AOParser.Ast.CaseLabels cl; .)
-		[CaseLabels<out cl>														(. o.CaseLabels.Add(cl); .) 
+		CaseLabels<out cl>														(. o.CaseLabels.Add(cl); .) 
 		{"," CaseLabels<out cl>													(. o.CaseLabels.Add(cl); .)
 		} 
-		":" StatementSeq<out o.StatementSeq>].
+		":" StatementSeq<out o.StatementSeq>.
 
 	CaseLabels<out AOParser.Ast.CaseLabels o> 	
 		=																		(. o = new AOParser.Ast.CaseLabels(); .)	

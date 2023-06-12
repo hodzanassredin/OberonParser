@@ -751,17 +751,15 @@ public Common.SymTable.SymTab symTab = new ();
 
 	void Case(out AOParser.Ast.Case o) {
 		o = new AOParser.Ast.Case(); AOParser.Ast.CaseLabels cl; 
-		if (StartOf(2)) {
+		CaseLabels(out cl);
+		o.CaseLabels.Add(cl); 
+		while (la.kind == 11) {
+			Get();
 			CaseLabels(out cl);
 			o.CaseLabels.Add(cl); 
-			while (la.kind == 11) {
-				Get();
-				CaseLabels(out cl);
-				o.CaseLabels.Add(cl); 
-			}
-			Expect(20);
-			StatementSeq(out o.StatementSeq);
 		}
+		Expect(20);
+		StatementSeq(out o.StatementSeq);
 	}
 
 	void CaseLabels(out AOParser.Ast.CaseLabels o) {

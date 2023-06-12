@@ -41,7 +41,9 @@ CHARACTERS
 
 TOKENS
 	ident = (letter | "_") {letter | "_" | digit}.
-	integer = digit {digit} | digit {hexDigit} ( "H" | "L" ).
+	integer = digit {digit}
+			| digit {digit} CONTEXT ("..")
+			| digit {hexDigit} ( "H" | "L" ).
 	real = digit {digit} "." {digit} [ "E" ["+" | "-"] digit {digit} ].
 	character  = digit {hexDigit} "X".
 	string  = '"' {noQuote} '"' | "'" {noQuote2} "'".
