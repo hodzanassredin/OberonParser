@@ -20,19 +20,19 @@ else
     Console.WriteLine("   Parsing source file {0}", args[0]);
     parser.Parse();
 
-    if (parser.errors.count > 0) { return; }
+    //if (parser.errors.count > 0) { return; }
 
     Console.WriteLine("-- {0} errors dectected", parser.errors.count);
     var sw = new StreamWriter(Console.OpenStandardOutput());
     sw.AutoFlush = true;
     Console.SetOut(sw);
     var aoppv = new AOParser.PrettyPrintVisitor(sw);
-    //parser.module.AcceptWithComments(aoppv);
+    parser.module.AcceptWithComments(aoppv);
     var mapper = new AoToCpMapper();
     var cpModule = mapper.Map(parser.module);
     var ppv = new CPParser.PrettyPrintVisitor(sw);
     var str = parser.module.ToString();
-    cpModule.AcceptWithComments(ppv);
+    //cpModule.AcceptWithComments(ppv);
 }
 
 

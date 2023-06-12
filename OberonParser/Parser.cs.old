@@ -35,6 +35,10 @@ public Common.SymTable.SymTab symTab = new ();
 		return obj.objClass == Common.SymTable.ObjCLass.MODULE;
 	}
 
+	bool IsSet(){
+		return t.val == "." && la.val == ".";
+	}
+
 	bool IsCast(){
 		var obj = symTab.Find(t.val);
 		if (obj.objClass == Common.SymTable.ObjCLass.FUNC) return false;

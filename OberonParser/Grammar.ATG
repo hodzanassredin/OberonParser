@@ -10,6 +10,10 @@ COMPILER ActiveOberon
 		return obj.objClass == Common.SymTable.ObjCLass.MODULE;
 	}
 
+	bool IsSet(){
+		return t.val == "." && la.val == ".";
+	}
+
 	bool IsCast(){
 		var obj = symTab.Find(t.val);
 		if (obj.objClass == Common.SymTable.ObjCLass.FUNC) return false;
@@ -37,7 +41,11 @@ CHARACTERS
 
 TOKENS
     ident =  letter { letter | digit | "_" } .
-    integer = digit {["'"]digit} | digit {hexDigit} "H" | "0x" {["'"]hexDigit} | "0b" {["'"]binaryDigit}. 
+    integer = digit {["'"]digit} 
+			| digit { ["'"]digit } CONTEXT ("..")
+			| digit {hexDigit} "H" 
+			| "0x" {["'"]hexDigit} 
+			| "0b" {["'"]binaryDigit} . 
     real =  digit { ["'"]digit } "." { digit } [ ("E" | "D") [ "+" | "-" ] digit { digit } ] .
     character = digit { hexDigit } "X" .
     string =  '"' { noQuote } '"' .

@@ -109,13 +109,15 @@ namespace AOParser.Ast
         }
 		public Scope scope;
 
-		public TypeDesc FindType()
-		{
-			var name = ToString();
-			if (baseTypes.ContainsKey(name)) {
-				return baseTypes[name];
+		public TypeDesc TypeDescr
+		{ get
+			{
+				var name = ToString();
+				if (baseTypes.ContainsKey(name)) {
+					return baseTypes[name];
+				}
+				return TypeDesc.Predefined(ToString(), scope);
 			}
-			return TypeDesc.Predefined(ToString(), scope);
 		}
 	}
 	public class Guard : AstElement
@@ -392,7 +394,7 @@ namespace AOParser.Ast
 
 		public TypeDesc TypeDescr(Scope scope)
 		{
-				return TypeDesc.Function(Qualident?.FindType() ?? TypeDesc.None, scope);
+				return TypeDesc.Function(Qualident?.TypeDescr ?? TypeDesc.None, scope);
 		}
 	}
 
@@ -426,7 +428,7 @@ namespace AOParser.Ast
 		public abstract Common.SymTable.TypeDesc TypeDescr { get; }
 		public class SynonimType : IType
 		{
-			public override TypeDesc TypeDescr => Qualident.FindType();
+			public override TypeDesc TypeDescr => Qualident.TypeDescr;
 			public Qualident? Qualident;
 			public override void Accept(IAstVisitor v) => v.Visit(this);
             public override string ToString()
@@ -475,7 +477,7 @@ namespace AOParser.Ast
 			{
 				get
 				{
-					return TypeDesc.Struct(Qualident?.FindType(), scope);
+					return TypeDesc.Struct(Qualident?.TypeDescr, scope);
 				}
 			}
 		}
@@ -509,7 +511,7 @@ namespace AOParser.Ast
 				get
 				{
 
-					return TypeDesc.Pointer(TypeDesc.Struct(Qualident?.FindType(), scope));
+					return TypeDesc.Pointer(TypeDesc.Struct(Qualident?.TypeDescr, scope));
 
 				}
 			}
@@ -1158,7 +1160,7 @@ namespace AOParser.Ast
 				foreach (var spec in Specs.Cast<IDesignatorSpec>())
 				{
 					t = spec.Specify(t);
-					if (t == null) return t;
+					if (t == null) return TypeDesc.None;
 				}
 				return t;
 			}

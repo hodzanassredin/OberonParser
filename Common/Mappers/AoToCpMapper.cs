@@ -321,7 +321,7 @@ namespace Common.Mappers
                                 //ReceiverPrefix = CPParser.Ast.Receiver.Prefix., //dont need for pointer record
                                 TypeIdent = Map(o.Ident)
                             },
-                            StatementSeq = Map(x.Body.StatBlock, x.ProcHead.FormalPars?.Qualident?.FindType()??Common.SymTable.TypeDesc.None),
+                            StatementSeq = Map(x.Body.StatBlock, x.ProcHead.FormalPars?.Qualident?.TypeDescr ?? Common.SymTable.TypeDesc.None),
                             FormalPars = Map(x.ProcHead.FormalPars),
                             MethAttributes = new CPParser.Ast.MethAttributes() {
                                 IsNew = true,
@@ -394,7 +394,7 @@ namespace Common.Mappers
                 IdentDef = Map(o.ProcHead.IdentDef),
                 DeclSeq = Map(o.DeclSeq),
                 FormalPars = Map(o.ProcHead.FormalPars),
-                StatementSeq = Map(o.Body.StatBlock, o.ProcHead.FormalPars?.Qualident?.FindType()??Common.SymTable.TypeDesc.None),
+                StatementSeq = Map(o.Body.StatBlock, o.ProcHead.FormalPars?.Qualident?.TypeDescr ?? Common.SymTable.TypeDesc.None),
                 MethAttributes = new CPParser.Ast.MethAttributes()
             };
         }
@@ -469,8 +469,7 @@ namespace Common.Mappers
             if (o.Flags!=null) {
                 if (o.Flags.Values.Any())
                 {
-                    var comment = new CPParser.Ast.Comment() { Content = "NOT SUPPORTED CONV: " + o.Flags.ToString() };
-                    res.CommentsBefore.Add(comment);
+                    res.CommentsBefore.Add(GetNotSupportedWarning(o.Flags.ToString()));
                 }
             }
             return res;
@@ -869,10 +868,20 @@ namespace Common.Mappers
                 Type_ = Map(o.Type_).Item1
             };
         }
-
+        private CPParser.Ast.Comment GetNotSupportedWarning(string str) {
+            if (str == null) return null;
+            return new CPParser.Ast.Comment() { Content = "WARN CONV NOT SUPPORTED: " + str };
+        }
         public CPParser.Ast.IType.PointerType Map(AOParser.Ast.IType.PointerType o)
         {
-            throw new NotImplementedException();
+            var res = new CPParser.Ast.IType.PointerType
+            {
+                Type_ = Map(o.Type_).Item1
+            };
+
+            res.CommentsBefore.Add(GetNotSupportedWarning(o.Flags?.ToString()));
+
+            return res;
         }
 
         public CPParser.Ast.IType.ProcedureType Map(AOParser.Ast.IType.ProcedureType o)
