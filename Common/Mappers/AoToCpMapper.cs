@@ -1,4 +1,5 @@
 ﻿
+using CPParser.Ast;
 using System.Text;
 
 namespace Common.Mappers
@@ -180,6 +181,9 @@ namespace Common.Mappers
                 Name = new CPParser.Ast.Ident { Name = CompatModuleName }
             });
             res.DeclSeq = Map(o.DeclSeq);
+
+            AddForward(res.DeclSeq.ProcForwardDecls);
+
             if (o.Definition != null)
             {
                 res.DeclSeq.CommentsBefore.Add(Map(o.Definition));
@@ -192,6 +196,22 @@ namespace Common.Mappers
             }
             return res;
 
+        }
+
+        private void AddForward(AstList procForwardDecls)
+        {
+            //var deps = new Dictionary<string, List<String>>();
+            //foreach (var item in procForwardDecls)
+            //{
+            //    if (item is CPParser.Ast.ProcDecl pdecl) {
+            //        var p = pdecl.IdentDef.Ident.Name;
+            //        if (pdecl.StatementSeq!=null)
+            //        foreach (var stmt in pdecl.StatementSeq.Statements)
+            //        {
+
+            //        }
+            //    }
+            //}
         }
 
         private CPParser.Ast.Comment GetConvComment(string from) { 
