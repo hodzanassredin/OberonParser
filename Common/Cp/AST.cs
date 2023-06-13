@@ -167,7 +167,12 @@ namespace CPParser.Ast
 		}
 		public Ident Ident;
 		public IdentExport Export;
-		public override void Accept(IAstVisitor v) => v.Visit(this);
+
+        public override string ToString()
+        {
+            return $"{Ident} {Export}";
+        }
+        public override void Accept(IAstVisitor v) => v.Visit(this);
 	}
 	public abstract class IConstTypeVarListDecl : AstElement {
 		public class ConstDeclList : IConstTypeVarListDecl
@@ -239,7 +244,11 @@ namespace CPParser.Ast
         public StatementSeq StatementSeq;
 		public override void Accept(IAstVisitor v) => v.Visit(this);
 
-		public Obj GetObj(Scope scope)
+        public override string ToString()
+        {
+            return $"PROCEDURE ({Receiver}) {IdentDef} {FormalPars} {MethAttributes}";
+        }
+        public Obj GetObj(Scope scope)
 		{
 			return new Obj(ObjCLass.FUNC, (Receiver != null ? $"({Receiver}) " : "") + IdentDef.Ident.Name, FormalPars?.TypeDescr(scope) 
 				?? TypeDesc.Function(TypeDesc.None, null, scope), "") { 
@@ -272,7 +281,10 @@ namespace CPParser.Ast
 		public AstList FPSections = new AstList();
 		public IType Type_;
         public override void Accept(IAstVisitor v) => v.Visit(this);
-
+		public override string ToString()
+		{
+			return $"({String.Join(";", FPSections)}) : {Type_}";
+		}
 		public TypeDesc TypeDescr(Scope scope)
 		{
 			var args = new List<Obj>();
@@ -301,7 +313,10 @@ namespace CPParser.Ast
 		public AstList Idents = new AstList();
 		public IType Type_;
 		public override void Accept(IAstVisitor v) => v.Visit(this);
-
+		public override string ToString()
+		{
+			return $"{FpSectionPrefix} {String.Join(", ", Idents)}:{Type_}";
+		}
 		public IEnumerable<Obj> Objects() { 
 
             foreach (var id in Idents.Cast<Ident>())
@@ -350,7 +365,11 @@ namespace CPParser.Ast
 			public override TypeDesc TypeDescr => Qualident.FindType();
 
             public override void Accept(IAstVisitor v) => v.Visit(this);
-		}
+            public override string ToString()
+            {
+                return Qualident.ToString();
+            }
+        }
 		public class ArrayType : IType
 		{
 			public AstList ConstExprs = new AstList();
@@ -366,6 +385,11 @@ namespace CPParser.Ast
 			}
 
             public override void Accept(IAstVisitor v) => v.Visit(this);
+
+			public override string ToString()
+			{
+				return $"ARRAY {String.Join(",", ConstExprs)} OF {Type_}";
+			}
 		}
 
 		public class RecordType : IType
@@ -383,8 +407,11 @@ namespace CPParser.Ast
 			public Qualident Qualident;
 			public AstList FieldList = new AstList();
             private readonly Scope scope;
-
-            public override TypeDesc TypeDescr { get {
+			public override string ToString()
+			{
+				return $"RECORD ({Qualident}) {FieldList} END";
+			}
+			public override TypeDesc TypeDescr { get {
 					return TypeDesc.Struct(Qualident?.FindType(), scope);
 
 				} }
@@ -399,6 +426,11 @@ namespace CPParser.Ast
             public override TypeDesc TypeDescr => TypeDesc.Pointer(Type_.TypeDescr);
 
             public override void Accept(IAstVisitor v) => v.Visit(this);
+
+			public override string ToString()
+			{
+				return $"POINTER TO {Type_}";
+			}
 		}
 
 		public class ProcedureType : IType
@@ -413,6 +445,11 @@ namespace CPParser.Ast
             public override TypeDesc TypeDescr => FormalPars.TypeDescr(scope);
 
             public override void Accept(IAstVisitor v) => v.Visit(this);
+
+			public override string ToString()
+			{
+				return $"PROCEDURE {FormalPars}";
+			}
 		}
 	}
     
@@ -433,6 +470,10 @@ namespace CPParser.Ast
 			return IdentDefs.Cast<IdentDef>().Select(x => x.Ident.Name).ToArray();
 		}
 		public override void Accept(IAstVisitor v) => v.Visit(this);
+		public override string ToString()
+		{
+			return String.Join(",", IdentDefs);
+		}
 	}
 	public class FieldList : AstElement
 	{
@@ -440,6 +481,11 @@ namespace CPParser.Ast
 		public IdentList IdentList;
 		public IType Type_;
 		public override void Accept(IAstVisitor v) => v.Visit(this);
+
+		public override string ToString()
+		{
+			return $"{String.Join(",", IdentList)} : {Type_}";
+		}
 	}
 	
 	

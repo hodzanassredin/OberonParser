@@ -5,11 +5,16 @@ namespace AOParser.Types
 {
     public class TypeResolver
     {
-        public static TypeDesc Resolve(TypeDesc type)
+
+        public static TypeDesc Resolve(TypeDesc type, bool expectedFunc = false)
         {
+            if (type == null) return TypeDesc.None;
             if (type.form != Common.SymTable.TypeForm.PREDEFINED) return type;
             if (type.predefinedName == "CHR")
                 return TypeDesc.Function(TypeDesc.UINT16, null, type.scope);
+            if (type.predefinedName == "SET" || type.predefinedName == "SET32")
+                return expectedFunc ? TypeDesc.Function(TypeDesc.Predefined("SET", type.scope), null, type.scope) : TypeDesc.Predefined("SET", type.scope);
+
             return type.scope.Find(type.predefinedName).type;
         }
 

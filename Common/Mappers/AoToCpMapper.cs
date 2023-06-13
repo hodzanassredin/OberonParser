@@ -37,8 +37,8 @@ namespace Common.Mappers
             ["SIGNED16"] = GetQualident("SHORTINT"),
             ["SIGNED32"] = GetQualident("INTEGER"),
             ["SIGNED64"] = GetQualident("LONGINT"),
-            ["UNSIGNED8"] = GetQualident("CHAR"),
-            ["UNSIGNED16"] = GetQualident(CompatModuleName, "UNSIGNED16"),
+            ["UNSIGNED8"] = GetQualident("SHORTCHAR"),
+            ["UNSIGNED16"] = GetQualident("CHAR"),
             ["UNSIGNED32"] = GetQualident(CompatModuleName, "UNSIGNED32"),
             ["UNSIGNED64"] = GetQualident(CompatModuleName, "UNSIGNED64"),
             ["FLOAT32"] = GetQualident("SHORTREAL"),
@@ -58,7 +58,9 @@ namespace Common.Mappers
         {
             ["ADDRESSOF"] = GetQualident("SYSTEM", "ADR"),
             ["SIZEOF"] = GetQualident("SIZE"),
-            
+            ["LSH"] = GetQualident("SYSTEM", "LSH"),
+            ["ROT"] = GetQualident("SYSTEM", "ROT"),
+
         };
         public static string BinaryStringToHexString(string binary)
         {
@@ -195,7 +197,10 @@ namespace Common.Mappers
         private CPParser.Ast.Comment GetConvComment(string from) { 
             return new CPParser.Ast.Comment() { Content = $"CONV FROM {from}" };
         }
-
+        private CPParser.Ast.Comment GetRemoveComment(string from)
+        {
+            return new CPParser.Ast.Comment() { Content = $"CONV REMOVE {from}" };
+        }
         public CPParser.Ast.Import Map(AOParser.Ast.Import o)
         {
             CPParser.Ast.Import res = null;
@@ -1053,11 +1058,31 @@ namespace Common.Mappers
             throw new NotImplementedException();
         }
 
-        public CPParser.Ast.IFactor.DesignatorFactor Map(AOParser.Ast.IFactor.DesignatorFactor o)
+        HashSet<string> skipIfArgTypeEqReturnType = new HashSet<string> { "CHR", "SET32" };
+
+        public CPParser.Ast.IFactor Map(AOParser.Ast.IFactor.DesignatorFactor o)
         {
-            return new CPParser.Ast.IFactor.DesignatorFactor {
+            var res = new CPParser.Ast.IFactor.DesignatorFactor
+            {
                 Value = Map(o.Value)
             };
+
+            if (skipIfArgTypeEqReturnType.Contains(o.Value.Qualident.ToString()) && o.Value.Specs.Count() == 1) {
+                var call = o.Value.Specs.Value.FirstOrDefault() as AOParser.Ast.Designator.IDesignatorSpec.ProcCallDesignatorSpec;
+                if (call != null)
+                {
+                    var arg = call.Value.Exprs.FirstOrDefault() as AOParser.Ast.Expr;
+                    var argType = AOParser.Types.TypeResolver.Resolve(arg.TypeDescr);
+                    var returnedType = AOParser.Types.TypeResolver.Resolve(o.Value.Qualident.TypeDescr, true).elemType;
+                    if (argType.form == returnedType.form && argType.predefinedName == returnedType.predefinedName) {
+                        res.Value.Qualident = GetQualident("");
+                        res.Value.Qualident.CommentsBefore.Add(GetRemoveComment(o.Value.Qualident.Ident1.Name));
+                    }
+                }
+
+            }
+
+            return res;
         }
 
         public CPParser.Ast.Comment Map(AOParser.Ast.Definition definition)
