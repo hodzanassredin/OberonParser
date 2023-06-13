@@ -373,7 +373,7 @@ namespace AOParser.Ast
 
 		public Obj GetObj(Scope scope)
 		{
-			return new Obj(ObjCLass.FUNC, ProcHead.IdentDef.Ident.Name, ProcHead.FormalPars?.TypeDescr(scope) ?? TypeDesc.Function(TypeDesc.None, scope), "")
+			return new Obj(ObjCLass.FUNC, ProcHead.IdentDef.Ident.Name, ProcHead.FormalPars?.TypeDescr(scope) ?? TypeDesc.Function(TypeDesc.None, null, scope), "")
 			{
 				scope = scope,
 			};
@@ -394,7 +394,17 @@ namespace AOParser.Ast
 
 		public TypeDesc TypeDescr(Scope scope)
 		{
-				return TypeDesc.Function(Qualident?.TypeDescr ?? TypeDesc.None, scope);
+			var args = new List<Obj>();
+            foreach (var sect in FPSections.Cast<FPSection>())
+            {
+                foreach (var item in sect.Idents.Value.Cast<Ident>())
+                {
+					args.Add(scope.Find(item.Name));
+
+				}
+				
+            }
+			return TypeDesc.Function(Qualident?.TypeDescr ?? TypeDesc.None, args.ToArray(), scope);
 		}
 	}
 
@@ -1137,7 +1147,7 @@ namespace AOParser.Ast
 				}
 				public override TypeDesc Specify(TypeDesc parent)
 				{
-					return parent.scope.Find(Value.Name).type;
+					return parent.scope?.Find(Value.Name)?.type??TypeDesc.None;
 				}
 			}
 			public class PointerDesignatorSpec : IDesignatorSpec
@@ -1205,10 +1215,10 @@ namespace AOParser.Ast
 				TypeDesc t = null;
 				if (this.Qualident.Ident1.Name == "Math")
 				{
-					t = TypeDesc.Function(TypeDesc.FLOAT64, scope);
+					t = TypeDesc.Function(TypeDesc.FLOAT64, null, scope);
 				}
 				else {
-					t = scope.Find(this.Qualident.ToString())?.type;
+					t = TypeResolver.Resolve(this.Qualident.TypeDescr);
 				}
 				if (t == null || t.form == TypeForm.NONE) return t;
 

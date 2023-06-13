@@ -9,7 +9,7 @@ namespace AOParser.Types
         {
             if (type.form != Common.SymTable.TypeForm.PREDEFINED) return type;
             if (type.predefinedName == "CHR")
-                return TypeDesc.Function(TypeDesc.UINT16, type.scope);
+                return TypeDesc.Function(TypeDesc.UINT16, null, type.scope);
             return type.scope.Find(type.predefinedName).type;
         }
 

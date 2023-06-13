@@ -238,9 +238,11 @@ namespace CPParser.Ast
 		public DeclSeq DeclSeq;
         public StatementSeq StatementSeq;
 		public override void Accept(IAstVisitor v) => v.Visit(this);
+
 		public Obj GetObj(Scope scope)
 		{
-			return new Obj(ObjCLass.FUNC, (Receiver != null ? $"({Receiver}) " : "") + IdentDef.Ident.Name, FormalPars?.TypeDescr(scope) ?? TypeDesc.Function(TypeDesc.None, scope), "") { 
+			return new Obj(ObjCLass.FUNC, (Receiver != null ? $"({Receiver}) " : "") + IdentDef.Ident.Name, FormalPars?.TypeDescr(scope) 
+				?? TypeDesc.Function(TypeDesc.None, null, scope), "") { 
 				scope = scope,
 			};
 		}
@@ -271,9 +273,20 @@ namespace CPParser.Ast
 		public IType Type_;
         public override void Accept(IAstVisitor v) => v.Visit(this);
 
-		public TypeDesc TypeDescr(Scope scope) {
-				return TypeDesc.Function(Type_?.TypeDescr?? TypeDesc.None, scope);
-		} 
+		public TypeDesc TypeDescr(Scope scope)
+		{
+			var args = new List<Obj>();
+            foreach (var sect in FPSections.Cast<FPSection>())
+            {
+                foreach (var item in sect.Idents.Value.Cast<Ident>())
+                {
+					args.Add(scope.Find(item.Name));
+
+				}
+				
+            }
+			return TypeDesc.Function(Type_.TypeDescr, args.ToArray(), scope);
+		}
 	}
 
 	
@@ -930,7 +943,7 @@ namespace CPParser.Ast
 		private readonly Scope scope;
 		public TypeDesc TypeDescr { get {
 				if (this.Qualident.Ident1.Name == "Math") {
-					return TypeDesc.Function(TypeDesc.FLOAT64, scope);
+					return TypeDesc.Function(TypeDesc.FLOAT64, null, scope);
 				}
 
 				var t = scope.Find(this.Qualident.ToString())?.type;

@@ -18,7 +18,7 @@ namespace CPParser.Types
         {
             if (type.predefinedName == null) return TypeDesc.None;
             if (type.predefinedName == "CHR") 
-                return TypeDesc.Function(TypeDesc.UINT16, type.scope);
+                return TypeDesc.Function(TypeDesc.UINT16, null, type.scope);
             return type.scope.Find(type.predefinedName).type;
         }
 

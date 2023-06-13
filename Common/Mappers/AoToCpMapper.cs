@@ -57,6 +57,8 @@ namespace Common.Mappers
         Dictionary<string, CPParser.Ast.Qualident> simpleFuncMap = new Dictionary<string, CPParser.Ast.Qualident>
         {
             ["ADDRESSOF"] = GetQualident("SYSTEM", "ADR"),
+            ["SIZEOF"] = GetQualident("SIZE"),
+            
         };
         public static string BinaryStringToHexString(string binary)
         {
@@ -105,7 +107,7 @@ namespace Common.Mappers
         public CPParser.Ast.IStatement.IfStatement.IfThen Map(AOParser.Ast.IStatement.IfStatement.IfThen o, Common.SymTable.TypeDesc expecteType)
         {
             return new CPParser.Ast.IStatement.IfStatement.IfThen {
-                Cond = Map(o.Cond),
+                Cond = Map(o.Cond, Common.SymTable.TypeDesc.BOOL),
                 ThenBody = Map(o.ThenBody, expecteType)
             };
         }
@@ -344,7 +346,7 @@ namespace Common.Mappers
         public CPParser.Ast.ConstDecl Map(AOParser.Ast.ConstDecl o)
         {
             return new CPParser.Ast.ConstDecl {
-                ConstExpr = Map(o.ConstExpr),
+                ConstExpr = Map(o.ConstExpr, null),
                 IdentDef = Map(o.IdentDef)
             };
         }
@@ -427,7 +429,7 @@ namespace Common.Mappers
                     ident.Ident.Name = $"{identDef?.Ident.Name}_{ident.Ident.Name}";
 
                 }
-                var expr = Map(item.Expr);
+                var expr = Map(item.Expr, null);
                 if (expr == null) {
                     expr = new CPParser.Ast.Expr
                     {
@@ -518,12 +520,21 @@ namespace Common.Mappers
             };
         }
 
-        public CPParser.Ast.ExprList Map(AOParser.Ast.ExprList o)
+        public CPParser.Ast.ExprList Map(AOParser.Ast.ExprList o, Common.SymTable.TypeDesc[] expectedTypes)
         {
             if (o == null) return null;
-            return new CPParser.Ast.ExprList {
-                Exprs = MapLst<AOParser.Ast.Expr, CPParser.Ast.Expr>(o.Exprs, Map),
+
+            var res = new CPParser.Ast.ExprList
+            {
+
             };
+            var i = 0;
+            foreach (var e in o.Exprs.Cast<AOParser.Ast.Expr>())
+            {
+                res.Exprs.Add(Map(e, expectedTypes==null?null: expectedTypes[i]));
+                i++;
+            }
+            return res;
         }
 
         public CPParser.Ast.IdentList Map(AOParser.Ast.IdentList o)
@@ -538,19 +549,19 @@ namespace Common.Mappers
             throw new NotImplementedException();
         }
 
-        public CPParser.Ast.ConstExpr Map(AOParser.Ast.ConstExpr o)
+        public CPParser.Ast.ConstExpr Map(AOParser.Ast.ConstExpr o, Common.SymTable.TypeDesc expecteType)
         {
             if (o == null) return null;
             return new CPParser.Ast.ConstExpr {
-                Expr = Map(o.Expr)
+                Expr = Map(o.Expr, expecteType)
             };
         }
 
         public CPParser.Ast.CaseLabels Map(AOParser.Ast.CaseLabels o)
         {
             return new CPParser.Ast.CaseLabels {
-                ConstExpr1 = Map(o.ConstExpr1),
-                ConstExpr2 = Map(o.ConstExpr2)
+                ConstExpr1 = Map(o.ConstExpr1, null),
+                ConstExpr2 = Map(o.ConstExpr2, null)
             };
         }
         public CPParser.Ast.StatementSeq Map(AOParser.Ast.StatBlock o, Common.SymTable.TypeDesc expecteType)
@@ -620,8 +631,8 @@ namespace Common.Mappers
         public CPParser.Ast.Element Map(AOParser.Ast.Element o)
         {
             return new CPParser.Ast.Element { 
-                Expr1 = Map(o.Expr1),
-                Expr2 = Map(o.Expr2)
+                Expr1 = Map(o.Expr1, Common.SymTable.TypeDesc.INT32),
+                Expr2 = Map(o.Expr2, Common.SymTable.TypeDesc.INT32)
             };
         }
 
@@ -692,18 +703,18 @@ namespace Common.Mappers
                         SimpleExpr = new CPParser.Ast.SimpleExpr {
                             Prefix = Map(t.Prefix.Value),
                             Term = new CPParser.Ast.Term {
-                                Factor = Map(t.Factor)
+                                Factor = Map(t.Factor, null)
                             }
                         }
                     }
                 };
             } else {
-                yield return Map(t.Factor);
+                yield return Map(t.Factor, null);
             }
             foreach (var te in t.TermElements.Cast<AOParser.Ast.TermElementExpr>())
             {
                 yield return Map(te.AddOp);
-                yield return Map(te.Factor);
+                yield return Map(te.Factor, null);
             }
         }
         private IEnumerable<CPParser.Ast.AstElement> ToSequence(AOParser.Ast.SimpleExpr o) {
@@ -771,12 +782,12 @@ namespace Common.Mappers
 
 
 
-        private CPParser.Ast.IFactor Map(AOParser.Ast.IFactor factor)
+        private CPParser.Ast.IFactor Map(AOParser.Ast.IFactor factor, Common.SymTable.TypeDesc expectedType)
         {
             switch (factor)
             {
                 case AOParser.Ast.IFactor.ExprFactor f:
-                    return Map(f);
+                    return Map(f, expectedType);
                 case AOParser.Ast.IFactor.NilFactor f:
                     return Map(f);
                 case AOParser.Ast.IFactor.SetFactor f:
@@ -786,7 +797,7 @@ namespace Common.Mappers
                 case AOParser.Ast.IFactor.DesignatorFactor f:
                     return Map(f);
                 case AOParser.Ast.IFactor.NegFactor f:
-                    return Map(f);
+                    return Map(f, expectedType);
                 case AOParser.Ast.IFactor.NumberFactor f:
                     return Map(f);
                 case AOParser.Ast.IFactor.StringFactor f:
@@ -811,9 +822,10 @@ namespace Common.Mappers
             }
         }
 
-        public CPParser.Ast.Expr Map(AOParser.Ast.Expr o)
+        public CPParser.Ast.Expr Map(AOParser.Ast.Expr o, Common.SymTable.TypeDesc toType)
         {
             if (o == null) return null;
+            o = DownOrUpCast(o, toType);
             return new CPParser.Ast.Expr {
                 SimpleExpr = Map(o.SimpleExpr),
                 Relation = Map(o.Relation),
@@ -862,16 +874,18 @@ namespace Common.Mappers
         {
             var res = new CPParser.Ast.IStatement.AssignmentStatement {
                 Designator = Map(o.Designator),
-                Expr = Map(DownOrUpCast(o.Expr, o.Designator.TypeDescr)),
+                Expr = Map(o.Expr, o.Designator.TypeDescr),
             };
             return res;
         }
 
         public CPParser.Ast.IStatement.ProcCallStatement Map(AOParser.Ast.IStatement.ProcCallStatement o)
         {
+            var fType = o.Designator.TypeDescr;
+            var tps = fType.parameters?.Select(x => x.type)?.ToArray();
             return new CPParser.Ast.IStatement.ProcCallStatement { 
                 Designator = Map(o.Designator),
-                ExprList = Map(o.ExprList)
+                ExprList = Map(o.ExprList, tps)
             };
         }
 
@@ -888,7 +902,7 @@ namespace Common.Mappers
         {
             return new CPParser.Ast.IStatement.CaseStatement
             {
-                Expr = Map(o.Expr),
+                Expr = Map(o.Expr, null),
                 ElseBody = Map(o.ElseBody, expecteType),
                 Cases = MapLst<AOParser.Ast.Case, CPParser.Ast.Case>(o.Cases, x=>Map(x, expecteType))
             };
@@ -898,7 +912,7 @@ namespace Common.Mappers
         {
             return new CPParser.Ast.IStatement.WhileStatement
             {
-                Expr = Map(o.Expr),
+                Expr = Map(o.Expr, Common.SymTable.TypeDesc.BOOL),
                 StatementSeq = Map(o.StatementSeq, expecteType)
             };
         }
@@ -914,7 +928,7 @@ namespace Common.Mappers
         public CPParser.Ast.IStatement.RepeatStatement Map(AOParser.Ast.IStatement.RepeatStatement o, Common.SymTable.TypeDesc expecteType)
         {
             return new CPParser.Ast.IStatement.RepeatStatement { 
-                Expr = Map(o.Expr),
+                Expr = Map(o.Expr, Common.SymTable.TypeDesc.BOOL),
                 StatementSeq = Map(o.StatementSeq, expecteType)
             };
         }
@@ -941,7 +955,7 @@ namespace Common.Mappers
         {
             return new CPParser.Ast.IStatement.AssignmentStatement
             {
-                Expr = Map(o.Expr),
+                Expr = Map(o.Expr, expectedType),
                 Designator = new CPParser.Ast.Designator(null) { 
                     Qualident = GetQualident("IGNORE")
                 }
@@ -950,7 +964,7 @@ namespace Common.Mappers
         public CPParser.Ast.IStatement.ReturnStatement Map(AOParser.Ast.IStatement.ReturnStatement o, Common.SymTable.TypeDesc expectedType)
         {
             return new CPParser.Ast.IStatement.ReturnStatement {
-                Expr = Map(DownOrUpCast(o.Expr, expectedType))
+                Expr = Map(o.Expr, expectedType)
             };
         }
 
@@ -958,9 +972,9 @@ namespace Common.Mappers
         public CPParser.Ast.IStatement.ForStatement Map(AOParser.Ast.IStatement.ForStatement o, Common.SymTable.TypeDesc expectedType)
         {
             return new CPParser.Ast.IStatement.ForStatement { 
-                ByExpr = Map(o.ByExpr),
-                Expr = Map(o.Expr),
-                ToExpr = Map(o.ToExpr),
+                ByExpr = Map(o.ByExpr, null),
+                Expr = Map(o.Expr, null),
+                ToExpr = Map(o.ToExpr, null),
                 Ident = Map(o.Ident),
                 StatementSeq = Map(o.StatementSeq, expectedType)
             };
@@ -969,7 +983,7 @@ namespace Common.Mappers
         public CPParser.Ast.IType.ArrayType Map(AOParser.Ast.IType.ArrayType o)
         {
             return new CPParser.Ast.IType.ArrayType { 
-                ConstExprs = MapLst<AOParser.Ast.ConstExpr,CPParser.Ast.ConstExpr>(o.ConstExprs, Map),
+                ConstExprs = MapLst<AOParser.Ast.ConstExpr, CPParser.Ast.ConstExpr>(o.ConstExprs, x => Map(x, null)),
                 Type_ = Map(o.Type_, null).Item1
             };
         }
@@ -1051,19 +1065,19 @@ namespace Common.Mappers
             throw new NotImplementedException();
         }
 
-        public CPParser.Ast.IFactor.ExprFactor Map(AOParser.Ast.IFactor.ExprFactor o)
+        public CPParser.Ast.IFactor.ExprFactor Map(AOParser.Ast.IFactor.ExprFactor o, Common.SymTable.TypeDesc expectedType)
         {
             return new CPParser.Ast.IFactor.ExprFactor
             {
-                Value = Map(o.Value)
+                Value = Map(o.Value, expectedType)
             };
         }
 
-        public CPParser.Ast.IFactor.NegFactor Map(AOParser.Ast.IFactor.NegFactor o)
+        public CPParser.Ast.IFactor.NegFactor Map(AOParser.Ast.IFactor.NegFactor o, Common.SymTable.TypeDesc expectedType)
         {
             return new CPParser.Ast.IFactor.NegFactor
             {
-                Value = Map(o.Value)
+                Value = Map(o.Value, expectedType)
             };
         }
 
@@ -1121,7 +1135,7 @@ namespace Common.Mappers
             args.Exprs.Add(new CPParser.Ast.Expr() { 
                 SimpleExpr = new CPParser.Ast.SimpleExpr() { 
                     Term = new CPParser.Ast.Term { 
-                        Factor = Map(o.Value)
+                        Factor = Map(o.Value, null)
                     }
                 }
             });
@@ -1161,13 +1175,24 @@ namespace Common.Mappers
                 q = simpleFuncMap[o.Qualident.ToString()];
                 
             }
-            return new CPParser.Ast.Designator(null) { 
-                Qualident = q,
-                Specs = MapLst< AOParser.Ast.Designator.IDesignatorSpec, CPParser.Ast.Designator.IDesignatorSpec> (o.Specs, Map)
+
+            var tp = AOParser.Types.TypeResolver.Resolve(o.Qualident.TypeDescr);
+            //if (tp.form == SymTable.TypeForm.FUNC)
+
+            var res = new CPParser.Ast.Designator(null) { 
+                Qualident = q
             };
+            foreach (var item in o.Specs.Cast<AOParser.Ast.Designator.IDesignatorSpec>())
+            {
+                
+                res.Specs.Add(Map(item, tp.form == SymTable.TypeForm.FUNC ? tp.parameters?.Select(x=>x.type)?.ToArray():null));
+                tp = item.Specify(tp);
+            }
+
+            return res;
         }
 
-        private CPParser.Ast.Designator.IDesignatorSpec Map(AOParser.Ast.Designator.IDesignatorSpec arg)
+        private CPParser.Ast.Designator.IDesignatorSpec Map(AOParser.Ast.Designator.IDesignatorSpec arg, Common.SymTable.TypeDesc[] expectedTypes)
         {
             switch (arg)
             {
@@ -1178,7 +1203,7 @@ namespace Common.Mappers
                 case AOParser.Ast.Designator.IDesignatorSpec.CastDesignatorSpec s:
                     return Map(s);
                 case AOParser.Ast.Designator.IDesignatorSpec.ProcCallDesignatorSpec s:
-                    return Map(s);
+                    return Map(s, expectedTypes);
                 case AOParser.Ast.Designator.IDesignatorSpec.PointerDesignatorSpec s:
                     return Map(s);
                 default:
@@ -1203,7 +1228,7 @@ namespace Common.Mappers
         {
             return new CPParser.Ast.Designator.IDesignatorSpec.ArrayDesignatorSpec
             {
-                Value = Map(o.Value)
+                Value = Map(o.Value, null)
             };
         }
 
@@ -1215,11 +1240,11 @@ namespace Common.Mappers
             };
         }
 
-        public CPParser.Ast.Designator.IDesignatorSpec.ProcCallDesignatorSpec Map(AOParser.Ast.Designator.IDesignatorSpec.ProcCallDesignatorSpec o)
+        public CPParser.Ast.Designator.IDesignatorSpec.ProcCallDesignatorSpec Map(AOParser.Ast.Designator.IDesignatorSpec.ProcCallDesignatorSpec o, Common.SymTable.TypeDesc[] expectedTypes)
         {
             return new CPParser.Ast.Designator.IDesignatorSpec.ProcCallDesignatorSpec
             {
-                Value = Map(o.Value)
+                Value = Map(o.Value, expectedTypes)
             };
         }
 

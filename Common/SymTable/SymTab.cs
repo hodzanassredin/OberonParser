@@ -100,11 +100,12 @@ namespace Common.SymTable
 				scope = scope
 			};
 		}
-		public static TypeDesc Function(TypeDesc returnType, Scope scope) {
+		public static TypeDesc Function(TypeDesc returnType, Obj[] parameters, Scope scope) {
 			return new TypeDesc(TypeForm.FUNC)
 			{
 				elemType = returnType,
-				scope = scope
+				scope = scope,
+				parameters = parameters
 			};
 		}
 
@@ -153,7 +154,7 @@ namespace Common.SymTable
 
 		public string predefinedName;
 		public Scope scope;
-
+		public Obj[] parameters;
 		private TypeDesc(TypeForm form) { this.form = form; }
 
         public override string ToString()
