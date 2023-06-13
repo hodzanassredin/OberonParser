@@ -831,6 +831,7 @@ namespace Common.Mappers
 
         public AOParser.Ast.Expr DownOrUpCast(AOParser.Ast.Expr e, Common.SymTable.TypeDesc toType) {
 
+            if (toType == null) return e;
             if (!toType.IsSimple || !e.TypeDescr.IsSimple) return e;
             if (toType.form == e.TypeDescr.form) return e;
             var downcast = toType.form < e.TypeDescr.form;
@@ -1146,6 +1147,15 @@ namespace Common.Mappers
         public CPParser.Ast.Designator Map(AOParser.Ast.Designator o)
         {
             var q = Map(o.Qualident);
+
+            if (AOParser.Types.TypeResolver.Resolve(o.Qualident.TypeDescr).form == SymTable.TypeForm.ENUM && o.Specs.Value.Any()) {
+                var selector = ((AOParser.Ast.Designator.IDesignatorSpec.RecordDesignatorSpec)(o.Specs.Value[0])).Value;
+                return new CPParser.Ast.Designator(null) {
+                    Qualident = GetQualident($"{o.Qualident.ToString()}_{selector}")
+                };
+            }
+
+            
             if (simpleFuncMap.ContainsKey(o.Qualident.ToString()) && o.Specs.Any() && o.Specs.Value[0] is AOParser.Ast.Designator.IDesignatorSpec.ProcCallDesignatorSpec)
             {
                 q = simpleFuncMap[o.Qualident.ToString()];
