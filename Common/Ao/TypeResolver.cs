@@ -5,6 +5,14 @@ namespace AOParser.Types
 {
     public class TypeResolver
     {
+        public static TypeDesc Resolve(TypeDesc type)
+        {
+            if (type.form != Common.SymTable.TypeForm.PREDEFINED) return type;
+            if (type.predefinedName == "CHR")
+                return TypeDesc.Function(TypeDesc.UINT16, type.scope);
+            return type.scope.Find(type.predefinedName).type;
+        }
+
         public static bool IsSimple(TypeForm form) {
             return form <= TypeForm.FLOAT64;
         }

@@ -14,6 +14,14 @@ namespace CPParser.Types
             return form.All(IsSimple);
         }
 
+        public static TypeDesc Resolve(TypeDesc type)
+        {
+            if (type.predefinedName == null) return TypeDesc.None;
+            if (type.predefinedName == "CHR") 
+                return TypeDesc.Function(TypeDesc.UINT16, type.scope);
+            return type.scope.Find(type.predefinedName).type;
+        }
+
         public static TypeDesc ResolveAddOp(AddOp.AddOps op, TypeForm form1, TypeForm form2) {
             if (!AreSimple(form1, form2)) return TypeDesc.None;
             switch (op)

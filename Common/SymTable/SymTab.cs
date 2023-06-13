@@ -154,10 +154,6 @@ namespace Common.SymTable
 		public string predefinedName;
 		public Scope scope;
 
-		public TypeDesc Resolve() {
-			return scope.Find(predefinedName)?.type;
-		}
-
 		private TypeDesc(TypeForm form) { this.form = form; }
 
         public override string ToString()

@@ -55,7 +55,7 @@ public Common.SymTable.SymTab symTab = new ();
 			if (obj.type.form == Common.SymTable.TypeForm.FUNC)
 				return false;
 			if (obj.type.form == Common.SymTable.TypeForm.PREDEFINED) {
-				if (obj.type.Resolve().form == Common.SymTable.TypeForm.FUNC)
+				if (AOParser.Types.TypeResolver.Resolve(obj.type).form == Common.SymTable.TypeForm.FUNC)
 					return false;
 			}
 		}

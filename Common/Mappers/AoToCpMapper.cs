@@ -56,9 +56,7 @@ namespace Common.Mappers
         };
         Dictionary<string, CPParser.Ast.Qualident> simpleFuncMap = new Dictionary<string, CPParser.Ast.Qualident>
         {
-            ["SET8"] = GetQualidentFrom("SET8", "SET"),
-            ["SET16"] = GetQualidentFrom("SET16", "SET"),
-            ["SET32"] = GetQualidentFrom("SET32", "SET"),
+            ["ADDRESSOF"] = GetQualident("SYSTEM", "ADR"),
         };
         public static string BinaryStringToHexString(string binary)
         {
@@ -249,12 +247,12 @@ namespace Common.Mappers
             }
         }
 
-        public (CPParser.Ast.IConstTypeVarListDecl, List<CPParser.Ast.ProcDecl>) Map(AOParser.Ast.IConstTypeVarListDecl o)
+        public (CPParser.Ast.IConstTypeVarListDecl, List<CPParser.Ast.ProcDecl>, List<CPParser.Ast.ConstDecl>) Map(AOParser.Ast.IConstTypeVarListDecl o)
         {
             switch (o)
             {
                 case AOParser.Ast.IConstTypeVarListDecl.ConstDeclList t:
-                    return (Map(t), null);
+                    return (Map(t), null, null);
                 case AOParser.Ast.IConstTypeVarListDecl.VarDeclList t:
                     return Map(t);
                 case AOParser.Ast.IConstTypeVarListDecl.TypeDeclList t:
@@ -278,6 +276,16 @@ namespace Common.Mappers
                         res.ProcForwardDecls.Add(pd);
                     }
                 }
+                if (r.Item3 != null)
+                {
+                    var cds = new CPParser.Ast.IConstTypeVarListDecl.ConstDeclList();
+                    foreach (var cd in r.Item3)
+                    {
+                        cds.Values.Add(cd);
+                        
+                    }
+                    res.ConstTypeVarDecls.Add(cds);
+                }
             }
             foreach (var item in o.ProcDecl.Cast<AOParser.Ast.ProcDecl>())
             {
@@ -296,9 +304,10 @@ namespace Common.Mappers
             return res;
         }
 
-        public (CPParser.Ast.IConstTypeVarListDecl.TypeDeclList, List<CPParser.Ast.ProcDecl>) Map(AOParser.Ast.IConstTypeVarListDecl.TypeDeclList o)
+        public (CPParser.Ast.IConstTypeVarListDecl.TypeDeclList, List<CPParser.Ast.ProcDecl>, List<CPParser.Ast.ConstDecl>) Map(AOParser.Ast.IConstTypeVarListDecl.TypeDeclList o)
         {
             var pds = new List<CPParser.Ast.ProcDecl>();
+            var cds = new List<CPParser.Ast.ConstDecl>();
             var res = new CPParser.Ast.IConstTypeVarListDecl.TypeDeclList();
             foreach (var item in o.Values.Cast<AOParser.Ast.TypeDecl>())
             {
@@ -308,11 +317,15 @@ namespace Common.Mappers
                 {
                     pds.AddRange(m.Item2);
                 }
+                if (m.Item3 != null)
+                {
+                    cds.AddRange(m.Item3);
+                }
             }
-            return (res, pds);
+            return (res, pds, cds);
         }
 
-        public (CPParser.Ast.IConstTypeVarListDecl.VarDeclList, List<CPParser.Ast.ProcDecl>) Map(AOParser.Ast.IConstTypeVarListDecl.VarDeclList o)
+        public (CPParser.Ast.IConstTypeVarListDecl.VarDeclList, List<CPParser.Ast.ProcDecl>, List<CPParser.Ast.ConstDecl>) Map(AOParser.Ast.IConstTypeVarListDecl.VarDeclList o)
         {
             var pds = new List<CPParser.Ast.ProcDecl>();
             var res = new CPParser.Ast.IConstTypeVarListDecl.VarDeclList();
@@ -325,7 +338,7 @@ namespace Common.Mappers
                     pds.AddRange(m.Item2);
                 }
             }
-            return (res, pds);
+            return (res, pds, null);
         }
 
         public CPParser.Ast.ConstDecl Map(AOParser.Ast.ConstDecl o)
@@ -335,7 +348,7 @@ namespace Common.Mappers
                 IdentDef = Map(o.IdentDef)
             };
         }
-        public (CPParser.Ast.IType.PointerType, List<CPParser.Ast.ProcDecl>) Map(AOParser.Ast.IType.ObjectType o)
+        public (CPParser.Ast.IType.PointerType, List<CPParser.Ast.ProcDecl>, List<CPParser.Ast.ConstDecl>) Map(AOParser.Ast.IType.ObjectType o)
         {
             var vars = o.DeclSeq.ConstTypeVarDecls
                         .Where(x => x is AOParser.Ast.IConstTypeVarListDecl.VarDeclList)
@@ -344,7 +357,7 @@ namespace Common.Mappers
                         .Cast<AOParser.Ast.VarDecl>()
                         .Select(x => new CPParser.Ast.FieldList {
                             IdentList = Map(x.IdentList),
-                            Type_ = Map(x.Type_).Item1//TODO support procs for anonymous objects
+                            Type_ = Map(x.Type_, null).Item1//TODO support procs for anonymous objects
                         }).Cast<CPParser.Ast.AstElement>().ToList();
 
 
@@ -373,51 +386,91 @@ namespace Common.Mappers
                 Type_ = new CPParser.Ast.IType.RecordType(o.TypeDescr.scope)
                 {
                     Qualident = Map(o.Qualident),
-                    FieldList = new CPParser.Ast.AstList(vars)
+                    FieldList = new CPParser.Ast.AstList(vars),
+                    RecordMeta = CPParser.Ast.IType.RecordType.Meta.EXTENSIBLE
                 }
             };
-            return (tp, procs);
+            return (tp, procs,null);
         }
 
-        public (CPParser.Ast.IType, List<CPParser.Ast.ProcDecl>) Map(AOParser.Ast.IType o)
+        public (CPParser.Ast.IType, List<CPParser.Ast.ProcDecl>, List<CPParser.Ast.ConstDecl>) Map(AOParser.Ast.IType o, AOParser.Ast.IdentDef identDef)
         {
-            
-
-
             switch (o)
             {
                 case AOParser.Ast.IType.ProcedureType t:
-                    return (Map(t), null);
+                    return (Map(t), null,null);
                 case AOParser.Ast.IType.ArrayType t:
-                    return (Map(t), null);
+                    return (Map(t), null, null);
                 case AOParser.Ast.IType.ObjectType t:
                     return Map(t);
                 case AOParser.Ast.IType.PointerType t:
-                    return (Map(t), null);
+                    return (Map(t), null, null);
                 case AOParser.Ast.IType.RecordType t:
-                    return (Map(t), null);
+                    return (Map(t), null, null);
                 case AOParser.Ast.IType.SynonimType t:
-                    
-                    return (Map(t), null);
+                    return (Map(t), null, null);
+                case AOParser.Ast.IType.EnumType t:
+                    return Map(t, identDef);
                 default:
                     throw new Exception();
             }
         }
-        public (CPParser.Ast.TypeDecl, List<CPParser.Ast.ProcDecl>) Map(AOParser.Ast.TypeDecl o)
+        public (CPParser.Ast.IType, List<CPParser.Ast.ProcDecl>, List<CPParser.Ast.ConstDecl>) Map(AOParser.Ast.IType.EnumType o, AOParser.Ast.IdentDef identDef)
+        {
+            var t = new CPParser.Ast.IType.SynonimType() {Qualident = new CPParser.Ast.Qualident(null) { Ident1 = new CPParser.Ast.Ident() { Name = "INTEGER"} } };
+            var consts = new List<CPParser.Ast.ConstDecl>();
+            var i = 0;
+            foreach (var item in o.Enums.Cast<AOParser.Ast.EnumItem>())
+            {
+                var ident = Map(item.IdentDef);
+                if (ident != null) {
+                    ident.Ident.Name = $"{identDef?.Ident.Name}_{ident.Ident.Name}";
+
+                }
+                var expr = Map(item.Expr);
+                if (expr == null) {
+                    expr = new CPParser.Ast.Expr
+                    {
+                        SimpleExpr = new CPParser.Ast.SimpleExpr
+                        {
+                            Term = new CPParser.Ast.Term
+                            {
+                                Factor = new CPParser.Ast.IFactor.NumberFactor
+                                {
+                                    Value = new CPParser.Ast.Number
+                                    {
+                                        Value = i.ToString()
+                                    }
+                                }
+                            }
+                        }
+                    };
+                    i++;
+                }
+                consts.Add(new CPParser.Ast.ConstDecl { 
+                    ConstExpr = new CPParser.Ast.ConstExpr { Expr = expr },
+                    IdentDef = ident,
+                });
+            }
+
+
+            return (t, null, consts);
+        }
+        public (CPParser.Ast.TypeDecl, List<CPParser.Ast.ProcDecl>, List<CPParser.Ast.ConstDecl>) Map(AOParser.Ast.TypeDecl o)
         {
             
-            var m = Map(o.Type_);
+            var m = Map(o.Type_, o.IdentDef);
             var tp = new CPParser.Ast.TypeDecl
             {
                 Type_ = m.Item1,
                 IdentDef = Map(o.IdentDef)
             };
-            return (tp, m.Item2);
+            return (tp, m.Item2, m.Item3);
         }
 
         public (CPParser.Ast.VarDecl, List<CPParser.Ast.ProcDecl>) Map(AOParser.Ast.VarDecl o)
         {
-            var m = Map(o.Type_);
+            var m = Map(o.Type_,null);
             var vr = new CPParser.Ast.VarDecl
             {
                 Type_ = m.Item1,
@@ -461,7 +514,7 @@ namespace Common.Mappers
         {
             return new CPParser.Ast.FPSection {
                 Idents = MapLst<AOParser.Ast.Ident, CPParser.Ast.Ident>(o.Idents, Map),
-                Type_ = Map(o.Type_).Item1
+                Type_ = Map(o.Type_, null).Item1
             };
         }
 
@@ -543,6 +596,8 @@ namespace Common.Mappers
                 case AOParser.Ast.IStatement.RepeatStatement s:
                     return Map(s, expectedType);
                 case AOParser.Ast.IStatement.ReturnStatement s:
+                    return Map(s, expectedType);
+                case AOParser.Ast.IStatement.IgnoreStatement s:
                     return Map(s, expectedType);
                 case AOParser.Ast.IStatement.WithStatement s:
                     return Map(s, expectedType);
@@ -736,6 +791,8 @@ namespace Common.Mappers
                     return Map(f);
                 case AOParser.Ast.IFactor.StringFactor f:
                     return Map(f);
+                case AOParser.Ast.IFactor.SizeOfFactor f:
+                    return Map(f);
                 default:
                     throw new NotImplementedException();
             }
@@ -879,7 +936,16 @@ namespace Common.Mappers
         {
             return new CPParser.Ast.IStatement.ExitStatement();
         }
-
+        public CPParser.Ast.IStatement.AssignmentStatement Map(AOParser.Ast.IStatement.IgnoreStatement o, Common.SymTable.TypeDesc expectedType)
+        {
+            return new CPParser.Ast.IStatement.AssignmentStatement
+            {
+                Expr = Map(o.Expr),
+                Designator = new CPParser.Ast.Designator(null) { 
+                    Qualident = GetQualident("IGNORE")
+                }
+            };
+        }
         public CPParser.Ast.IStatement.ReturnStatement Map(AOParser.Ast.IStatement.ReturnStatement o, Common.SymTable.TypeDesc expectedType)
         {
             return new CPParser.Ast.IStatement.ReturnStatement {
@@ -903,7 +969,7 @@ namespace Common.Mappers
         {
             return new CPParser.Ast.IType.ArrayType { 
                 ConstExprs = MapLst<AOParser.Ast.ConstExpr,CPParser.Ast.ConstExpr>(o.ConstExprs, Map),
-                Type_ = Map(o.Type_).Item1
+                Type_ = Map(o.Type_, null).Item1
             };
         }
         private CPParser.Ast.Comment GetNotSupportedWarning(string str) {
@@ -914,7 +980,7 @@ namespace Common.Mappers
         {
             var res = new CPParser.Ast.IType.PointerType
             {
-                Type_ = Map(o.Type_).Item1
+                Type_ = Map(o.Type_, null).Item1
             };
 
             res.CommentsBefore.Add(GetNotSupportedWarning(o.Flags?.ToString()));
@@ -936,7 +1002,7 @@ namespace Common.Mappers
                         .Select(x => new CPParser.Ast.FieldList()
                         {
                             IdentList = Map(x.IdentList),
-                            Type_ = Map(x.Type_).Item1
+                            Type_ = Map(x.Type_, null).Item1
                         }).Cast<CPParser.Ast.AstElement>().ToList();
 
             return new CPParser.Ast.IType.RecordType(null) {
@@ -1047,7 +1113,29 @@ namespace Common.Mappers
                 Value = Map(o.Value)
             };
         }
-
+        //replace SIZE OF XXX by SIZE(XXX)
+        public CPParser.Ast.IFactor.DesignatorFactor Map(AOParser.Ast.IFactor.SizeOfFactor o)
+        {
+            var args = new CPParser.Ast.ExprList();
+            args.Exprs.Add(new CPParser.Ast.Expr() { 
+                SimpleExpr = new CPParser.Ast.SimpleExpr() { 
+                    Term = new CPParser.Ast.Term { 
+                        Factor = Map(o.Value)
+                    }
+                }
+            });
+            var d = new CPParser.Ast.Designator(null)
+            {
+                Qualident = GetQualident("SIZE"),
+            };
+            d.Specs.Add(new CPParser.Ast.Designator.IDesignatorSpec.ProcCallDesignatorSpec() { 
+                Value = args
+            });
+            return new CPParser.Ast.IFactor.DesignatorFactor
+            {
+                Value = d
+            };
+        }
         public CPParser.Ast.IFactor.StringFactor Map(AOParser.Ast.IFactor.StringFactor o)
         {
             return new CPParser.Ast.IFactor.StringFactor
