@@ -163,8 +163,17 @@ namespace Common.Mappers
             if (number.StartsWith("0x"))
             {
                 var hex = number.Substring(2);
-                if (!Char.IsDigit(hex[0])) hex = "0" + hex;
+                hex = hex.TrimStart('0');
                 var suffix = hex.Length > 8 ? 'L' : 'H';
+                if (!Char.IsDigit(hex[0])) hex = "0" + hex;
+                return hex + suffix;
+            }
+            if (number.EndsWith("H"))
+            {
+                var hex = number.Substring(0, number.Length-1);
+                hex = hex.TrimStart('0');
+                var suffix = hex.Length > 8 ? 'L' : 'H';
+                if (!Char.IsDigit(hex[0])) hex = "0" + hex;
                 return hex + suffix;
             }
 
@@ -607,9 +616,23 @@ namespace Common.Mappers
         public CPParser.Ast.FPSection Map(AOParser.Ast.FPSection o)
         {
             return new CPParser.Ast.FPSection {
+                FpSectionPrefix = o.FpSectionPrefix.HasValue ? Map(o.FpSectionPrefix.Value) : null,
                 Idents = MapLst<AOParser.Ast.Ident, CPParser.Ast.Ident>(o.Idents, Map),
                 Type_ = Map(o.Type_, null).Item1
             };
+        }
+
+        private FPSection.Prefix Map(AOParser.Ast.FPSection.Prefix fpSectionPrefix)
+        {
+            switch (fpSectionPrefix)
+            {
+                case AOParser.Ast.FPSection.Prefix.VAR:
+                    return FPSection.Prefix.VAR;
+                case AOParser.Ast.FPSection.Prefix.CONST:
+                    return FPSection.Prefix.IN;
+                default:
+                    throw new Exception();
+            }
         }
 
         public CPParser.Ast.ExprList Map(AOParser.Ast.ExprList o, Common.SymTable.TypeDesc[] expectedTypes)
@@ -1180,9 +1203,14 @@ namespace Common.Mappers
 
         public CPParser.Ast.IType.ProcedureType Map(AOParser.Ast.IType.ProcedureType o)
         {
-            return new CPParser.Ast.IType.ProcedureType(null) { 
+            
+            var res = new CPParser.Ast.IType.ProcedureType(null) { 
                 FormalPars = Map(o.FormalPars)
             };
+            if (o.Flags != null) {
+                res.CommentsBefore.Add(GetNotSupportedWarning(o.Flags.ToString()));
+            }
+            return res;
         }
 
         public CPParser.Ast.IType.RecordType Map(AOParser.Ast.IType.RecordType o)
