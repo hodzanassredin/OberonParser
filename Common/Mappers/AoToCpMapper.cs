@@ -6,7 +6,8 @@ namespace Common.Mappers
 {
     public class AoToCpMapper
     {
-        public const string CompatModuleName = "CyptoCompat";
+        public const string CompatModuleName = "AO";
+        public const string CompatModuleNameFull = "CryptoCompat";
         public static CPParser.Ast.Qualident GetQualident(string name) {
             var res =  new CPParser.Ast.Qualident(null) { Ident1 = new CPParser.Ast.Ident { Name = name } };
             return res;
@@ -67,6 +68,67 @@ namespace Common.Mappers
             ["ROT"] = GetQualident("SYSTEM", "ROT"),
             ["SET32"] = GetQualident("BITS"),
         };
+
+        CPParser.Ast.Qualident UnsignedRelationMap(AOParser.Ast.Relation.Relations rel, int bits) {
+            var suffix = bits == 64 ? "64" : "";
+            switch (rel)
+            {
+                case AOParser.Ast.Relation.Relations.Eq:
+                    return null;
+                case AOParser.Ast.Relation.Relations.Neq:
+                    return null;
+                case AOParser.Ast.Relation.Relations.Lss:
+                    return GetQualident(CompatModuleName, $"ULss{suffix}");
+                case AOParser.Ast.Relation.Relations.Leq:
+                    return GetQualident(CompatModuleName, $"ULeq{suffix}");
+                case AOParser.Ast.Relation.Relations.Gtr:
+                    return GetQualident(CompatModuleName, $"UGtr{suffix}");
+                case AOParser.Ast.Relation.Relations.Geq:
+                    return GetQualident(CompatModuleName, $"UGeq{suffix}");
+                case AOParser.Ast.Relation.Relations.In:
+                    return null;
+                case AOParser.Ast.Relation.Relations.Is:
+                    return null;
+                default:
+                    return null;
+            }
+        }
+
+        CPParser.Ast.Qualident UnsignedAddOpMap(AOParser.Ast.AddOp.AddOps op, int bits)
+        {
+            if (bits != 64) return null;
+            switch (op)
+            {
+                case AOParser.Ast.AddOp.AddOps.Add:
+                    return GetQualident(CompatModuleName, $"UAdd64");
+                case AOParser.Ast.AddOp.AddOps.Sub:
+                    return GetQualident(CompatModuleName, $"USub64");
+                case AOParser.Ast.AddOp.AddOps.Or:
+                    return null;
+                default:
+                    return null;
+            }
+        }
+
+        CPParser.Ast.Qualident UnsignedMulOpMap(AOParser.Ast.MulOp.MulOps op, int bits)
+        {
+
+            switch (op)
+            {
+                case AOParser.Ast.MulOp.MulOps.Mul:
+                    return bits == 64 ? GetQualident(CompatModuleName, $"UMul64") : null;
+                case AOParser.Ast.MulOp.MulOps.Division:
+                    return GetQualident(CompatModuleName, $"UDiv{bits}");
+                case AOParser.Ast.MulOp.MulOps.DIV:
+                    return GetQualident(CompatModuleName, $"UDiv{bits}");
+                case AOParser.Ast.MulOp.MulOps.MOD:
+                    return GetQualident(CompatModuleName, $"UMod{bits}");
+                case AOParser.Ast.MulOp.MulOps.AND:
+                    return null;
+                default:
+                    return null;
+            }
+        }
         public static string BinaryStringToHexString(string binary)
         {
             if (string.IsNullOrEmpty(binary))
@@ -182,7 +244,8 @@ namespace Common.Mappers
             }
             res.ImportList.Add(new CPParser.Ast.Import
             {
-                Name = new CPParser.Ast.Ident { Name = CompatModuleName }
+                Name = new CPParser.Ast.Ident { Name = CompatModuleName },
+                OriginalName = new CPParser.Ast.Ident { Name = CompatModuleNameFull },
             });
             res.DeclSeq = Map(o.DeclSeq);
 
@@ -724,127 +787,179 @@ namespace Common.Mappers
                     throw new NotImplementedException();
             }
         }
-        private IEnumerable<CPParser.Ast.AstElement> ToSequence(AOParser.Ast.Term t)
-        {
-            if (t.Prefix.HasValue) {
-                yield return new CPParser.Ast.IFactor.ExprFactor() {
-                    Value = new CPParser.Ast.Expr() {
-                        SimpleExpr = new CPParser.Ast.SimpleExpr {
-                            Prefix = Map(t.Prefix.Value),
-                            Term = new CPParser.Ast.Term {
-                                Factor = Map(t.Factor, null)
-                            }
-                        }
-                    }
-                };
-            } else {
-                yield return Map(t.Factor, null);
-            }
-            foreach (var te in t.TermElements.Cast<AOParser.Ast.TermElementExpr>())
-            {
-                yield return Map(te.AddOp);
-                yield return Map(te.Factor, null);
-            }
-        }
-        private IEnumerable<CPParser.Ast.AstElement> ToSequence(AOParser.Ast.SimpleExpr o) {
-            foreach (var item in ToSequence(o.Term))
-            {
-                yield return item;
-            }
-            foreach (var te in o.SimpleExprElements.Cast<AOParser.Ast.SimpleElementExpr>())
-            {
-                yield return Map(te.MulOp);
-                foreach (var item in ToSequence(te.Term))
-                {
-                    yield return item;
-                }
-            }
-        }
-
+        
         public CPParser.Ast.SimpleExpr Map(AOParser.Ast.SimpleExpr o)
         {
             if (o == null) return null;
 
-            var s = ToSequence(o).ToList();
 
-            var res = new CPParser.Ast.SimpleExpr();
-            var t = new CPParser.Ast.Term();
-            CPParser.Ast.TermElementExpr te = null;
-            res.Term = t;
-            foreach (var item in s) {
-                switch (item)
+            var res = new CPParser.Ast.SimpleExpr() { 
+                Term = Map(o.Term)
+            };
+
+            foreach (var item in o.SimpleExprElements.Cast<AOParser.Ast.SimpleElementExpr>())
+            {
+                if (o.Term.TypeDescr.IsUnsigned)
                 {
-                    case CPParser.Ast.IFactor f:
-                        if (te != null)
+                    var q = UnsignedAddOpMap(item.AddOp.Op, o.Term.TypeDescr.GetSize());
+                    if (q != null)
+                    {
+                        var args = new AstList();
+                        args.Add(new Expr { SimpleExpr = res });
+                        args.Add(new Expr { SimpleExpr = new SimpleExpr { Term = Map(item.Term) } });
+                        var specs = new AstList();
+                        specs.Add(new CPParser.Ast.Designator.IDesignatorSpec.ProcCallDesignatorSpec()
                         {
-                            te.Factor = f;
-                        }
-                        else
-                        {
-                            t.Factor = f;
-                        }
-                        break;
-
-                    case CPParser.Ast.AddOp f:
-                        t = new CPParser.Ast.Term();
-                        te = null;
-                        res.SimpleExprElements.Add(new CPParser.Ast.SimpleElementExpr {
-                            AddOp = f,
-                            Term = t
+                            Value = new ExprList
+                            {
+                                Exprs = args
+                            }
                         });
-                        break;
-                    case CPParser.Ast.MulOp f:
-                        te = new CPParser.Ast.TermElementExpr()
-                        {
-                            MulOp = f,
-                        };
-                        t.TermElements.Add(te);
-                        break;
 
-                    default:
-                        break;
+                        res = new CPParser.Ast.SimpleExpr
+                        {
+                            Term = new Term { 
+                                Factor = new CPParser.Ast.IFactor.DesignatorFactor
+                                {
+                                    Value = new CPParser.Ast.Designator(null)
+                                    {
+                                        Qualident = q,
+                                        Specs = specs
+                                    }
+                                }
+                            }
+                        };
+                    }
                 }
+                else
+                {
+                    res.SimpleExprElements.Add(Map(item));
+                }
+            }
+            return res;
+        }
+
+        private SimpleElementExpr Map(AOParser.Ast.SimpleElementExpr item)
+        {
+            return new SimpleElementExpr { 
+                AddOp = Map(item.AddOp),
+                Term = Map(item.Term)
+            };
+        }
+
+        private Term Map(AOParser.Ast.Term o)
+        {
+            Term res = new Term
+            {
+                Factor = Map(o.Factor, null)
+            };
+
+            foreach (var item in o.TermElements.Cast<AOParser.Ast.TermElementExpr>())
+            {
+                if (o.Factor.TypeDescr.IsUnsigned)
+                {
+                    var q = UnsignedMulOpMap(item.MulOp.Op, o.Factor.TypeDescr.GetSize());
+                    if (q != null)
+                    {
+                        var args = new AstList();
+                        args.Add(new Expr { SimpleExpr = new SimpleExpr { Term = res } });
+                        args.Add(new Expr { SimpleExpr = new SimpleExpr { Term = new Term { Factor = Map(item.Factor, null) } } });
+                        var specs = new AstList();
+                        specs.Add(new CPParser.Ast.Designator.IDesignatorSpec.ProcCallDesignatorSpec()
+                        {
+                            Value = new ExprList
+                            {
+                                Exprs = args
+                            }
+                        });
+
+                        res = new CPParser.Ast.Term
+                        {
+                            Factor = new CPParser.Ast.IFactor.DesignatorFactor
+                            {
+                                Value = new CPParser.Ast.Designator(null)
+                                {
+                                    Qualident = q,
+                                    Specs = specs
+                                }
+                            }
+                        };
+                    }
+                }
+                else {
+                    res.TermElements.Add(Map(item));
+                }
+            }
+            return res;
+        }
+
+        private TermElementExpr Map(AOParser.Ast.TermElementExpr item)
+        {
+            return new TermElementExpr
+            {
+                MulOp = Map(item.MulOp),
+                Factor = Map(item.Factor,null)
+            };
+        }
+
+        private CPParser.Ast.IFactor Map(AOParser.Ast.IFactor factor, Common.SymTable.TypeDesc expectedType)
+        {
+            IFactor res = null;
+            switch (factor)
+            {
+                case AOParser.Ast.IFactor.ExprFactor f:
+                    res = Map(f, expectedType);
+                    break;
+                case AOParser.Ast.IFactor.NilFactor f:
+                    res = Map(f);
+                    break;
+                case AOParser.Ast.IFactor.SetFactor f:
+                    res = Map(f);
+                    break;
+                case AOParser.Ast.IFactor.CharacterFactor f:
+                    res = Map(f);
+                    break;
+                case AOParser.Ast.IFactor.DesignatorFactor f:
+                    res = Map(f);
+                    break;
+                case AOParser.Ast.IFactor.NegFactor f:
+                    res = Map(f, expectedType);
+                    break;
+                case AOParser.Ast.IFactor.NumberFactor f:
+                    res = Map(f);
+                    break;
+                case AOParser.Ast.IFactor.StringFactor f:
+                    res = Map(f);
+                    break;
+                case AOParser.Ast.IFactor.SizeOfFactor f:
+                    res = Map(f);
+                    break;
+                default:
+                    throw new Exception();
+            }
+            if (factor.Prefix.HasValue) {
+                res = new CPParser.Ast.IFactor.ExprFactor { 
+                    Value = new Expr { 
+                        SimpleExpr = new SimpleExpr { 
+                            Prefix = Map(factor.Prefix.Value),
+                            Term = new Term { 
+                                Factor = res
+                            }
+                        }
+                    }
+                };
             }
 
             return res;
         }
 
-
-
-        private CPParser.Ast.IFactor Map(AOParser.Ast.IFactor factor, Common.SymTable.TypeDesc expectedType)
-        {
-            switch (factor)
-            {
-                case AOParser.Ast.IFactor.ExprFactor f:
-                    return Map(f, expectedType);
-                case AOParser.Ast.IFactor.NilFactor f:
-                    return Map(f);
-                case AOParser.Ast.IFactor.SetFactor f:
-                    return Map(f);
-                case AOParser.Ast.IFactor.CharacterFactor f:
-                    return Map(f);
-                case AOParser.Ast.IFactor.DesignatorFactor f:
-                    return Map(f);
-                case AOParser.Ast.IFactor.NegFactor f:
-                    return Map(f, expectedType);
-                case AOParser.Ast.IFactor.NumberFactor f:
-                    return Map(f);
-                case AOParser.Ast.IFactor.StringFactor f:
-                    return Map(f);
-                case AOParser.Ast.IFactor.SizeOfFactor f:
-                    return Map(f);
-                default:
-                    throw new NotImplementedException();
-            }
-        }
-
-        private CPParser.Ast.SimpleExpr.SimpleExprPrefix Map(AOParser.Ast.Term.TermExprPrefix value)
+        private CPParser.Ast.SimpleExpr.SimpleExprPrefix Map(AOParser.Ast.IFactor.FactorPrefix value)
         {
             switch (value)
             {
-                case AOParser.Ast.Term.TermExprPrefix.Add:
+                case AOParser.Ast.IFactor.FactorPrefix.Add:
                     return CPParser.Ast.SimpleExpr.SimpleExprPrefix.Add;
-                case AOParser.Ast.Term.TermExprPrefix.Sub:
+                case AOParser.Ast.IFactor.FactorPrefix.Sub:
                     return CPParser.Ast.SimpleExpr.SimpleExprPrefix.Sub;
                 default:
                     throw new Exception();
@@ -854,6 +969,37 @@ namespace Common.Mappers
         public CPParser.Ast.Expr Map(AOParser.Ast.Expr o, Common.SymTable.TypeDesc toType)
         {
             if (o == null) return null;
+
+            if (o.SimpleExpr.TypeDescr.IsUnsigned && o.Relation!= null) {
+                var q = UnsignedRelationMap(o.Relation.Op, o.SimpleExpr.TypeDescr.GetSize());
+                if (q != null) {
+                    var args = new AstList();
+                    args.Add(new Expr { SimpleExpr = Map(o.SimpleExpr) });
+                    args.Add(new Expr { SimpleExpr = Map(o.SimpleExpr2) });
+                    var specs = new AstList();
+                    specs.Add(new CPParser.Ast.Designator.IDesignatorSpec.ProcCallDesignatorSpec() { 
+                        Value = new ExprList { 
+                            Exprs = args
+                        }
+                    });
+                    return new CPParser.Ast.Expr()
+                    {
+                        SimpleExpr = new CPParser.Ast.SimpleExpr {
+                            Term = new CPParser.Ast.Term {
+                                Factor = new CPParser.Ast.IFactor.DesignatorFactor {
+                                    Value = new CPParser.Ast.Designator(o.scope) {
+                                        Qualident = q,
+                                        Specs = specs
+                                    }
+                                }
+                            }
+                        }
+                    };
+                }
+
+            }
+
+
             o = DownOrUpCast(o, toType);
             return new CPParser.Ast.Expr {
                 SimpleExpr = Map(o.SimpleExpr),

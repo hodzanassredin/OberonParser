@@ -719,7 +719,7 @@ namespace AOParser.Ast
     }
 
 	public class SimpleElementExpr : AstElement {
-		public MulOp MulOp;
+		public AddOp AddOp;
 		public Term Term;
         public override void Accept(IAstVisitor v)
         {
@@ -727,7 +727,7 @@ namespace AOParser.Ast
         }
         public override string ToString()
         {
-            return $"{MulOp} {Term} ";
+            return $"{AddOp} {Term} ";
         }
     }
 
@@ -741,7 +741,7 @@ namespace AOParser.Ast
 
 				foreach (var item in SimpleExprElements.Cast<SimpleElementExpr>())
 				{
-					type = TypeResolver.ResolveMulOp(item.MulOp.Op, type.form, item.Term.TypeDescr.form);
+					type = TypeResolver.ResolveAddOp(item.AddOp.Op, type.form, item.Term.TypeDescr.form);
 				}
 
 				return type;
@@ -768,7 +768,7 @@ namespace AOParser.Ast
 
 	public class TermElementExpr : AstElement
 	{
-		public AddOp AddOp;
+		public MulOp MulOp;
 		public IFactor Factor;
 		public override void Accept(IAstVisitor v)
 		{
@@ -777,7 +777,7 @@ namespace AOParser.Ast
 
         public override string ToString()
         {
-            return $"{AddOp} {Factor}";
+            return $"{MulOp} {Factor}";
         }
     }
 	public class Term : AstElement
@@ -790,17 +790,13 @@ namespace AOParser.Ast
 
 				foreach (var item in TermElements.Cast<TermElementExpr>())
 				{
-					type = TypeResolver.ResolveAddOp(item.AddOp.Op, type.form, item.Factor.TypeDescr.form);
+					type = TypeResolver.ResolveMulOp(item.MulOp.Op, type.form, item.Factor.TypeDescr.form);
 				}
 
 				return type;
 			}
 		}
-		public enum TermExprPrefix
-		{
-			Add, Sub
-		}
-		public TermExprPrefix? Prefix;
+
 		public IFactor Factor;
 		public AstList TermElements = new AstList();
 		public override void Accept(IAstVisitor v) => v.Visit(this);
@@ -808,11 +804,7 @@ namespace AOParser.Ast
 		public override string ToString()
 		{
 			var sb = new StringBuilder();
-			if (Prefix.HasValue)
-			{
-				sb.Append(Prefix.Value.ToString());
-				sb.Append(" ");
-			}
+
 			sb.Append(Factor.ToString());
 			if (TermElements.Count() > 0)
 			{
@@ -1034,6 +1026,11 @@ namespace AOParser.Ast
 
 	public abstract class IFactor : AstElement
 	{
+		public enum FactorPrefix
+		{
+			Add, Sub
+		}
+		public FactorPrefix? Prefix;
 		public abstract Common.SymTable.TypeDesc TypeDescr { get; }
 		public class DesignatorFactor : IFactor
 		{
@@ -1043,7 +1040,7 @@ namespace AOParser.Ast
 
 			public override string ToString()
 			{
-				return $"{Value}";
+				return $"{Prefix} {Value}";
 			}
 		}
 		public class NumberFactor : IFactor
@@ -1053,7 +1050,7 @@ namespace AOParser.Ast
 			public override void Accept(IAstVisitor v) => v.Visit(this);
 			public override string ToString()
 			{
-				return $"{Value}";
+				return $"{Prefix} {Value}";
 			}
 		}
 		public class CharacterFactor : IFactor
@@ -1063,7 +1060,7 @@ namespace AOParser.Ast
 			public override void Accept(IAstVisitor v) => v.Visit(this);
 			public override string ToString()
 			{
-				return $"{Value}";
+				return $"{Prefix} {Value}";
 			}
 		}
 		public class StringFactor : IFactor
@@ -1074,7 +1071,7 @@ namespace AOParser.Ast
 			public override void Accept(IAstVisitor v) => v.Visit(this);
 			public override string ToString()
 			{
-				return $"{Value}";
+				return $"{Prefix} {Value}";
 			}
 		}
 		public class NilFactor : IFactor
@@ -1093,7 +1090,7 @@ namespace AOParser.Ast
 			public override void Accept(IAstVisitor v) => v.Visit(this);
 			public override string ToString()
 			{
-				return $"{Value}";
+				return $"{Prefix} {Value}";
 			}
 		}
 		public class ExprFactor : IFactor
@@ -1103,7 +1100,7 @@ namespace AOParser.Ast
 			public override void Accept(IAstVisitor v) => v.Visit(this);
 			public override string ToString()
 			{
-				return $"{Value}";
+				return $"{Prefix} {Value}";
 			}
 		}
 		

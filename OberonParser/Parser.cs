@@ -824,9 +824,9 @@ public Common.SymTable.SymTab symTab = new ();
 	void SimpleExpr(out AOParser.Ast.SimpleExpr o) {
 		o = new AOParser.Ast.SimpleExpr(); AOParser.Ast.SimpleElementExpr e; 
 		Term(out o.Term);
-		while (StartOf(10)) {
+		while (la.kind == 25 || la.kind == 58 || la.kind == 71) {
 			e = new AOParser.Ast.SimpleElementExpr(); 
-			MulOp(out e.MulOp);
+			AddOp(out e.AddOp);
 			Term(out e.Term);
 			o.SimpleExprElements.Add(e); 
 		}
@@ -881,46 +881,40 @@ public Common.SymTable.SymTab symTab = new ();
 
 	void Term(out AOParser.Ast.Term o) {
 		o = new AOParser.Ast.Term(); AOParser.Ast.TermElementExpr e; 
-		if (la.kind == 25 || la.kind == 58) {
-			if (la.kind == 58) {
-				Get();
-				o.Prefix = AOParser.Ast.Term.TermExprPrefix.Add; 
-			} else {
-				Get();
-				o.Prefix = AOParser.Ast.Term.TermExprPrefix.Sub; 
-			}
-		}
 		Factor(out o.Factor);
-		while (la.kind == 25 || la.kind == 58 || la.kind == 71) {
+		while (StartOf(10)) {
 			e = new AOParser.Ast.TermElementExpr(); 
-			AddOp(out e.AddOp);
+			MulOp(out e.MulOp);
 			Factor(out e.Factor);
 			o.TermElements.Add(e); 
 		}
 	}
 
-	void MulOp(out AOParser.Ast.MulOp o) {
-		o = new AOParser.Ast.MulOp(); 
-		if (la.kind == 67) {
+	void AddOp(out AOParser.Ast.AddOp o) {
+		o = new AOParser.Ast.AddOp(); 
+		if (la.kind == 58) {
 			Get();
-			o.Op = AOParser.Ast.MulOp.MulOps.Mul; 
-		} else if (la.kind == 68) {
+			o.Op = AOParser.Ast.AddOp.AddOps.Add; 
+		} else if (la.kind == 25) {
 			Get();
-			o.Op = AOParser.Ast.MulOp.MulOps.Division; 
-		} else if (la.kind == 69) {
+			o.Op = AOParser.Ast.AddOp.AddOps.Sub; 
+		} else if (la.kind == 71) {
 			Get();
-			o.Op = AOParser.Ast.MulOp.MulOps.DIV; 
-		} else if (la.kind == 70) {
-			Get();
-			o.Op = AOParser.Ast.MulOp.MulOps.MOD; 
-		} else if (la.kind == 23) {
-			Get();
-			o.Op = AOParser.Ast.MulOp.MulOps.AND; 
+			o.Op = AOParser.Ast.AddOp.AddOps.Or; 
 		} else SynErr(81);
 	}
 
 	void Factor(out AOParser.Ast.IFactor f) {
-		f = null;
+		f = null; AOParser.Ast.IFactor.FactorPrefix? p = null;
+		if (la.kind == 25 || la.kind == 58) {
+			if (la.kind == 58) {
+				Get();
+				p = AOParser.Ast.IFactor.FactorPrefix.Add; 
+			} else {
+				Get();
+				p = AOParser.Ast.IFactor.FactorPrefix.Sub; 
+			}
+		}
 		if (IsSizeOf()) {
 			var o = new AOParser.Ast.IFactor.SizeOfFactor(); 
 			Expect(6);
@@ -963,19 +957,26 @@ public Common.SymTable.SymTab symTab = new ();
 			Factor(out o.Value);
 			f = o; 
 		} else SynErr(82);
+		f.Prefix = p; 
 	}
 
-	void AddOp(out AOParser.Ast.AddOp o) {
-		o = new AOParser.Ast.AddOp(); 
-		if (la.kind == 58) {
+	void MulOp(out AOParser.Ast.MulOp o) {
+		o = new AOParser.Ast.MulOp(); 
+		if (la.kind == 67) {
 			Get();
-			o.Op = AOParser.Ast.AddOp.AddOps.Add; 
-		} else if (la.kind == 25) {
+			o.Op = AOParser.Ast.MulOp.MulOps.Mul; 
+		} else if (la.kind == 68) {
 			Get();
-			o.Op = AOParser.Ast.AddOp.AddOps.Sub; 
-		} else if (la.kind == 71) {
+			o.Op = AOParser.Ast.MulOp.MulOps.Division; 
+		} else if (la.kind == 69) {
 			Get();
-			o.Op = AOParser.Ast.AddOp.AddOps.Or; 
+			o.Op = AOParser.Ast.MulOp.MulOps.DIV; 
+		} else if (la.kind == 70) {
+			Get();
+			o.Op = AOParser.Ast.MulOp.MulOps.MOD; 
+		} else if (la.kind == 23) {
+			Get();
+			o.Op = AOParser.Ast.MulOp.MulOps.AND; 
 		} else SynErr(83);
 	}
 
@@ -1131,9 +1132,9 @@ public class Errors {
 			case 78: s = "invalid Type"; break;
 			case 79: s = "invalid Statement"; break;
 			case 80: s = "invalid Relation"; break;
-			case 81: s = "invalid MulOp"; break;
+			case 81: s = "invalid AddOp"; break;
 			case 82: s = "invalid Factor"; break;
-			case 83: s = "invalid AddOp"; break;
+			case 83: s = "invalid MulOp"; break;
 
 			default: s = "error " + n; break;
 		}

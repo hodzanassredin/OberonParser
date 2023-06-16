@@ -308,21 +308,21 @@ PRODUCTIONS
 	SimpleExpr<out AOParser.Ast.SimpleExpr o>	
 		=																		(. o = new AOParser.Ast.SimpleExpr(); AOParser.Ast.SimpleElementExpr e; .)		
 		Term<out o.Term> {														(. e = new AOParser.Ast.SimpleElementExpr(); .)  
-		MulOp<out e.MulOp> Term<out e.Term>										(. o.SimpleExprElements.Add(e); .)
+		AddOp<out e.AddOp> Term<out e.Term>										(. o.SimpleExprElements.Add(e); .)
 		}.
 
 	Term<out AOParser.Ast.Term o> 	
 		=																		(. o = new AOParser.Ast.Term(); AOParser.Ast.TermElementExpr e; .)		
-		["+"																	(. o.Prefix = AOParser.Ast.Term.TermExprPrefix.Add; .)
-		| "-"																	(. o.Prefix = AOParser.Ast.Term.TermExprPrefix.Sub; .)
-		] Factor<out o.Factor> {												(. e = new AOParser.Ast.TermElementExpr(); .) 
-		AddOp<out e.AddOp> Factor<out e.Factor>									(. o.TermElements.Add(e); .)
+		Factor<out o.Factor> {													(. e = new AOParser.Ast.TermElementExpr(); .) 
+		MulOp<out e.MulOp> Factor<out e.Factor>									(. o.TermElements.Add(e); .)
 		}.
 
-	Factor<out AOParser.Ast.IFactor f>											(. f = null;.)	
+	Factor<out AOParser.Ast.IFactor f>											(. f = null; AOParser.Ast.IFactor.FactorPrefix? p = null;.)	
 		=																		
-																		
-		 ( IF(IsSizeOf())																		(. var o = new AOParser.Ast.IFactor.SizeOfFactor(); .) 
+		["+"																	(. p = AOParser.Ast.IFactor.FactorPrefix.Add; .)
+		| "-"																	(. p = AOParser.Ast.IFactor.FactorPrefix.Sub; .)
+		] 																
+		 (( IF(IsSizeOf())														(. var o = new AOParser.Ast.IFactor.SizeOfFactor(); .) 
 		 "SIZE" "OF" Factor<out o.Value>										(. f = o; .)
 		|																		(. var o = new AOParser.Ast.IFactor.DesignatorFactor(); .) 
 		Designator<out o.Value>													(. f = o; .)
@@ -339,7 +339,7 @@ PRODUCTIONS
 		|																		(. var o = new AOParser.Ast.IFactor.ExprFactor(); .) 
 		"(" Expr<out o.Value> ")"												(. f = o; .)
 		|																		(. var o = new AOParser.Ast.IFactor.NegFactor(); .) 
-		"~" Factor<out o.Value>													(. f = o; .)) .
+		"~" Factor<out o.Value>													(. f = o; .)) ) (. f.Prefix = p; .).
 
 	Set<out AOParser.Ast.Set o>	
 		=																		(. o = new AOParser.Ast.Set(); AOParser.Ast.Element e; .)	

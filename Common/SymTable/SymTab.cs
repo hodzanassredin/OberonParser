@@ -77,6 +77,55 @@ namespace Common.SymTable
 	}
 	public class TypeDesc
 	{
+		public int GetSize() {
+            switch (form)
+            {
+                case TypeForm.BOOL:
+					return 8;
+                case TypeForm.UINT8:
+					return 8;
+				case TypeForm.INT8:
+					return 8;
+				case TypeForm.UINT16:
+					return 16;
+				case TypeForm.INT16:
+					return 16;
+				case TypeForm.UINT32:
+					return 32;
+				case TypeForm.INT32:
+					return 32;
+				case TypeForm.UINT64:
+					return 64;
+				case TypeForm.INT64:
+					return 64;
+				case TypeForm.FLOAT32:
+					return 32;
+				case TypeForm.FLOAT64:
+					return 64;
+				case TypeForm.NONE:
+					return 0;
+				case TypeForm.STRUCT:
+					return 0;
+				case TypeForm.UNION:
+					return 0;
+				case TypeForm.ENUM:
+					return 0;
+				case TypeForm.PTR:
+					return 0;
+				case TypeForm.ARRAY:
+					return 0;
+				case TypeForm.FUNC:
+					return 0;
+				case TypeForm.PREDEFINED:
+					return 0;
+				default:
+					return 0;
+			}
+        }
+		public bool IsUnsigned => form == TypeForm.UINT8 
+								|| form == TypeForm.UINT16
+								|| form == TypeForm.UINT32
+								|| form == TypeForm.UINT64;
 		public bool IsSimple => form <= TypeForm.FLOAT64;
 
 		

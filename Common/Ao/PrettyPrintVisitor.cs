@@ -333,20 +333,7 @@ namespace AOParser
 
         public void Visit(Term o)
         {
-            if (o.Prefix != null)
-            {
-                switch (o.Prefix.Value)
-                {
-                    case Term.TermExprPrefix.Add:
-                        sw.Write("+");
-                        break;
-                    case Term.TermExprPrefix.Sub:
-                        sw.Write("-");
-                        break;
-                    default:
-                        break;
-                }
-            }
+            
             o.Factor.AcceptWithComments(this);
             VisitList(o.TermElements, () => { }, () => { });
         }
@@ -550,23 +537,44 @@ namespace AOParser
             sw.Write(o.Value);
         }
 
+        private void Visit(IFactor.FactorPrefix? o) {
+            if (o != null)
+            {
+                switch (o.Value)
+                {
+                    case IFactor.FactorPrefix.Add:
+                        sw.Write("+");
+                        break;
+                    case IFactor.FactorPrefix.Sub:
+                        sw.Write("-");
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+
         public void Visit(IFactor.CharacterFactor o)
         {
+            Visit(o.Prefix);
             sw.Write(o.Value);
         }
 
         public void Visit(IFactor.DesignatorFactor o)
         {
+            Visit(o.Prefix);
             o.Value.AcceptWithComments(this);
         }
 
         public void Visit(IFactor.ExprFactor o)
         {
+            Visit(o.Prefix);
             sw.Write("("); o.Value.AcceptWithComments(this); sw.Write(")");
         }
 
         public void Visit(IFactor.NegFactor o)
         {
+            Visit(o.Prefix);
             sw.Write("~");
             o.Value.AcceptWithComments(this);
         }
@@ -578,16 +586,19 @@ namespace AOParser
 
         public void Visit(IFactor.NumberFactor o)
         {
+            Visit(o.Prefix);
             o.Value.AcceptWithComments(this);
         }
 
         public void Visit(IFactor.SetFactor o)
         {
+            Visit(o.Prefix);
             o.Value.AcceptWithComments(this);
         }
 
         public async void Visit(IFactor.StringFactor o)
         {
+            Visit(o.Prefix);
             sw.Write(o.Value);
         }
 
@@ -649,13 +660,13 @@ namespace AOParser
 
         public void Visit(SimpleElementExpr o)
         {
-            sw.Write(" "); o.MulOp.AcceptWithComments(this);
+            sw.Write(" "); o.AddOp.AcceptWithComments(this);
             sw.Write(" "); o.Term.AcceptWithComments(this);
         }
 
         public void Visit(TermElementExpr o)
         {
-            sw.Write(" ");o.AddOp.AcceptWithComments(this);sw.Write(" ");o.Factor.AcceptWithComments(this);
+            sw.Write(" ");o.MulOp.AcceptWithComments(this);sw.Write(" ");o.Factor.AcceptWithComments(this);
         }
 
         public void Visit(DefinitionProc o)
