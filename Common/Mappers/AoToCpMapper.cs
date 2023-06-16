@@ -34,26 +34,30 @@ namespace Common.Mappers
         {
             ["BOOLEAN"] = GetQualident("BOOLEAN"),
             ["CHAR"] = GetQualident("SHORTCHAR"),
-            ["SIGNED8"] = GetQualident("BYTE"),
-            ["SIGNED16"] = GetQualident("SHORTINT"),
-            ["SIGNED32"] = GetQualident("INTEGER"),
-            ["SIGNED64"] = GetQualident("LONGINT"),
-            ["UNSIGNED8"] = GetQualident("SHORTCHAR"),
-            ["UNSIGNED16"] = GetQualident("CHAR"),
-            ["UNSIGNED32"] = GetQualident(CompatModuleName, "UNSIGNED32"),
-            ["UNSIGNED64"] = GetQualident(CompatModuleName, "UNSIGNED64"),
-            ["FLOAT32"] = GetQualident("SHORTREAL"),
-            ["FLOAT64"] = GetQualident("REAL"),
-            ["SET8"] = GetQualident("SET"),
-            ["SET16"] = GetQualident("SET"),
-            ["SET32"] = GetQualident("SET"),
-            ["SET64"] = GetQualident(CompatModuleName, "SET64"),
-
             ["REAL"] = GetQualident("REAL"),
             ["INTEGER"] = GetQualident("INTEGER"),
             ["ADDRESS"] = GetQualident(CompatModuleName, "ADDRESS"),
             ["SIZE"] = GetQualident(CompatModuleName, "SIZE"),
-            ["SET"] = GetQualident("SET")
+            ["SET"] = GetQualident("SET"),
+
+            ["SIGNED8"] = GetQualident(CompatModuleName, "SIGNED8"),
+            ["SIGNED16"] = GetQualident(CompatModuleName, "SIGNED16"),
+            ["SIGNED32"] = GetQualident(CompatModuleName, "SIGNED32"),
+            ["SIGNED64"] = GetQualident(CompatModuleName, "SIGNED64"),
+            ["FLOAT32"] = GetQualident(CompatModuleName, "FLOAT32"),
+            ["FLOAT64"] = GetQualident(CompatModuleName, "FLOAT64"),
+            ["SET8"] = GetQualident(CompatModuleName, "SET8"),
+            ["SET16"] = GetQualident(CompatModuleName, "SET16"),
+            ["SET32"] = GetQualident("SET"),
+            ["SET64"] = GetQualident(CompatModuleName, "SET64"),
+
+            ["UNSIGNED8"] = GetQualident(CompatModuleName, "UNSIGNED8"),
+            ["UNSIGNED16"] = GetQualident(CompatModuleName, "UNSIGNED16"),
+            ["UNSIGNED32"] = GetQualident(CompatModuleName, "UNSIGNED32"),
+            ["UNSIGNED64"] = GetQualident(CompatModuleName, "UNSIGNED64"),
+
+
+
         };
         Dictionary<string, CPParser.Ast.Qualident> simpleFuncMap = new Dictionary<string, CPParser.Ast.Qualident>
         {
@@ -61,7 +65,7 @@ namespace Common.Mappers
             ["SIZEOF"] = GetQualident("SIZE"),
             ["LSH"] = GetQualident("SYSTEM", "LSH"),
             ["ROT"] = GetQualident("SYSTEM", "ROT"),
-
+            ["SET32"] = GetQualident("BITS"),
         };
         public static string BinaryStringToHexString(string binary)
         {
