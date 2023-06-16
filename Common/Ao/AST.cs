@@ -79,7 +79,7 @@ namespace AOParser.Ast
 		Dictionary<string, TypeDesc> baseTypes = new Dictionary<string, TypeDesc>
 		{
 			["BOOLEAN"] = TypeDesc.BOOL,
-			["CHAR"] = TypeDesc.UINT8,
+			["CHAR"] = TypeDesc.CHAR8,
 			["SIGNED8"] = TypeDesc.INT8,
 			["SIGNED16"] = TypeDesc.INT16,
 			["SIGNED32"] = TypeDesc.INT32,

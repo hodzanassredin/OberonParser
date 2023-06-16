@@ -27,7 +27,6 @@ namespace Common.Mappers
         }
         Dictionary<string, CPParser.Ast.Ident> moduleMap = new Dictionary<string, CPParser.Ast.Ident>
         {
-            ["Streams"] = new CPParser.Ast.Ident { Name = "CommStreams"},
             ["KernelLog"] = new CPParser.Ast.Ident { Name = "StdLog" },
         };
 
@@ -479,8 +478,10 @@ namespace Common.Mappers
                             FormalPars = Map(x.ProcHead.FormalPars),
                             MethAttributes = new CPParser.Ast.MethAttributes() {
                                 IsNew = true,
-                            }
-
+                            },
+                            CommentsBefore = String.IsNullOrEmpty(x.ProcHead.Tag)? new AstList()
+                                    : new AstList { Value = new List<AstElement> { GetNotSupportedWarning(x.ProcHead.Tag) } }
+                            
                             //Map(x.ProcHead.Tag.)
                         }).ToList();
 
@@ -824,7 +825,7 @@ namespace Common.Mappers
             {
                 if (o.Term.TypeDescr.IsUnsigned)
                 {
-                    var q = UnsignedAddOpMap(item.AddOp.Op, o.Term.TypeDescr.GetSize());
+                    var q = UnsignedAddOpMap(item.AddOp.Op, o.Term.TypeDescr.GetSize);
                     if (q != null)
                     {
                         var args = new AstList();
@@ -881,7 +882,7 @@ namespace Common.Mappers
             {
                 if (o.Factor.TypeDescr.IsUnsigned)
                 {
-                    var q = UnsignedMulOpMap(item.MulOp.Op, o.Factor.TypeDescr.GetSize());
+                    var q = UnsignedMulOpMap(item.MulOp.Op, o.Factor.TypeDescr.GetSize);
                     if (q != null)
                     {
                         var args = new AstList();
@@ -994,7 +995,7 @@ namespace Common.Mappers
             if (o == null) return null;
 
             if (o.SimpleExpr.TypeDescr.IsUnsigned && o.Relation!= null) {
-                var q = UnsignedRelationMap(o.Relation.Op, o.SimpleExpr.TypeDescr.GetSize());
+                var q = UnsignedRelationMap(o.Relation.Op, o.SimpleExpr.TypeDescr.GetSize);
                 if (q != null) {
                     var args = new AstList();
                     args.Add(new Expr { SimpleExpr = Map(o.SimpleExpr) });

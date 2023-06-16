@@ -72,56 +72,60 @@ namespace Common.SymTable
 		FLOAT32 = 9,
 		FLOAT64 = 10,
 		NONE = 11,
-
-		STRUCT = 12, UNION = 13, ENUM = 14, PTR = 15, ARRAY = 16, FUNC = 17, PREDEFINED = 18
+		CHAR8 = 12,
+		STRUCT = 13, UNION = 14, ENUM = 15, PTR = 16, ARRAY = 17, FUNC = 18, PREDEFINED = 19
 	}
 	public class TypeDesc
 	{
-		public int GetSize() {
-            switch (form)
-            {
-                case TypeForm.BOOL:
-					return 8;
-                case TypeForm.UINT8:
-					return 8;
-				case TypeForm.INT8:
-					return 8;
-				case TypeForm.UINT16:
-					return 16;
-				case TypeForm.INT16:
-					return 16;
-				case TypeForm.UINT32:
-					return 32;
-				case TypeForm.INT32:
-					return 32;
-				case TypeForm.UINT64:
-					return 64;
-				case TypeForm.INT64:
-					return 64;
-				case TypeForm.FLOAT32:
-					return 32;
-				case TypeForm.FLOAT64:
-					return 64;
-				case TypeForm.NONE:
-					return 0;
-				case TypeForm.STRUCT:
-					return 0;
-				case TypeForm.UNION:
-					return 0;
-				case TypeForm.ENUM:
-					return 0;
-				case TypeForm.PTR:
-					return 0;
-				case TypeForm.ARRAY:
-					return 0;
-				case TypeForm.FUNC:
-					return 0;
-				case TypeForm.PREDEFINED:
-					return 0;
-				default:
-					return 0;
+		public int GetSize
+		{
+			get
+			{
+				switch (form)
+				{
+					case TypeForm.BOOL:
+						return 8;
+					case TypeForm.UINT8:
+						return 8;
+					case TypeForm.INT8:
+						return 8;
+					case TypeForm.UINT16:
+						return 16;
+					case TypeForm.INT16:
+						return 16;
+					case TypeForm.UINT32:
+						return 32;
+					case TypeForm.INT32:
+						return 32;
+					case TypeForm.UINT64:
+						return 64;
+					case TypeForm.INT64:
+						return 64;
+					case TypeForm.FLOAT32:
+						return 32;
+					case TypeForm.FLOAT64:
+						return 64;
+					case TypeForm.NONE:
+						return 0;
+					case TypeForm.STRUCT:
+						return 0;
+					case TypeForm.UNION:
+						return 0;
+					case TypeForm.ENUM:
+						return 0;
+					case TypeForm.PTR:
+						return 0;
+					case TypeForm.ARRAY:
+						return 0;
+					case TypeForm.FUNC:
+						return 0;
+					case TypeForm.PREDEFINED:
+						return 0;
+					default:
+						return 0;
+				}
 			}
-        }
+		}
 		public bool IsUnsigned => form == TypeForm.UINT8 
 								|| form == TypeForm.UINT16
 								|| form == TypeForm.UINT32
@@ -141,6 +145,7 @@ namespace Common.SymTable
 		public static TypeDesc FLOAT32 = new TypeDesc(TypeForm.FLOAT32);
 		public static TypeDesc FLOAT64 = new TypeDesc(TypeForm.FLOAT64);
 
+		public static TypeDesc CHAR8 = new TypeDesc(TypeForm.CHAR8);
 		public static TypeDesc Predefined(String name, Scope scope)
 		{
 			return new TypeDesc(TypeForm.PREDEFINED)
