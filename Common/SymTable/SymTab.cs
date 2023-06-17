@@ -60,20 +60,22 @@ namespace Common.SymTable
 	// Types
 	//----------------------------------------------------------------------------------------------
 	public enum TypeForm {
-		BOOL = 0,
-		UINT8 = 1,
-		INT8 = 2,
-		UINT16 = 3,
-		INT16 = 4,
-		UINT32 = 5,
-		INT32 = 6,
-		UINT64 = 7,
-		INT64 = 8,
-		FLOAT32 = 9,
-		FLOAT64 = 10,
-		NONE = 11,
-		CHAR8 = 12,
-		STRUCT = 13, UNION = 14, ENUM = 15, PTR = 16, ARRAY = 17, FUNC = 18, PREDEFINED = 19
+		BOOL,
+		UINT8,
+		INT8,
+		CHAR8,
+		CHAR16,
+		UINT16,
+		INT16,
+		UINT32,
+		INT32,
+		UINT64,
+		INT64,
+		FLOAT32,
+		FLOAT64,
+		NONE,
+		
+		STRUCT, UNION, ENUM, PTR, ARRAY, FUNC, PREDEFINED
 	}
 	public class TypeDesc
 	{
@@ -105,6 +107,10 @@ namespace Common.SymTable
 						return 32;
 					case TypeForm.FLOAT64:
 						return 64;
+					case TypeForm.CHAR8:
+						return 8;
+					case TypeForm.CHAR16:
+						return 16;
 					case TypeForm.NONE:
 						return 0;
 					case TypeForm.STRUCT:
@@ -146,6 +152,7 @@ namespace Common.SymTable
 		public static TypeDesc FLOAT64 = new TypeDesc(TypeForm.FLOAT64);
 
 		public static TypeDesc CHAR8 = new TypeDesc(TypeForm.CHAR8);
+		public static TypeDesc CHAR16 = new TypeDesc(TypeForm.CHAR16);
 		public static TypeDesc Predefined(String name, Scope scope)
 		{
 			return new TypeDesc(TypeForm.PREDEFINED)
@@ -327,6 +334,14 @@ namespace Common.SymTable
 				if (x.name.Equals(obj.name)) Error("-- " + obj.name + " declared twice");
 			}
 			curScope.locals.Add(obj);
+			return obj;
+		}
+
+		public Obj InsertFunc(String name, TypeDesc returnType, params TypeDesc[] args) {
+			var argsList = args.Select((x, i) => new Obj(ObjCLass.PARAM, $"arg{i}", x, "")).ToArray();
+			var fnType = TypeDesc.Function(returnType, argsList, curScope);
+			var obj = new Obj(ObjCLass.FUNC, name, fnType, null);
+			Insert(obj);
 			return obj;
 		}
 

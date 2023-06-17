@@ -77,7 +77,7 @@ PRODUCTIONS
 
 	Module<out AOParser.Ast.Module o> 
 		=																		(. o = new AOParser.Ast.Module(); .)
-		"MODULE" Ident<out o.Ident>";" (. symTab.OpenScope(); .)
+		"MODULE" Ident<out o.Ident>";" (. symTab.OpenScope(); o.SetDefaultScope(symTab);.)
 		[ImportList<out o.ImportList>] 
 		{Definition<out o.Definition>}
 		DeclSeq<out o.DeclSeq> 

@@ -130,7 +130,7 @@ public Common.SymTable.SymTab symTab = new ();
 		Expect(7);
 		Ident(out o.Ident);
 		Expect(8);
-		symTab.OpenScope(); 
+		symTab.OpenScope(); o.SetDefaultScope(symTab);
 		if (la.kind == 11) {
 			ImportList(out o.ImportList);
 		}

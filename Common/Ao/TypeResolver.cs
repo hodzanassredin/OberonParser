@@ -10,12 +10,20 @@ namespace AOParser.Types
         {
             if (type == null) return TypeDesc.None;
             if (type.form != Common.SymTable.TypeForm.PREDEFINED) return type;
-            if (type.predefinedName == "CHR")
-                return TypeDesc.Function(TypeDesc.UINT16, null, type.scope);
             if (type.predefinedName == "SET" || type.predefinedName == "SET32")
                 return expectedFunc ? TypeDesc.Function(TypeDesc.Predefined("SET", type.scope), null, type.scope) : TypeDesc.Predefined("SET", type.scope);
 
-            return type.scope.Find(type.predefinedName).type;
+
+
+            TypeDesc res = type.scope.Find(type.predefinedName).type;
+            if (res.form == TypeForm.PREDEFINED)
+            {
+                var res2 = type.scope.Find(res.predefinedName).type;
+                if (res2.form != TypeForm.NONE) 
+                    return res2;
+            }
+
+            return res;
         }
 
         public static bool IsSimple(TypeForm form) {
@@ -131,6 +139,7 @@ namespace AOParser.Types
 
         public static TypeDesc ResolveNumber(String number)
         {
+            if (number.EndsWith('X')) return TypeDesc.CHAR8;
             number = number.Replace("'", "");
             if (number.Contains("."))
             {

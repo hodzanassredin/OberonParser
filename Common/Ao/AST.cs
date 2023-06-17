@@ -234,6 +234,10 @@ namespace AOParser.Ast
 	}
 	public class Module : AstElement
 	{
+		public void SetDefaultScope(SymTab tab) {
+			tab.InsertFunc("CHR", TypeDesc.CHAR16, TypeDesc.None);
+		}
+
 		public Ident Ident;
 		public AstList ImportList;
 		public Definition Definition;
@@ -1055,7 +1059,7 @@ namespace AOParser.Ast
 		}
 		public class CharacterFactor : IFactor
 		{
-			public override TypeDesc TypeDescr => TypeDesc.UINT8;
+			public override TypeDesc TypeDescr => TypeDesc.CHAR8;
 			public String Value;
 			public override void Accept(IAstVisitor v) => v.Visit(this);
 			public override string ToString()

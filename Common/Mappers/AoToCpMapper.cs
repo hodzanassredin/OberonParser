@@ -28,6 +28,7 @@ namespace Common.Mappers
         Dictionary<string, CPParser.Ast.Ident> moduleMap = new Dictionary<string, CPParser.Ast.Ident>
         {
             ["KernelLog"] = new CPParser.Ast.Ident { Name = "StdLog" },
+            ["RealConversions"] = new CPParser.Ast.Ident { Name = "CryptoRealConversions" },
         };
 
         Dictionary<string, CPParser.Ast.Qualident> simpleTypeMap = new Dictionary<string, CPParser.Ast.Qualident>
@@ -55,9 +56,6 @@ namespace Common.Mappers
             ["UNSIGNED16"] = GetQualident(CompatModuleName, "UNSIGNED16"),
             ["UNSIGNED32"] = GetQualident(CompatModuleName, "UNSIGNED32"),
             ["UNSIGNED64"] = GetQualident(CompatModuleName, "UNSIGNED64"),
-
-
-
         };
         Dictionary<string, CPParser.Ast.Qualident> simpleFuncMap = new Dictionary<string, CPParser.Ast.Qualident>
         {
@@ -66,24 +64,24 @@ namespace Common.Mappers
             ["LSH"] = GetQualident("SYSTEM", "LSH"),
             ["ROT"] = GetQualident("SYSTEM", "ROT"),
             ["SET32"] = GetQualident("BITS"),
+            ["SET"] = GetQualident("BITS"),
         };
 
         CPParser.Ast.Qualident UnsignedRelationMap(AOParser.Ast.Relation.Relations rel, int bits) {
-            var suffix = bits == 64 ? "64" : "";
             switch (rel)
             {
                 case AOParser.Ast.Relation.Relations.Eq:
-                    return null;
+                    return GetQualident(CompatModuleName, $"UEq{bits}");
                 case AOParser.Ast.Relation.Relations.Neq:
-                    return null;
+                    return GetQualident(CompatModuleName, $"UNeq{bits}");
                 case AOParser.Ast.Relation.Relations.Lss:
-                    return GetQualident(CompatModuleName, $"ULss{suffix}");
+                    return GetQualident(CompatModuleName, $"ULss{bits}");
                 case AOParser.Ast.Relation.Relations.Leq:
-                    return GetQualident(CompatModuleName, $"ULeq{suffix}");
+                    return GetQualident(CompatModuleName, $"ULeq{bits}");
                 case AOParser.Ast.Relation.Relations.Gtr:
-                    return GetQualident(CompatModuleName, $"UGtr{suffix}");
+                    return GetQualident(CompatModuleName, $"UGtr{bits}");
                 case AOParser.Ast.Relation.Relations.Geq:
-                    return GetQualident(CompatModuleName, $"UGeq{suffix}");
+                    return GetQualident(CompatModuleName, $"UGeq{bits}");
                 case AOParser.Ast.Relation.Relations.In:
                     return null;
                 case AOParser.Ast.Relation.Relations.Is:
@@ -95,13 +93,12 @@ namespace Common.Mappers
 
         CPParser.Ast.Qualident UnsignedAddOpMap(AOParser.Ast.AddOp.AddOps op, int bits)
         {
-            if (bits != 64) return null;
             switch (op)
             {
                 case AOParser.Ast.AddOp.AddOps.Add:
-                    return GetQualident(CompatModuleName, $"UAdd64");
+                    return GetQualident(CompatModuleName, $"UAdd{bits}");
                 case AOParser.Ast.AddOp.AddOps.Sub:
-                    return GetQualident(CompatModuleName, $"USub64");
+                    return GetQualident(CompatModuleName, $"USub{bits}");
                 case AOParser.Ast.AddOp.AddOps.Or:
                     return null;
                 default:
@@ -115,7 +112,7 @@ namespace Common.Mappers
             switch (op)
             {
                 case AOParser.Ast.MulOp.MulOps.Mul:
-                    return bits == 64 ? GetQualident(CompatModuleName, $"UMul64") : null;
+                    return GetQualident(CompatModuleName, $"UMul{bits}");
                 case AOParser.Ast.MulOp.MulOps.Division:
                     return GetQualident(CompatModuleName, $"UDiv{bits}");
                 case AOParser.Ast.MulOp.MulOps.DIV:
@@ -196,13 +193,24 @@ namespace Common.Mappers
                 Name = o.Name,
             };
         }
-
-        public CPParser.Ast.Qualident Map(AOParser.Ast.Qualident o)
+        public enum QType { 
+            None,
+            Func,
+            Type
+        }
+        public CPParser.Ast.Qualident MapQualident(AOParser.Ast.Qualident o, QType tp, SymTable.TypeDesc expectedReturnType = null, Common.SymTable.TypeDesc[] argTypes = null)
         {
             if (o == null) return null;
-            if (simpleTypeMap.ContainsKey(o.ToString()))
+
+            if (tp == QType.Type && simpleTypeMap.ContainsKey(o.ToString()))
             {
                 return simpleTypeMap[o.ToString()];
+            }
+
+            if (tp == QType.Func && simpleFuncMap.ContainsKey(o.ToString()))
+            {
+                return simpleFuncMap[o.ToString()];
+
             }
             if (o.IsSelf) {
                 return new CPParser.Ast.Qualident(null)
@@ -232,8 +240,8 @@ namespace Common.Mappers
         public CPParser.Ast.Guard Map(AOParser.Ast.Guard o)
         {
             return new CPParser.Ast.Guard() {
-                VarQualident = Map(o.VarQualident),
-                TypeQualident = Map(o.TypeQualident)
+                VarQualident = MapQualident(o.VarQualident, QType.None),
+                TypeQualident = MapQualident(o.TypeQualident, QType.Type)
             };
         }
 
@@ -489,7 +497,7 @@ namespace Common.Mappers
             {
                 Type_ = new CPParser.Ast.IType.RecordType(o.TypeDescr.scope)
                 {
-                    Qualident = Map(o.Qualident),
+                    Qualident = MapQualident(o.Qualident, QType.Type),
                     FieldList = new CPParser.Ast.AstList(vars),
                     RecordMeta = CPParser.Ast.IType.RecordType.Meta.EXTENSIBLE
                 }
@@ -609,7 +617,7 @@ namespace Common.Mappers
             return new CPParser.Ast.FormalPars {
                 FPSections = MapLst<AOParser.Ast.FPSection, CPParser.Ast.FPSection>(o.FPSections, Map),
                 Type_ = o.Qualident == null ? null : new CPParser.Ast.IType.SynonimType() {
-                    Qualident = Map(o.Qualident)
+                    Qualident = MapQualident(o.Qualident, QType.Type)
                 }
             };
         }
@@ -812,13 +820,13 @@ namespace Common.Mappers
             }
         }
         
-        public CPParser.Ast.SimpleExpr Map(AOParser.Ast.SimpleExpr o)
+        public CPParser.Ast.SimpleExpr Map(AOParser.Ast.SimpleExpr o, SymTable.Scope scope)
         {
             if (o == null) return null;
 
 
             var res = new CPParser.Ast.SimpleExpr() { 
-                Term = Map(o.Term)
+                Term = Map(o.Term, scope)
             };
 
             foreach (var item in o.SimpleExprElements.Cast<AOParser.Ast.SimpleElementExpr>())
@@ -828,50 +836,33 @@ namespace Common.Mappers
                     var q = UnsignedAddOpMap(item.AddOp.Op, o.Term.TypeDescr.GetSize);
                     if (q != null)
                     {
-                        var args = new AstList();
-                        args.Add(new Expr { SimpleExpr = res });
-                        args.Add(new Expr { SimpleExpr = new SimpleExpr { Term = Map(item.Term) } });
-                        var specs = new AstList();
-                        specs.Add(new CPParser.Ast.Designator.IDesignatorSpec.ProcCallDesignatorSpec()
+                        var arg1 = new Expr { SimpleExpr = res };
+                        var arg2 = new Expr { SimpleExpr = new SimpleExpr { Term = Map(item.Term, scope) } };
+                        return new CPParser.Ast.SimpleExpr
                         {
-                            Value = new ExprList
-                            {
-                                Exprs = args
-                            }
-                        });
-
-                        res = new CPParser.Ast.SimpleExpr
-                        {
-                            Term = new Term { 
-                                Factor = new CPParser.Ast.IFactor.DesignatorFactor
-                                {
-                                    Value = new CPParser.Ast.Designator(null)
-                                    {
-                                        Qualident = q,
-                                        Specs = specs
-                                    }
-                                }
-                            }
+                            Term = CreateFunctionCallTerm(q, null, 
+                                CastToUnsigned(arg1, o.Term.TypeDescr, o.Term.TypeDescr.GetSize), 
+                                CastToUnsigned(arg2, o.Term.TypeDescr, o.Term.TypeDescr.GetSize))
                         };
                     }
                 }
                 else
                 {
-                    res.SimpleExprElements.Add(Map(item));
+                    res.SimpleExprElements.Add(Map(item, scope));
                 }
             }
             return res;
         }
 
-        private SimpleElementExpr Map(AOParser.Ast.SimpleElementExpr item)
+        private SimpleElementExpr Map(AOParser.Ast.SimpleElementExpr item, SymTable.Scope scope)
         {
             return new SimpleElementExpr { 
                 AddOp = Map(item.AddOp),
-                Term = Map(item.Term)
+                Term = Map(item.Term, scope)
             };
         }
 
-        private Term Map(AOParser.Ast.Term o)
+        private Term Map(AOParser.Ast.Term o, SymTable.Scope scope)
         {
             Term res = new Term
             {
@@ -885,29 +876,11 @@ namespace Common.Mappers
                     var q = UnsignedMulOpMap(item.MulOp.Op, o.Factor.TypeDescr.GetSize);
                     if (q != null)
                     {
-                        var args = new AstList();
-                        args.Add(new Expr { SimpleExpr = new SimpleExpr { Term = res } });
-                        args.Add(new Expr { SimpleExpr = new SimpleExpr { Term = new Term { Factor = Map(item.Factor, null) } } });
-                        var specs = new AstList();
-                        specs.Add(new CPParser.Ast.Designator.IDesignatorSpec.ProcCallDesignatorSpec()
-                        {
-                            Value = new ExprList
-                            {
-                                Exprs = args
-                            }
-                        });
-
-                        res = new CPParser.Ast.Term
-                        {
-                            Factor = new CPParser.Ast.IFactor.DesignatorFactor
-                            {
-                                Value = new CPParser.Ast.Designator(null)
-                                {
-                                    Qualident = q,
-                                    Specs = specs
-                                }
-                            }
-                        };
+                        var arg1 = new Expr { SimpleExpr = new SimpleExpr { Term = res } };
+                        var arg2 = new Expr { SimpleExpr = new SimpleExpr { Term = new Term { Factor = Map(item.Factor, null) } } };
+                        return CreateFunctionCallTerm(q, scope, 
+                            CastToUnsigned(arg1, o.Factor.TypeDescr, o.Factor.TypeDescr.GetSize),
+                            CastToUnsigned(arg2, item.Factor.TypeDescr , o.Factor.TypeDescr.GetSize));
                     }
                 }
                 else {
@@ -944,7 +917,7 @@ namespace Common.Mappers
                     res = Map(f);
                     break;
                 case AOParser.Ast.IFactor.DesignatorFactor f:
-                    res = Map(f);
+                    res = Map(f, expectedType);
                     break;
                 case AOParser.Ast.IFactor.NegFactor f:
                     res = Map(f, expectedType);
@@ -990,45 +963,74 @@ namespace Common.Mappers
             }
         }
 
+        public Expr CastToUnsigned(Expr e, Common.SymTable.TypeDesc typeDescr,int bits) {
+            if (typeDescr.IsUnsigned) return e;
+            return new Expr { 
+                SimpleExpr = new SimpleExpr { 
+                    Term = CreateFunctionCallTerm(GetQualident(CompatModuleName, $"TOUNSIGNED{bits}"), null, e)
+                }
+            };
+        }
+
+        public Term CreateFunctionCallTerm(Qualident fnQ, Common.SymTable.Scope scope, params Expr[] args)
+        {
+            var argsLst = new AstList();
+            foreach (var arg in args)
+            {
+                argsLst.Add(arg);
+            }
+            
+            var specs = new AstList();
+            specs.Add(new CPParser.Ast.Designator.IDesignatorSpec.ProcCallDesignatorSpec()
+            {
+                Value = new ExprList
+                {
+                    Exprs = argsLst
+                }
+            });
+            return new CPParser.Ast.Term
+            {
+                Factor = new CPParser.Ast.IFactor.DesignatorFactor
+                {
+                    Value = new CPParser.Ast.Designator(scope)
+                    {
+                        Qualident = fnQ,
+                        Specs = specs
+                    }
+                }
+            };
+            
+         }
+
+
         public CPParser.Ast.Expr Map(AOParser.Ast.Expr o, Common.SymTable.TypeDesc toType)
         {
             if (o == null) return null;
 
-            if (o.SimpleExpr.TypeDescr.IsUnsigned && o.Relation!= null) {
+            //FIX UNSIGNED EPRESSIONS
+            if (o.SimpleExpr.TypeDescr.IsUnsigned && o.Relation != null)
+            {
                 var q = UnsignedRelationMap(o.Relation.Op, o.SimpleExpr.TypeDescr.GetSize);
-                if (q != null) {
-                    var args = new AstList();
-                    args.Add(new Expr { SimpleExpr = Map(o.SimpleExpr) });
-                    args.Add(new Expr { SimpleExpr = Map(o.SimpleExpr2) });
-                    var specs = new AstList();
-                    specs.Add(new CPParser.Ast.Designator.IDesignatorSpec.ProcCallDesignatorSpec() { 
-                        Value = new ExprList { 
-                            Exprs = args
-                        }
-                    });
+                if (q != null)
+                {
+                    var arg1 = new Expr { SimpleExpr = Map(o.SimpleExpr, o.scope) };
+                    var arg2 = new Expr { SimpleExpr = Map(o.SimpleExpr2, o.scope) };
                     return new CPParser.Ast.Expr()
                     {
-                        SimpleExpr = new CPParser.Ast.SimpleExpr {
-                            Term = new CPParser.Ast.Term {
-                                Factor = new CPParser.Ast.IFactor.DesignatorFactor {
-                                    Value = new CPParser.Ast.Designator(o.scope) {
-                                        Qualident = q,
-                                        Specs = specs
-                                    }
-                                }
-                            }
+                        SimpleExpr = new CPParser.Ast.SimpleExpr
+                        {
+                            Term = CreateFunctionCallTerm(q, o.scope, 
+                                CastToUnsigned(arg1, o.SimpleExpr.TypeDescr, o.SimpleExpr.TypeDescr.GetSize), 
+                                CastToUnsigned(arg2, o.SimpleExpr2.TypeDescr , o.SimpleExpr.TypeDescr.GetSize))
                         }
                     };
                 }
-
             }
-
-
             o = DownOrUpCast(o, toType);
             return new CPParser.Ast.Expr {
-                SimpleExpr = Map(o.SimpleExpr),
+                SimpleExpr = Map(o.SimpleExpr, o.scope),
                 Relation = Map(o.Relation),
-                SimpleExpr2 = Map(o.SimpleExpr2),
+                SimpleExpr2 = Map(o.SimpleExpr2, o.scope),
             };
         }
 
@@ -1072,7 +1074,7 @@ namespace Common.Mappers
         public CPParser.Ast.IStatement.AssignmentStatement Map(AOParser.Ast.IStatement.AssignmentStatement o)
         {
             var res = new CPParser.Ast.IStatement.AssignmentStatement {
-                Designator = Map(o.Designator),
+                Designator = Map(o.Designator,null),
                 Expr = Map(o.Expr, o.Designator.TypeDescr),
             };
             return res;
@@ -1083,7 +1085,7 @@ namespace Common.Mappers
             var fType = o.Designator.TypeDescr;
             var tps = fType.parameters?.Select(x => x.type)?.ToArray();
             return new CPParser.Ast.IStatement.ProcCallStatement { 
-                Designator = Map(o.Designator),
+                Designator = Map(o.Designator, null),
                 ExprList = Map(o.ExprList, tps)
             };
         }
@@ -1139,8 +1141,8 @@ namespace Common.Mappers
             res.Alternatives.Add(new CPParser.Ast.IStatement.WithAlternativeStatement() { 
                 StatementSeq = Map(o.StatementSeq, expecteType),
                 Guard = new CPParser.Ast.Guard { 
-                    VarQualident = Map(o.Qualident1),
-                    TypeQualident = Map(o.Qualident2)
+                    VarQualident = MapQualident(o.Qualident1, QType.None),
+                    TypeQualident = MapQualident(o.Qualident2, QType.Type)
                 }
             });
             return res;
@@ -1225,7 +1227,7 @@ namespace Common.Mappers
                         }).Cast<CPParser.Ast.AstElement>().ToList();
 
             return new CPParser.Ast.IType.RecordType(null) {
-                Qualident = Map(o.Qualident),
+                Qualident = MapQualident(o.Qualident, QType.Type),
                 FieldList = new CPParser.Ast.AstList(lst),
                 RecordMeta = CPParser.Ast.IType.RecordType.Meta.EXTENSIBLE
             };
@@ -1234,7 +1236,7 @@ namespace Common.Mappers
         public CPParser.Ast.IType.SynonimType Map(AOParser.Ast.IType.SynonimType o)
         {
             return new CPParser.Ast.IType.SynonimType() { 
-                Qualident = Map(o.Qualident)
+                Qualident = MapQualident(o.Qualident, QType.Type)
             };
         }
 
@@ -1259,11 +1261,11 @@ namespace Common.Mappers
 
         HashSet<string> skipIfArgTypeEqReturnType = new HashSet<string> { "CHR", "SET32" };
 
-        public CPParser.Ast.IFactor Map(AOParser.Ast.IFactor.DesignatorFactor o)
+        public CPParser.Ast.IFactor Map(AOParser.Ast.IFactor.DesignatorFactor o, Common.SymTable.TypeDesc expectedType)
         {
             var res = new CPParser.Ast.IFactor.DesignatorFactor
             {
-                Value = Map(o.Value)
+                Value = Map(o.Value, expectedType)
             };
 
             if (skipIfArgTypeEqReturnType.Contains(o.Value.Qualident.ToString()) && o.Value.Specs.Count() == 1) {
@@ -1382,23 +1384,23 @@ namespace Common.Mappers
                 Value = o.Value
             };
         }
-        public CPParser.Ast.Designator Map(AOParser.Ast.Designator o)
+        public CPParser.Ast.Designator Map(AOParser.Ast.Designator o, Common.SymTable.TypeDesc expectedType)
         {
-            var q = Map(o.Qualident);
+            var isFn = o.Specs.Any() && o.Specs.Value[0] is AOParser.Ast.Designator.IDesignatorSpec.ProcCallDesignatorSpec;
+            var spec = isFn ? o.Specs.Value[0] as AOParser.Ast.Designator.IDesignatorSpec.ProcCallDesignatorSpec : null;
+
+            var argTypes = spec!=null ? spec.Value.Exprs.Cast<AOParser.Ast.Expr>().Select(x => x.TypeDescr).ToArray() : null;
+            var q = MapQualident(o.Qualident, isFn? QType.Func: QType.None, expectedType, argTypes);
 
             if (AOParser.Types.TypeResolver.Resolve(o.Qualident.TypeDescr).form == SymTable.TypeForm.ENUM && o.Specs.Value.Any()) {
                 var selector = ((AOParser.Ast.Designator.IDesignatorSpec.RecordDesignatorSpec)(o.Specs.Value[0])).Value;
-                return new CPParser.Ast.Designator(null) {
-                    Qualident = GetQualident($"{o.Qualident.ToString()}_{selector}")
+                return new Designator(o.Qualident.scope) {
+                    Qualident = GetQualident($"{o.Qualident}_{selector}")
                 };
             }
 
             
-            if (simpleFuncMap.ContainsKey(o.Qualident.ToString()) && o.Specs.Any() && o.Specs.Value[0] is AOParser.Ast.Designator.IDesignatorSpec.ProcCallDesignatorSpec)
-            {
-                q = simpleFuncMap[o.Qualident.ToString()];
-                
-            }
+
 
             var tp = AOParser.Types.TypeResolver.Resolve(o.Qualident.TypeDescr);
             //if (tp.form == SymTable.TypeForm.FUNC)
@@ -1460,7 +1462,7 @@ namespace Common.Mappers
         {
             return new CPParser.Ast.Designator.IDesignatorSpec.CastDesignatorSpec(null)
             {
-                Value = Map(o.Value)
+                Value = MapQualident(o.Value, QType.Type)
             };
         }
 
