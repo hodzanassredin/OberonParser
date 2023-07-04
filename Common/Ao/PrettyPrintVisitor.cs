@@ -124,7 +124,7 @@ namespace AOParser
         {
             WriteTabs();sw.WriteLine("VAR");
             EnterScope();
-            this.VisitList(o.Values, () => { }, () => { sw.WriteLine(";"); }, true);
+            this.VisitList(o.Values, () => { WriteTabs(); }, () => { sw.WriteLine(";"); }, true);
             ExitScope();
         }
         public void Visit(ConstDecl o)
@@ -139,7 +139,7 @@ namespace AOParser
 
         public void Visit(VarDecl o)
         {
-            WriteTabs();o.IdentList.AcceptWithComments(this);sw.Write(": ");o.Type_.AcceptWithComments(this);
+            o.VariableNameList.AcceptWithComments(this);sw.Write(": ");o.Type_.AcceptWithComments(this);
         }
 
         public void Visit(ProcDecl o)
@@ -857,6 +857,32 @@ namespace AOParser
                 sw.Write(" ");
                 o.Expr.AcceptWithComments(this);
             }
+        }
+
+        public void Visit(VariableName o)
+        {
+            o.IdentDef.AcceptWithComments(this);
+            if (o.Flags != null) {
+                o.Flags.AcceptWithComments(this);
+            }
+            if (o.Expr != null)
+            {
+                sw.Write(" := ");
+                o.Expr.AcceptWithComments(this);
+            }
+            //[":=" Expr <out o.Expr > | "EXTERN" string].
+        }
+
+        public void Visit(VariableNameList o)
+        {
+            VisitList(o.VariableNames, () => { }, () => sw.Write(", "));
+        }
+
+        public void Visit(IStatement.VarDeclStatement o)
+        {
+            WriteTabs();
+            sw.Write("VAR ");
+            o.VarDecl.AcceptWithComments(this);
         }
     }
 }

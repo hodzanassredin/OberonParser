@@ -94,18 +94,18 @@ namespace CPParser.Ast
 
 	public class Qualident : AstElement
 	{
-        public Qualident(Common.SymTable.SymTab tab)
+        public Qualident(Common.SymTable.Scope scope)
         {
-            this.tab = tab;
+            this.scope = scope;
         }
 		//module ident
 		public Ident Ident1;
 		public Ident Ident2;
-        private readonly SymTab tab;
+        private readonly Common.SymTable.Scope scope;
 
 		public TypeDesc FindType()
 		{
-			return TypeDesc.Predefined(ToString(), tab.curScope);
+			return TypeDesc.Predefined(ToString(), scope);
 		}
 		public override void Accept(IAstVisitor v) => v.Visit(this);
         public override string ToString()

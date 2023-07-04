@@ -125,26 +125,35 @@ namespace CPParser
         }
         public void Visit(IConstTypeVarListDecl.ConstDeclList o)
         {
-            WriteTabs();sw.WriteLine("CONST");
-            EnterScope();
-            this.VisitList(o.Values, () => { }, () => { sw.WriteLine(";"); }, true);
-            ExitScope();
+            if (o.Values.Any())
+            {
+                WriteTabs(); sw.WriteLine("CONST");
+                EnterScope();
+                this.VisitList(o.Values, () => { }, () => { sw.WriteLine(";"); }, true);
+                ExitScope();
+            }
         }
 
         public void Visit(IConstTypeVarListDecl.TypeDeclList o)
         {
-            WriteTabs();sw.WriteLine("TYPE");
-            EnterScope();
-            this.VisitList(o.Values, () => { }, () => { sw.WriteLine(";"); }, true);
-            ExitScope();
+            if (o.Values.Any())
+            {
+                WriteTabs(); sw.WriteLine("TYPE");
+                EnterScope();
+                this.VisitList(o.Values, () => { }, () => { sw.WriteLine(";"); }, true);
+                ExitScope();
+            }
         }
 
         public void Visit(IConstTypeVarListDecl.VarDeclList o)
         {
-            WriteTabs();sw.WriteLine("VAR");
-            EnterScope();
-            this.VisitList(o.Values, () => { }, () => { sw.WriteLine(";"); }, true);
-            ExitScope();
+            if (o.Values.Any())
+            {
+                WriteTabs(); sw.WriteLine("VAR");
+                EnterScope();
+                this.VisitList(o.Values, () => { }, () => { sw.WriteLine(";"); }, true);
+                ExitScope();
+            }
         }
         public void Visit(ConstDecl o)
         {

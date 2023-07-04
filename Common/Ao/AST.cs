@@ -234,10 +234,11 @@ namespace AOParser.Ast
 	}
 	public class Module : AstElement
 	{
+
 		public void SetDefaultScope(SymTab tab) {
 			tab.InsertFunc("CHR", TypeDesc.CHAR16, TypeDesc.None);
 		}
-
+		public Scope Scope;
 		public Ident Ident;
 		public AstList ImportList;
 		public Definition Definition;
@@ -346,25 +347,54 @@ namespace AOParser.Ast
 			return new Obj(ObjCLass.TYPE, IdentDef.Ident.Name, Type_.TypeDescr, null);
 		}
 	}
+
+	public class VariableName : AstElement
+	{
+		public IdentDef IdentDef;
+		public Flags Flags;
+		public Expr Expr;
+		public override void Accept(IAstVisitor v) => v.Visit(this);
+		public override string ToString()
+		{
+			return $"{IdentDef} {Flags}" + (Expr != null ? $" := {Expr}" : "");
+		}
+	}
+
+	public class VariableNameList : AstElement
+	{
+		public string[] GetNames()
+		{
+			return VariableNames.Cast<VariableName>().Select(x => x.IdentDef.Ident.Name).ToArray();
+		}
+
+		public AstList VariableNames = new AstList();
+		public override void Accept(IAstVisitor v) => v.Visit(this);
+		public override string ToString()
+		{
+			return String.Join(",", VariableNames);
+		}
+	}
+
 	public class VarDecl : AstElement
 	{
-		public IdentList IdentList;
+		public VariableNameList VariableNameList;
 		public IType Type_;
         public override void Accept(IAstVisitor v) => v.Visit(this);
 
 		public override string ToString()
 		{
-			return $"{IdentList} = {Type_}";
+			return $"{VariableNameList} = {Type_}";
 		}
 
 		public IEnumerable<Obj> GetObjects()
 		{
-			return IdentList.GetNames().Select(name => new Obj(ObjCLass.VAR, name, Type_.TypeDescr, null));
+			return VariableNameList.GetNames().Select(name => new Obj(ObjCLass.VAR, name, Type_.TypeDescr, null));
 		}
 	}
 
 	public class ProcDecl : AstElement
 	{
+		public Scope Scope;
 		public ProcHead ProcHead;
 		public DeclSeq DeclSeq;
 		public Body Body;
@@ -866,6 +896,16 @@ namespace AOParser.Ast
                 return $"{Designator} := {Expr}";
             }
         }
+
+		public class VarDeclStatement : IStatement
+		{
+			public VarDecl VarDecl;
+			public override void Accept(IAstVisitor v) => v.Visit(this);
+			public override string ToString()
+			{
+				return $"{VarDecl}";
+			}
+		}
 
 		public class ProcCallStatement : IStatement
 		{

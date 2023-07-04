@@ -77,7 +77,7 @@ PRODUCTIONS
 
 	Module<out AOParser.Ast.Module o> 
 		=																		(. o = new AOParser.Ast.Module(); .)
-		"MODULE" Ident<out o.Ident>";" (. symTab.OpenScope(); o.SetDefaultScope(symTab);.)
+		"MODULE" Ident<out o.Ident>";" (. o.Scope = symTab.OpenScope(); o.SetDefaultScope(symTab);.)
 		[ImportList<out o.ImportList>] 
 		{Definition<out o.Definition>}
 		DeclSeq<out o.DeclSeq> 
@@ -102,13 +102,14 @@ PRODUCTIONS
 		"END" ident.
 
 	DeclSeq<out AOParser.Ast.DeclSeq o> 
-		=																		(. o = new AOParser.Ast.DeclSeq(); .)
+		=																		(. o = new AOParser.Ast.DeclSeq(); AOParser.Ast.VarDecl vd = null;.)
 		{ "CONST"																	(. var lst = new AOParser.Ast.IConstTypeVarListDecl.ConstDeclList(); .) 
 				{ConstDecl<lst.Values> ";" }											(. o.ConstTypeVarDecls.Add(lst); .)
 			| "TYPE"															(. var lst = new AOParser.Ast.IConstTypeVarListDecl.TypeDeclList(); .) 
 				{TypeDecl<lst.Values> ";"}												(. o.ConstTypeVarDecls.Add(lst); .)
 			| "VAR"																(. var lst = new AOParser.Ast.IConstTypeVarListDecl.VarDeclList(); .) 
-				{VarDecl<lst.Values> ";"}												(. o.ConstTypeVarDecls.Add(lst); .) 
+				{VarDecl<out vd> ";"							(. lst.Values.Add(vd); .) 
+				}												(. o.ConstTypeVarDecls.Add(lst); .) 
 			| ProcDecl<o.ProcDecl> ";" }.
 
 
@@ -122,17 +123,31 @@ PRODUCTIONS
 		IdentDef<out o.IdentDef> "=" Type<out o.Type_>							(. lst.Add(o); .)
 		(. symTab.Insert(o.GetObj());  .).
 
-	VarDecl<AOParser.Ast.AstList lst> 
-		=																		(. var o = new AOParser.Ast.VarDecl(); .)	
-		IdentList<out o.IdentList> ":" Type<out o.Type_>						(. lst.Add(o); .)
+
+	VariableNameList<out AOParser.Ast.VariableNameList o> 	
+		=																		(. o = new AOParser.Ast.VariableNameList(); AOParser.Ast.VariableName id; .)
+		VariableName<out id>													(. o.VariableNames.Add(id); .)
+		{","																	
+		VariableName<out id>													(. o.VariableNames.Add(id); .)
+		}.
+
+	VariableName<out AOParser.Ast.VariableName o>  
+		=																		(. o = new AOParser.Ast.VariableName(); .)
+		IdentDef<out o.IdentDef> 
+		[Flags<out o.Flags>]
+		[":=" Expr<out o.Expr> | "EXTERN" string].
+
+	VarDecl<out AOParser.Ast.VarDecl o> 
+		=																		(. o = new AOParser.Ast.VarDecl(); .)	
+		VariableNameList<out o.VariableNameList> ":" Type<out o.Type_>						
 		(. symTab.Insert(o.GetObjects());  .).
 
 	ProcDecl<AOParser.Ast.AstList lst> 
 		= "PROCEDURE"															(. var o = new AOParser.Ast.ProcDecl(); .)	
-		ProcHead<out o.ProcHead> ";" 
+		ProcHead<out o.ProcHead> ";"											
 		DeclSeq<out o.DeclSeq> 
-		Body<out o.Body> Ident<out o.Ident>													(. lst.Add(o); .)
-		(. var scope = symTab.curScope; symTab.CloseScope();symTab.Insert(o.GetObj(scope)); .).	
+		Body<out o.Body> Ident<out o.Ident>										(. lst.Add(o); .)
+		(. o.Scope = symTab.curScope; symTab.CloseScope();symTab.Insert(o.GetObj(o.Scope)); .).	
 
 	ProcHead<out AOParser.Ast.ProcHead o>  
 		=																			(. o = new AOParser.Ast.ProcHead(); .)	
@@ -246,6 +261,8 @@ PRODUCTIONS
 					StatementSeq<out elsif.ThenBody>							(. o.ELSIFs.Add(elsif); .)
 				}
 				["ELSE" StatementSeq<out o.ElseBody>] "END"						(. os = o; .)
+		|																		(. var o = new AOParser.Ast.IStatement.VarDeclStatement(); .) 
+			"VAR" VarDecl<out o.VarDecl>										(. os = o; .)
 		|																		(. var o = new AOParser.Ast.IStatement.CaseStatement(); .) 
 			"CASE" Expr<out o.Expr> "OF"										(. var c = new AOParser.Ast.Case(); .) 
 			["|"] Case<out c>															(. o.Cases.Add(c); .) 

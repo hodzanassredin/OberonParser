@@ -178,12 +178,15 @@ namespace Common.Mappers
 
         public readonly CPParser.Ast.Module module = new CPParser.Ast.Module();
 
-        public CPParser.Ast.IStatement.IfStatement.IfThen Map(AOParser.Ast.IStatement.IfStatement.IfThen o, Common.SymTable.TypeDesc expecteType)
+        public (CPParser.Ast.IStatement.IfStatement.IfThen, List<VarDecl>) Map(AOParser.Ast.IStatement.IfStatement.IfThen o, Common.SymTable.TypeDesc expecteType, SymTable.Scope scope)
         {
-            return new CPParser.Ast.IStatement.IfStatement.IfThen {
+            var r = Map(o.ThenBody, expecteType, scope);
+            var ss = new CPParser.Ast.IStatement.IfStatement.IfThen {
                 Cond = Map(o.Cond, Common.SymTable.TypeDesc.BOOL),
-                ThenBody = Map(o.ThenBody, expecteType)
+                ThenBody = r.Item1
             };
+
+            return (ss, r.Item2);
         }
 
         public CPParser.Ast.Ident Map(AOParser.Ast.Ident o)
@@ -263,7 +266,7 @@ namespace Common.Mappers
                 Name = new CPParser.Ast.Ident { Name = CompatModuleName },
                 OriginalName = new CPParser.Ast.Ident { Name = CompatModuleNameFull },
             });
-            res.DeclSeq = Map(o.DeclSeq);
+            res.DeclSeq = Map(o.DeclSeq, o.Scope).Item1;
 
             AddForward(res.DeclSeq.ProcForwardDecls);
 
@@ -273,9 +276,17 @@ namespace Common.Mappers
             }
             if (o.Body.StatBlock != null)
             {
-                res.Begin = Map(o.Body.StatBlock, Common.SymTable.TypeDesc.None);
-
-
+                var sb = Map(o.Body.StatBlock, Common.SymTable.TypeDesc.None, null, o.Scope);
+                res.Begin = sb.Item1;
+                if (sb.Item2 != null && sb.Item2.Any()) {
+                    var lst = new IConstTypeVarListDecl.VarDeclList();
+                    foreach (var item in sb.Item2)
+                    {
+                        item.CommentsBefore.Add(new Comment { Content = "WARN. MOVED DECL"});
+                        lst.Values.Add(item);
+                    }
+                    res.DeclSeq.ConstTypeVarDecls.Add(lst);
+                }
             }
             return res;
 
@@ -357,14 +368,14 @@ namespace Common.Mappers
             }
         }
 
-        public (CPParser.Ast.IConstTypeVarListDecl, List<CPParser.Ast.ProcDecl>, List<CPParser.Ast.ConstDecl>) Map(AOParser.Ast.IConstTypeVarListDecl o)
+        public (CPParser.Ast.IConstTypeVarListDecl, List<CPParser.Ast.ProcDecl>, List<CPParser.Ast.ConstDecl>, List<IStatement.AssignmentStatement>) Map(AOParser.Ast.IConstTypeVarListDecl o, SymTable.Scope scope)
         {
             switch (o)
             {
                 case AOParser.Ast.IConstTypeVarListDecl.ConstDeclList t:
-                    return (Map(t), null, null);
+                    return (Map(t), null, null, null);
                 case AOParser.Ast.IConstTypeVarListDecl.VarDeclList t:
-                    return Map(t);
+                    return Map(t, scope);
                 case AOParser.Ast.IConstTypeVarListDecl.TypeDeclList t:
                     return Map(t);
                 default:
@@ -372,12 +383,13 @@ namespace Common.Mappers
             }
         }
 
-        public CPParser.Ast.DeclSeq Map(AOParser.Ast.DeclSeq o)
+        public (CPParser.Ast.DeclSeq, List<IStatement.AssignmentStatement>) Map(AOParser.Ast.DeclSeq o, SymTable.Scope scope)
         {
             var res = new CPParser.Ast.DeclSeq();
+            var stmts = new List<IStatement.AssignmentStatement>();
             foreach (var item in o.ConstTypeVarDecls.Cast<AOParser.Ast.IConstTypeVarListDecl>())
             {
-                var r = Map(item);
+                var r = Map(item, scope);
                 res.ConstTypeVarDecls.Add(r.Item1);
                 if (r.Item2 != null)
                 {
@@ -396,12 +408,17 @@ namespace Common.Mappers
                     }
                     res.ConstTypeVarDecls.Add(cds);
                 }
+                if (r.Item4 != null)
+                {
+                    stmts.AddRange(r.Item4);
+                }
+                
             }
             foreach (var item in o.ProcDecl.Cast<AOParser.Ast.ProcDecl>())
             {
                 res.ProcForwardDecls.Add(Map(item));
             }
-            return res;
+            return (res, stmts);
         }
 
         public CPParser.Ast.IConstTypeVarListDecl.ConstDeclList Map(AOParser.Ast.IConstTypeVarListDecl.ConstDeclList o)
@@ -414,7 +431,7 @@ namespace Common.Mappers
             return res;
         }
 
-        public (CPParser.Ast.IConstTypeVarListDecl.TypeDeclList, List<CPParser.Ast.ProcDecl>, List<CPParser.Ast.ConstDecl>) Map(AOParser.Ast.IConstTypeVarListDecl.TypeDeclList o)
+        public (CPParser.Ast.IConstTypeVarListDecl.TypeDeclList, List<CPParser.Ast.ProcDecl>, List<CPParser.Ast.ConstDecl>, List<IStatement.AssignmentStatement>) Map(AOParser.Ast.IConstTypeVarListDecl.TypeDeclList o)
         {
             var pds = new List<CPParser.Ast.ProcDecl>();
             var cds = new List<CPParser.Ast.ConstDecl>();
@@ -432,23 +449,29 @@ namespace Common.Mappers
                     cds.AddRange(m.Item3);
                 }
             }
-            return (res, pds, cds);
+            return (res, pds, cds, null);
         }
 
-        public (CPParser.Ast.IConstTypeVarListDecl.VarDeclList, List<CPParser.Ast.ProcDecl>, List<CPParser.Ast.ConstDecl>) Map(AOParser.Ast.IConstTypeVarListDecl.VarDeclList o)
+        public (CPParser.Ast.IConstTypeVarListDecl.VarDeclList, List<CPParser.Ast.ProcDecl>, List<CPParser.Ast.ConstDecl>, List<IStatement.AssignmentStatement>) Map(AOParser.Ast.IConstTypeVarListDecl.VarDeclList o, SymTable.Scope scope)
         {
             var pds = new List<CPParser.Ast.ProcDecl>();
+            var stmts = new List<IStatement.AssignmentStatement>();
             var res = new CPParser.Ast.IConstTypeVarListDecl.VarDeclList();
             foreach (var item in o.Values.Cast<AOParser.Ast.VarDecl>())
             {
-                var m = Map(item);
+                var m = Map(item, scope);
                 res.Values.Add(m.Item1);
                 if (m.Item2 != null)
                 {
                     pds.AddRange(m.Item2);
                 }
+
+                if (m.Item3 != null)
+                {
+                    stmts.AddRange(m.Item3);
+                }
             }
-            return (res, pds, null);
+            return (res, pds, null, stmts);
         }
 
         public CPParser.Ast.ConstDecl Map(AOParser.Ast.ConstDecl o)
@@ -465,32 +488,51 @@ namespace Common.Mappers
                         .Cast<AOParser.Ast.IConstTypeVarListDecl.VarDeclList>()
                         .SelectMany(x => x.Values)
                         .Cast<AOParser.Ast.VarDecl>()
-                        .Select(x => new CPParser.Ast.FieldList {
-                            IdentList = Map(x.IdentList),
-                            Type_ = Map(x.Type_, null).Item1//TODO support procs for anonymous objects
+                        .Select(x => {
+                            var t = Map(x.Type_, null).Item1;//TODO support procs for anonymous objects
+                            var r = new CPParser.Ast.FieldList
+                            {
+                                IdentList = Map(x.VariableNameList, o.Qualident.scope, t.TypeDescr).Item1,
+                                Type_ = t
+                            };
+                            return r;
                         }).Cast<CPParser.Ast.AstElement>().ToList();
 
 
             var procs = o.DeclSeq.ProcDecl
                         .Cast<AOParser.Ast.ProcDecl>()
-                        .Select(x => new CPParser.Ast.ProcDecl
-                        {
-                            IdentDef = Map(x.ProcHead.IdentDef),
-                            DeclSeq = Map(x.DeclSeq),
-                            Receiver = new CPParser.Ast.Receiver(null) {
-                                SelfIdent = new CPParser.Ast.Ident { Name = "SELF" },
-                                //ReceiverPrefix = CPParser.Ast.Receiver.Prefix., //dont need for pointer record
-                                TypeIdent = Map(o.Ident)
-                            },
-                            StatementSeq = Map(x.Body.StatBlock, x.ProcHead.FormalPars?.Qualident?.TypeDescr ?? Common.SymTable.TypeDesc.None),
-                            FormalPars = Map(x.ProcHead.FormalPars),
-                            MethAttributes = new CPParser.Ast.MethAttributes() {
-                                IsNew = true,
-                            },
-                            CommentsBefore = String.IsNullOrEmpty(x.ProcHead.Tag)? new AstList()
+                        .Select(x => {
+                            var ss = Map(x.Body.StatBlock, x.ProcHead.FormalPars?.Qualident?.TypeDescr ?? Common.SymTable.TypeDesc.None, null, x.Scope);
+                            var ds = Map(x.DeclSeq, x.Scope).Item1;
+                            if (ss.Item2 != null) {
+                                var lst = new IConstTypeVarListDecl.VarDeclList();
+                                foreach (var item in ss.Item2)
+                                {
+                                    lst.Values.Add(item);
+                                }
+                                ds.ConstTypeVarDecls.Add(lst);
+                            }
+                            return new CPParser.Ast.ProcDecl
+                            {
+                                IdentDef = Map(x.ProcHead.IdentDef),
+                                DeclSeq = ds,
+                                Receiver = new CPParser.Ast.Receiver(null)
+                                {
+                                    SelfIdent = new CPParser.Ast.Ident { Name = "SELF" },
+                                    //ReceiverPrefix = CPParser.Ast.Receiver.Prefix., //dont need for pointer record
+                                    TypeIdent = Map(o.Ident)
+                                },
+                                StatementSeq = ss.Item1,
+                                FormalPars = Map(x.ProcHead.FormalPars),
+                                MethAttributes = new CPParser.Ast.MethAttributes()
+                                {
+                                    IsNew = true,
+                                },
+                                CommentsBefore = String.IsNullOrEmpty(x.ProcHead.Tag) ? new AstList()
                                     : new AstList { Value = new List<AstElement> { GetNotSupportedWarning(x.ProcHead.Tag) } }
-                            
-                            //Map(x.ProcHead.Tag.)
+
+                                    //Map(x.ProcHead.Tag.)
+                            };
                         }).ToList();
 
             var tp = new CPParser.Ast.IType.PointerType()
@@ -580,24 +622,75 @@ namespace Common.Mappers
             return (tp, m.Item2, m.Item3);
         }
 
-        public (CPParser.Ast.VarDecl, List<CPParser.Ast.ProcDecl>) Map(AOParser.Ast.VarDecl o)
+        public (CPParser.Ast.VarDecl, List<CPParser.Ast.ProcDecl>, List<IStatement.AssignmentStatement>) Map(AOParser.Ast.VarDecl o, SymTable.Scope scope)
         {
             var m = Map(o.Type_,null);
+            var m2 = Map(o.VariableNameList, scope, m.Item1.TypeDescr);
             var vr = new CPParser.Ast.VarDecl
             {
                 Type_ = m.Item1,
-                IdentList = Map(o.IdentList)
+                IdentList = m2.Item1
             };
-            return (vr, m.Item2);
+            return (vr, m.Item2, m2.Item2);
+        }
+
+        private (IdentList, List<IStatement.AssignmentStatement>) Map(AOParser.Ast.VariableNameList o, SymTable.Scope scope, Common.SymTable.TypeDesc toType)
+        {
+            var res = new CPParser.Ast.IdentList();
+            var stmts = new List<IStatement.AssignmentStatement>();
+            foreach (var item in o.VariableNames.Cast<AOParser.Ast.VariableName>())
+            {
+                var r = Map(item, scope, toType);
+                res.IdentDefs.Add(r.Item1);
+                if (r.Item2 != null) {
+                    stmts.Add(r.Item2);
+                }
+            }
+
+            return (res, stmts);
+        }
+
+        private (IdentDef, CPParser.Ast.IStatement.AssignmentStatement) Map(AOParser.Ast.VariableName o, SymTable.Scope scope, Common.SymTable.TypeDesc toType)
+        {
+            var res = new IdentDef { 
+                Ident = Map(o.IdentDef.Ident)
+            };
+            CPParser.Ast.IStatement.AssignmentStatement stmt = null;
+
+            if (o.Expr != null) {
+                stmt = new IStatement.AssignmentStatement
+                {
+                    Designator = new Designator(scope) { 
+                        Qualident = new Qualident(scope) { 
+                            Ident1 = Map(o.IdentDef.Ident)
+                        }
+                    },
+                    Expr = Map(o.Expr, toType)
+                };
+            }
+
+            return (res, stmt);
         }
 
         public CPParser.Ast.ProcDecl Map(AOParser.Ast.ProcDecl o)
         {
+            var ds = Map(o.DeclSeq, o.Scope);
+
+            var ss = Map(o.Body.StatBlock, o.ProcHead.FormalPars?.Qualident?.TypeDescr ?? Common.SymTable.TypeDesc.None, ds.Item2, o.Scope);
+            if (ss.Item2 != null)
+            {
+                var lst = new IConstTypeVarListDecl.VarDeclList();
+                foreach (var item in ss.Item2)
+                {
+                    lst.Values.Add(item);
+                }
+                ds.Item1.ConstTypeVarDecls.Add(lst);
+            }
             return new CPParser.Ast.ProcDecl {
                 IdentDef = Map(o.ProcHead.IdentDef),
-                DeclSeq = Map(o.DeclSeq),
+                DeclSeq = ds.Item1,
                 FormalPars = Map(o.ProcHead.FormalPars),
-                StatementSeq = Map(o.Body.StatBlock, o.ProcHead.FormalPars?.Qualident?.TypeDescr ?? Common.SymTable.TypeDesc.None),
+                StatementSeq = ss.Item1,
                 MethAttributes = new CPParser.Ast.MethAttributes()
             };
         }
@@ -688,58 +781,83 @@ namespace Common.Mappers
                 ConstExpr2 = Map(o.ConstExpr2, null)
             };
         }
-        public CPParser.Ast.StatementSeq Map(AOParser.Ast.StatBlock o, Common.SymTable.TypeDesc expecteType)
+        public (CPParser.Ast.StatementSeq, List<VarDecl>) Map(AOParser.Ast.StatBlock o, Common.SymTable.TypeDesc expecteType, List<IStatement.AssignmentStatement> varInits, SymTable.Scope scope)
         {
-            if (o == null) return null;
-            var res = Map(o.StatementSeq, expecteType);
+            if (o == null) return (null, null);
+            var r = Map(o.StatementSeq, expecteType, scope);
+            var res = r.Item1;
+            if (varInits != null)
+            {
+                foreach (var stmt in varInits)
+                {
+                    res.Statements.Value.Insert(0, stmt);
+                }
+            }
+
             if (o.Flags!=null) {
                 if (o.Flags.Values.Any())
                 {
                     res.CommentsBefore.Add(GetNotSupportedWarning(o.Flags.ToString()));
                 }
             }
-            return res;
+            return (res, r.Item2);
         }
-        public CPParser.Ast.StatementSeq Map(AOParser.Ast.StatementSeq o, Common.SymTable.TypeDesc expectedType)
+        public (CPParser.Ast.StatementSeq, List<VarDecl>) Map(AOParser.Ast.StatementSeq o, Common.SymTable.TypeDesc expectedType, SymTable.Scope scope)
         {
-            if (o == null) return null;
-            return new CPParser.Ast.StatementSeq {
-                Statements = MapLst<AOParser.Ast.IStatement, CPParser.Ast.AstElement>(o.Statements, x=>Map(x, expectedType))
+            //todo
+            if (o == null) return (null,null);
+            var decls = new List<VarDecl>();
+            var res = new CPParser.Ast.StatementSeq
+            {
+
             };
+            foreach (var x in o.Statements.Cast<AOParser.Ast.IStatement>())
+            {
+                var r = Map(x, expectedType, scope);
+                res.Statements.Value.Add(r.Item1);
+                if (r.Item2 != null) {
+                    decls.AddRange(r.Item2);
+                }
+            }
+
+            return (res, decls);
         }
 
-        private CPParser.Ast.AstElement Map(AOParser.Ast.IStatement arg, Common.SymTable.TypeDesc expectedType)
+        private (CPParser.Ast.AstElement, List<VarDecl>) Map(AOParser.Ast.IStatement arg, Common.SymTable.TypeDesc expectedType, SymTable.Scope scope)
         {
             switch (arg)
             {
                 case AOParser.Ast.IStatement.AssignmentStatement s:
-                    return Map(s);
+                    return (MapAssigementStmt(s), null);
                 case AOParser.Ast.IStatement.AwaitStatement s:
-                    return new CPParser.Ast.Comment() { Content = "NOT SUPPORTED CONV: " + s.ToString() };
+                    return (new CPParser.Ast.Comment() { Content = "NOT SUPPORTED CONV: " + s.ToString() }, null);
                 case AOParser.Ast.IStatement.CaseStatement s:
-                    return Map(s, expectedType);
+                    return Map(s, expectedType, scope);
                 case AOParser.Ast.IStatement.ExitStatement s:
                     return Map(s);
+                case AOParser.Ast.IStatement.VarDeclStatement s:
+                    var r = Map(s.VarDecl, scope);
+                    return (r.Item3[0], new List<VarDecl>() { r.Item1 });
                 case AOParser.Ast.IStatement.ForStatement s:
-                    return Map(s, expectedType);
+                    return (Map(s, expectedType, scope), null);
                 case AOParser.Ast.IStatement.IfStatement s:
-                    return Map(s, expectedType);
+                    return Map(s, expectedType, scope);
                 case AOParser.Ast.IStatement.LoopStatement s:
-                    return Map(s, expectedType);
+                    return Map(s, expectedType, scope);
                 case AOParser.Ast.IStatement.ProcCallStatement s:
-                    return Map(s);
+                    return (Map(s), null);
                 case AOParser.Ast.IStatement.RepeatStatement s:
-                    return Map(s, expectedType);
+                    return Map(s, expectedType, scope);
                 case AOParser.Ast.IStatement.ReturnStatement s:
-                    return Map(s, expectedType);
+                    return (Map(s, expectedType), null);
                 case AOParser.Ast.IStatement.IgnoreStatement s:
                     return Map(s, expectedType);
                 case AOParser.Ast.IStatement.WithStatement s:
-                    return Map(s, expectedType);
+                    return Map(s, expectedType, scope);
                 case AOParser.Ast.IStatement.WhileStatement s:
-                    return Map(s, expectedType);
+                    return Map(s, expectedType, scope);
                 case AOParser.Ast.IStatement.StatBlockStatement s:
-                    return new CPParser.Ast.Comment() { Content = "NOT SUPPORTED CONV: " + s.ToString() };
+                    return (new CPParser.Ast.Comment() { Content = "NOT SUPPORTED CONV: " + s.ToString() }, null);
                 default:
                     throw new NotSupportedException();
             }
@@ -1034,11 +1152,11 @@ namespace Common.Mappers
             };
         }
 
-        public CPParser.Ast.Case Map(AOParser.Ast.Case o, Common.SymTable.TypeDesc expecteType)
+        public CPParser.Ast.Case Map(AOParser.Ast.Case o, Common.SymTable.TypeDesc expecteType, SymTable.Scope scope)
         {
             return new CPParser.Ast.Case {
                 CaseLabels = MapLst<AOParser.Ast.CaseLabels, CPParser.Ast.CaseLabels>(o.CaseLabels, Map),
-                StatementSeq = Map(o.StatementSeq, expecteType)
+                StatementSeq = Map(o.StatementSeq, expecteType, scope).Item1
             };
         }
 
@@ -1071,7 +1189,7 @@ namespace Common.Mappers
             };
         }
 
-        public CPParser.Ast.IStatement.AssignmentStatement Map(AOParser.Ast.IStatement.AssignmentStatement o)
+        public CPParser.Ast.IStatement.AssignmentStatement MapAssigementStmt(AOParser.Ast.IStatement.AssignmentStatement o)
         {
             var res = new CPParser.Ast.IStatement.AssignmentStatement {
                 Designator = Map(o.Designator,null),
@@ -1090,77 +1208,105 @@ namespace Common.Mappers
             };
         }
 
-        public CPParser.Ast.IStatement.IfStatement Map(AOParser.Ast.IStatement.IfStatement o, Common.SymTable.TypeDesc expecteType)
+        public (CPParser.Ast.IStatement.IfStatement, List<VarDecl>) Map(AOParser.Ast.IStatement.IfStatement o, Common.SymTable.TypeDesc expecteType, SymTable.Scope scope)
         {
-            return new CPParser.Ast.IStatement.IfStatement
+            var varDecls = new List<VarDecl>();
+            var i = Map(o.If, expecteType, scope);
+            if (i.Item2 != null)
             {
-                If = Map(o.If, expecteType),
-                ElseBody = Map(o.ElseBody, expecteType),
-                ELSIFs = MapLst<AOParser.Ast.IStatement.IfStatement.IfThen, CPParser.Ast.IStatement.IfStatement.IfThen>(o.ELSIFs, x=>Map(x, expecteType))
+                varDecls.AddRange(i.Item2);
+            }
+            var eb = Map(o.ElseBody, expecteType, scope);
+            if (eb.Item2 != null)
+            {
+                varDecls.AddRange(eb.Item2);
+            }
+            var r = new CPParser.Ast.IStatement.IfStatement
+            {
+                If = i.Item1,
+                ElseBody = eb.Item1,
+                ELSIFs = MapLst<AOParser.Ast.IStatement.IfStatement.IfThen, CPParser.Ast.IStatement.IfStatement.IfThen>(o.ELSIFs, x=> {
+                    var t = Map(x, expecteType, scope);
+                    if (t.Item2 != null)
+                    {
+                        varDecls.AddRange(t.Item2);
+                    }
+                    return t.Item1;
+                })
             };
+            return (r, varDecls);
         }
-        public CPParser.Ast.IStatement.CaseStatement Map(AOParser.Ast.IStatement.CaseStatement o, Common.SymTable.TypeDesc expecteType)
+        public (CPParser.Ast.IStatement.CaseStatement, List<VarDecl>) Map(AOParser.Ast.IStatement.CaseStatement o, Common.SymTable.TypeDesc expecteType, SymTable.Scope scope)
         {
-            return new CPParser.Ast.IStatement.CaseStatement
+            var i = Map(o.ElseBody, expecteType, scope);
+            var r = new CPParser.Ast.IStatement.CaseStatement
             {
                 Expr = Map(o.Expr, null),
-                ElseBody = Map(o.ElseBody, expecteType),
-                Cases = MapLst<AOParser.Ast.Case, CPParser.Ast.Case>(o.Cases, x=>Map(x, expecteType))
+                ElseBody = i.Item1,
+                Cases = MapLst<AOParser.Ast.Case, CPParser.Ast.Case>(o.Cases, x=>Map(x, expecteType, scope))
             };
+            return (r, i.Item2);
         }
 
-        public CPParser.Ast.IStatement.WhileStatement Map(AOParser.Ast.IStatement.WhileStatement o, Common.SymTable.TypeDesc expecteType)
+        public (CPParser.Ast.IStatement.WhileStatement, List<VarDecl>) Map(AOParser.Ast.IStatement.WhileStatement o, Common.SymTable.TypeDesc expecteType, SymTable.Scope scope)
         {
-            return new CPParser.Ast.IStatement.WhileStatement
+            var i = Map(o.StatementSeq, expecteType, scope);
+            var r = new CPParser.Ast.IStatement.WhileStatement
             {
                 Expr = Map(o.Expr, Common.SymTable.TypeDesc.BOOL),
-                StatementSeq = Map(o.StatementSeq, expecteType)
+                StatementSeq = i.Item1
             };
+            return (r, i.Item2);
         }
 
-        public CPParser.Ast.IStatement.LoopStatement Map(AOParser.Ast.IStatement.LoopStatement o, Common.SymTable.TypeDesc expecteType)
+        public (CPParser.Ast.IStatement.LoopStatement, List<VarDecl>) Map(AOParser.Ast.IStatement.LoopStatement o, Common.SymTable.TypeDesc expecteType, SymTable.Scope scope)
         {
-            return new CPParser.Ast.IStatement.LoopStatement
+            var i = Map(o.StatementSeq, expecteType, scope);
+            var r = new CPParser.Ast.IStatement.LoopStatement
             {
-                StatementSeq = Map(o.StatementSeq, expecteType)
+                StatementSeq = i.Item1
             };
+            return (r, i.Item2);
         }
 
-        public CPParser.Ast.IStatement.RepeatStatement Map(AOParser.Ast.IStatement.RepeatStatement o, Common.SymTable.TypeDesc expecteType)
+        public (CPParser.Ast.IStatement.RepeatStatement, List<VarDecl>) Map(AOParser.Ast.IStatement.RepeatStatement o, Common.SymTable.TypeDesc expecteType, SymTable.Scope scope)
         {
-            return new CPParser.Ast.IStatement.RepeatStatement { 
+            var i = Map(o.StatementSeq, expecteType, scope);
+            var r = new CPParser.Ast.IStatement.RepeatStatement { 
                 Expr = Map(o.Expr, Common.SymTable.TypeDesc.BOOL),
-                StatementSeq = Map(o.StatementSeq, expecteType)
+                StatementSeq = i.Item1
             };
+            return (r, i.Item2);
         }
 
-        public CPParser.Ast.IStatement.WithStatement Map(AOParser.Ast.IStatement.WithStatement o, Common.SymTable.TypeDesc expecteType)
+        public (CPParser.Ast.IStatement.WithStatement, List<VarDecl>) Map(AOParser.Ast.IStatement.WithStatement o, Common.SymTable.TypeDesc expecteType, SymTable.Scope scope)
         {
+            var i = Map(o.StatementSeq, expecteType, scope);
             var res = new CPParser.Ast.IStatement.WithStatement {
             };
             res.Alternatives.Add(new CPParser.Ast.IStatement.WithAlternativeStatement() { 
-                StatementSeq = Map(o.StatementSeq, expecteType),
+                StatementSeq = i.Item1,
                 Guard = new CPParser.Ast.Guard { 
                     VarQualident = MapQualident(o.Qualident1, QType.None),
                     TypeQualident = MapQualident(o.Qualident2, QType.Type)
                 }
             });
-            return res;
+            return (res, i.Item2);
         }
 
-        public CPParser.Ast.IStatement.ExitStatement Map(AOParser.Ast.IStatement.ExitStatement o)
+        public (CPParser.Ast.IStatement.ExitStatement, List<VarDecl>) Map(AOParser.Ast.IStatement.ExitStatement o)
         {
-            return new CPParser.Ast.IStatement.ExitStatement();
+            return (new CPParser.Ast.IStatement.ExitStatement(), null);
         }
-        public CPParser.Ast.IStatement.AssignmentStatement Map(AOParser.Ast.IStatement.IgnoreStatement o, Common.SymTable.TypeDesc expectedType)
+        public (CPParser.Ast.IStatement.AssignmentStatement, List<VarDecl>) Map(AOParser.Ast.IStatement.IgnoreStatement o, Common.SymTable.TypeDesc expectedType)
         {
-            return new CPParser.Ast.IStatement.AssignmentStatement
+            return (new CPParser.Ast.IStatement.AssignmentStatement
             {
                 Expr = Map(o.Expr, expectedType),
                 Designator = new CPParser.Ast.Designator(null) { 
                     Qualident = GetQualident("IGNORE")
                 }
-            };
+            }, null);
         }
         public CPParser.Ast.IStatement.ReturnStatement Map(AOParser.Ast.IStatement.ReturnStatement o, Common.SymTable.TypeDesc expectedType)
         {
@@ -1170,14 +1316,14 @@ namespace Common.Mappers
         }
 
 
-        public CPParser.Ast.IStatement.ForStatement Map(AOParser.Ast.IStatement.ForStatement o, Common.SymTable.TypeDesc expectedType)
+        public CPParser.Ast.IStatement.ForStatement Map(AOParser.Ast.IStatement.ForStatement o, Common.SymTable.TypeDesc expectedType, SymTable.Scope scope)
         {
             return new CPParser.Ast.IStatement.ForStatement { 
                 ByExpr = Map(o.ByExpr, null),
                 Expr = Map(o.Expr, null),
                 ToExpr = Map(o.ToExpr, null),
                 Ident = Map(o.Ident),
-                StatementSeq = Map(o.StatementSeq, expectedType)
+                StatementSeq = Map(o.StatementSeq, expectedType, scope).Item1
             };
         }
 
@@ -1389,7 +1535,7 @@ namespace Common.Mappers
             var isFn = o.Specs.Any() && o.Specs.Value[0] is AOParser.Ast.Designator.IDesignatorSpec.ProcCallDesignatorSpec;
             var spec = isFn ? o.Specs.Value[0] as AOParser.Ast.Designator.IDesignatorSpec.ProcCallDesignatorSpec : null;
 
-            var argTypes = spec!=null ? spec.Value.Exprs.Cast<AOParser.Ast.Expr>().Select(x => x.TypeDescr).ToArray() : null;
+            var argTypes = spec?.Value?.Exprs != null ? spec.Value.Exprs.Cast<AOParser.Ast.Expr>().Select(x => x.TypeDescr).ToArray() : null;
             var q = MapQualident(o.Qualident, isFn? QType.Func: QType.None, expectedType, argTypes);
 
             if (AOParser.Types.TypeResolver.Resolve(o.Qualident.TypeDescr).form == SymTable.TypeForm.ENUM && o.Specs.Value.Any()) {

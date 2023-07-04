@@ -85,5 +85,8 @@ namespace AOParser
         void Visit(IType.EnumType enumType);
         void Visit(IFactor.SizeOfFactor sizeOfFactor);
         void Visit(IStatement.IgnoreStatement ignoreStatement);
+        void Visit(VariableName variableName);
+        void Visit(VariableNameList variableNameList);
+        void Visit(IStatement.VarDeclStatement varDeclStatement);
     }
 }

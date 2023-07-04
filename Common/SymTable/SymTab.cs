@@ -350,11 +350,12 @@ namespace Common.SymTable
 			return curScope.Find(name);
 		}
 
-		public void OpenScope(bool isSelf = false)
+		public Scope OpenScope(bool isSelf = false)
 		{
 			Scope s = curScope;
 			curScope = new Scope(isSelf);
 			curScope.outer = s;
+			return curScope;
 		}
 
 		public void CloseScope()

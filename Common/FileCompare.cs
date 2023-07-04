@@ -29,8 +29,8 @@ namespace Common
                 var firstIsFinished = i == txt1.Length;
                 var secondIsFinished = j == txt2.Length;
                 if (firstIsFinished && secondIsFinished) break;
-                else if (!firstIsFinished && (txt1[i] == '(' && txt1[i + 1] == '*')) i = SkipComment(txt1, i);
-                else if (!secondIsFinished && (txt2[j] == '(' && txt2[j + 1] == '*')) j = SkipComment(txt2, j);
+                else if (!firstIsFinished && (txt1[i] == '(' && txt1[i + 1] == '*')) i = SkipComment(txt1, i+2);
+                else if (!secondIsFinished && (txt2[j] == '(' && txt2[j + 1] == '*')) j = SkipComment(txt2, j+2);
                 else if (!firstIsFinished && Char.IsWhiteSpace(txt1[i]))
                 {
                     i++;
@@ -54,11 +54,11 @@ namespace Common
                 }
                 else
                 {
-                    var istart = i - 20;
-                    var jstart = j - 20;
+                    var istart = i - 100;
+                    var jstart = j - 100;
                     if (istart < 0) istart = 0;
                     if (jstart < 0) jstart = 0;
-                    Console.WriteLine($"Cant compare, found a diff {txt1.Substring(istart,i-istart)} {txt2.Substring(jstart, j - jstart)} ");
+                    Console.WriteLine($"Cant compare, found a diff. {Environment.NewLine} ORIGINAL: {Environment.NewLine} {txt1.Substring(istart,i-istart+10)} {Environment.NewLine} RESULT: {Environment.NewLine}  {txt2.Substring(jstart, j - jstart+10)} ");
                     return false;
                 }
             }
@@ -75,7 +75,7 @@ namespace Common
 
                 if (str[i] == '(' && str[i + 1] == '*')
                 {
-                    SkipComment(str, i);
+                    i = SkipComment(str, i+2);
                 }
                 if (str[i] == '*' && str[i + 1] == ')')
                 {
