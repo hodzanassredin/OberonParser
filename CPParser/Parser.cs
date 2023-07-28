@@ -490,7 +490,7 @@ public Common.SymTable.SymTab symTab = new ();
 	}
 
 	void Qualident(out CPParser.Ast.Qualident o) {
-		o = new CPParser.Ast.Qualident(symTab); 
+		o = new CPParser.Ast.Qualident(symTab.curScope); 
 		Ident(out o.Ident1);
 		if (IsModule()) {
 			Expect(11);

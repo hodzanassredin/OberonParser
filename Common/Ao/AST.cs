@@ -362,9 +362,9 @@ namespace AOParser.Ast
 
 	public class VariableNameList : AstElement
 	{
-		public string[] GetNames()
+		public VariableName[] GetVars()
 		{
-			return VariableNames.Cast<VariableName>().Select(x => x.IdentDef.Ident.Name).ToArray();
+			return VariableNames.Cast<VariableName>().ToArray();
 		}
 
 		public AstList VariableNames = new AstList();
@@ -388,7 +388,7 @@ namespace AOParser.Ast
 
 		public IEnumerable<Obj> GetObjects()
 		{
-			return VariableNameList.GetNames().Select(name => new Obj(ObjCLass.VAR, name, Type_.TypeDescr, null));
+			return VariableNameList.GetVars().Select(v => new Obj(ObjCLass.VAR, v.IdentDef.Ident.Name, Type_ == null? v.Expr.TypeDescr : Type_.TypeDescr, null));
 		}
 	}
 
@@ -487,7 +487,7 @@ namespace AOParser.Ast
 				get
 				{
 					var sizes = ConstExprs.Cast<ConstExpr>().Count;//.Select(x => Int32.Parse(x.ToString())).ToArray();
-					return TypeDesc.Array(Type_.TypeDescr, new int[sizes]);
+					return TypeDesc.Array(Type_.TypeDescr, new string[sizes]);
 				}
 			}
 
@@ -564,7 +564,7 @@ namespace AOParser.Ast
 			public Body Body;
 
 			public Ident Ident;
-            private readonly Scope scope;
+			public readonly Scope scope;
 
             public override void Accept(IAstVisitor v) => v.Visit(this);
 
@@ -1109,7 +1109,7 @@ namespace AOParser.Ast
 		}
 		public class StringFactor : IFactor
 		{
-			public override TypeDesc TypeDescr => TypeDesc.Array(TypeDesc.UINT8, Array.Empty<int>());//to do all are short then array of shortreal else real
+			public override TypeDesc TypeDescr => TypeDesc.Array(TypeDesc.UINT8, Array.Empty<string>());//to do all are short then array of shortreal else real
 
 			public String Value;
 			public override void Accept(IAstVisitor v) => v.Visit(this);

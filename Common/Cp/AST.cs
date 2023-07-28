@@ -379,7 +379,7 @@ namespace CPParser.Ast
 			{
 				get
 				{
-					var sizes = ConstExprs.Cast<ConstExpr>().Select(x => Int32.Parse(x.ToString())).ToArray();
+					var sizes = ConstExprs.Cast<ConstExpr>().Select(x => x.ToString()).ToArray();
 					return TypeDesc.Array(Type_.TypeDescr, sizes);
 				}
 			}
@@ -843,7 +843,7 @@ namespace CPParser.Ast
 		{
 			public String Value;
 
-            public override TypeDesc TypeDescr => TypeDesc.Array(TypeDesc.Predefined("CHAR", null), Array.Empty<int>());
+            public override TypeDesc TypeDescr => TypeDesc.Array(TypeDesc.Predefined("CHAR", null), Array.Empty<string>());
 
             public override void Accept(IAstVisitor v) => v.Visit(this);
 			public override string ToString()

@@ -492,7 +492,7 @@ namespace Common.Mappers
                             var t = Map(x.Type_, null).Item1;//TODO support procs for anonymous objects
                             var r = new CPParser.Ast.FieldList
                             {
-                                IdentList = Map(x.VariableNameList, o.Qualident.scope, t.TypeDescr).Item1,
+                                IdentList = Map(x.VariableNameList, o.scope, t.TypeDescr).Item1,
                                 Type_ = t
                             };
                             return r;
@@ -748,7 +748,7 @@ namespace Common.Mappers
             var i = 0;
             foreach (var e in o.Exprs.Cast<AOParser.Ast.Expr>())
             {
-                res.Exprs.Add(Map(e, expectedTypes==null?null: expectedTypes[i]));
+                res.Exprs.Add(Map(e, expectedTypes==null || expectedTypes.Length < o.Exprs.Value.Count ? null: expectedTypes[i]));
                 i++;
             }
             return res;
@@ -756,6 +756,7 @@ namespace Common.Mappers
 
         public CPParser.Ast.IdentList Map(AOParser.Ast.IdentList o)
         {
+            if (o == null) return null;
             return new CPParser.Ast.IdentList {
                 IdentDefs = MapLst<AOParser.Ast.IdentDef, CPParser.Ast.IdentDef>(o.IdentDefs, Map),
             };
@@ -1366,6 +1367,7 @@ namespace Common.Mappers
         {
             var lst = o.FieldList.FieldDecl
                         .Cast<AOParser.Ast.FieldDecl>()
+                        .Where(x=>x.IdentList != null)
                         .Select(x => new CPParser.Ast.FieldList()
                         {
                             IdentList = Map(x.IdentList),

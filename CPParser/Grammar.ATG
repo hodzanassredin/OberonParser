@@ -371,7 +371,7 @@ PRODUCTIONS
 		IdentDef<out id>														(. o.IdentDefs.Add(id); .)}.
 
 	Qualident<out CPParser.Ast.Qualident o>
-		=																		(. o = new CPParser.Ast.Qualident(symTab); .)
+		=																		(. o = new CPParser.Ast.Qualident(symTab.curScope); .)
 		Ident<out o.Ident1> [IF(IsModule()) "." Ident<out o.Ident2>] .
 
 	IdentDef<out CPParser.Ast.IdentDef o> 	

@@ -178,7 +178,7 @@ namespace Common.SymTable
 			};
 		}
 
-		public static TypeDesc Array(TypeDesc elemType, int[] length)
+		public static TypeDesc Array(TypeDesc elemType, string[] length)
 		{
 			return new TypeDesc(TypeForm.ARRAY)
 			{
@@ -210,7 +210,7 @@ namespace Common.SymTable
 
 		public TypeForm form;     // NONE, CHAR, SHORT, ...
 								  //public Obj obj;      // to defining object if such an object exists. base type
-		public int[] length = new int[0];//for arrays, can be without size or multidim
+		public string[] length = new string[0];//for arrays, can be without size or multidim
 		public TypeDesc elemType; // for ARRAY, PTR, FUNC
 
 		public string predefinedName;
