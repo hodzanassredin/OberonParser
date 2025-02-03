@@ -1,5 +1,5 @@
 This is Oberon parsers library.
-Based on ompiler generator Coco/R(C# version).
+Based on compiler generator Coco/R(C# version).
 
 Implemented:
 
